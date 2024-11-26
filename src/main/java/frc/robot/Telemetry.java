@@ -10,7 +10,7 @@ import org.littletonrobotics.junction.AutoLogOutput;
 
 public class Telemetry {
 
-  SwerveDriveState state;
+  SwerveDriveState state = new SwerveDriveState();
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
 
   /** Accept the swerve drive state and telemeterize it to SmartDashboard and SignalLogger. */
