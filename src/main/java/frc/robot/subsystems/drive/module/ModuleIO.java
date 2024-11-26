@@ -11,31 +11,36 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drive.module;
+
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volt;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface ModuleIO {
   @AutoLog
   public static class ModuleIOInputs {
     public boolean driveConnected = false;
-    public double drivePositionRad = 0.0;
-    public double driveVelocityRadPerSec = 0.0;
-    public double driveAppliedVolts = 0.0;
-    public double driveCurrentAmps = 0.0;
+    public Angle drivePosition = Radians.of(0.0);
+    public AngularVelocity driveVelocity = RotationsPerSecond.of(0.0);
+    public Voltage driveAppliedVolts = Volt.of(0.0);
+    public Current driveCurrent = Amps.of(0.0);
 
     public boolean turnConnected = false;
     public boolean turnEncoderConnected = false;
     public Rotation2d turnAbsolutePosition = new Rotation2d();
     public Rotation2d turnPosition = new Rotation2d();
-    public double turnVelocityRadPerSec = 0.0;
-    public double turnAppliedVolts = 0.0;
-    public double turnCurrentAmps = 0.0;
-
-    public double[] odometryTimestamps = new double[] {};
-    public double[] odometryDrivePositionsRad = new double[] {};
-    public Rotation2d[] odometryTurnPositions = new Rotation2d[] {};
+    public AngularVelocity turnVelocity = RotationsPerSecond.of(0.0);
+    public Voltage turnAppliedVolts = Volt.of(0.0);
+    public Current turnCurrent = Amps.of(0.0);
   }
 
   /** Updates the set of loggable inputs. */

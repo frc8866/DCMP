@@ -25,8 +25,6 @@ public class RobotContainer {
 
   private final CommandXboxController joystick = new CommandXboxController(0);
 
-  private final Telemetry logger = new Telemetry();
-
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
   /* Setting up bindings for necessary control of the swerve drive platform */
@@ -78,8 +76,6 @@ public class RobotContainer {
 
     // reset the field-centric heading on left bumper press
     joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
-
-    drivetrain.registerTelemetry(logger::telemeterize);
   }
 
   public Command getAutonomousCommand() {

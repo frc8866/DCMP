@@ -2,7 +2,6 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -11,8 +10,11 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -20,7 +22,13 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.subsystems.drive.gyro.Gyro;
+import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
+import frc.robot.subsystems.drive.module.Module;
+import frc.robot.subsystems.drive.module.ModuleIOAll;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements Subsystem so it can easily
@@ -30,6 +38,9 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
   private static final double kSimLoopPeriod = 0.005; // 5 ms
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
+
+  private Module[] modules = new Module[4];
+  private Gyro gyro;
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.fromDegrees(0);
@@ -54,7 +65,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
               Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
               null, // Use default timeout (10 s)
               // Log state with SignalLogger class
-              state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+              state -> Logger.recordOutput("Drive/SysIdTranslation_State", state.toString())),
           new SysIdRoutine.Mechanism(
               output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
 
@@ -66,7 +77,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
               Volts.of(7), // Use dynamic voltage of 7 V
               null, // Use default timeout (10 s)
               // Log state with SignalLogger class
-              state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+              state -> Logger.recordOutput("Drive/SysIdSteer_State", state.toString())),
           new SysIdRoutine.Mechanism(
               volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
 
@@ -84,13 +95,13 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
               Volts.of(Math.PI),
               null, // Use default timeout (10 s)
               // Log state with SignalLogger class
-              state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
+              state -> Logger.recordOutput("Drive/SysIdRotation_State", state.toString())),
           new SysIdRoutine.Mechanism(
               output -> {
                 /* output is actually radians per second, but SysId only supports "volts" */
                 setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
                 /* also log the requested output for SysId */
-                SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+                Logger.recordOutput("Drive/Rotational_Rate", output.in(Volts));
               },
               null,
               this));
@@ -113,6 +124,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     if (Utils.isSimulation()) {
       startSimThread();
     }
+    createIOLayers();
   }
 
   /**
@@ -134,6 +146,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     if (Utils.isSimulation()) {
       startSimThread();
     }
+    createIOLayers();
   }
 
   /**
@@ -164,6 +177,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     if (Utils.isSimulation()) {
       startSimThread();
     }
+    createIOLayers();
   }
 
   /**
@@ -218,6 +232,34 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                 m_hasAppliedOperatorPerspective = true;
               });
     }
+    updateIOLayers();
+  }
+
+  private void updateIOLayers() {
+    // Update all IOLayers
+
+    // Update all modules
+    for (var module : modules) {
+      module.periodic();
+    }
+
+    // Update gyro
+    gyro.periodic();
+  }
+
+  private void createIOLayers() {
+    createModules();
+    createGyro();
+  }
+
+  private void createModules() {
+    for (int i = 0; i < getModules().length; i++) {
+      modules[i] = new Module(new ModuleIOAll(getModule(i)), i);
+    }
+  }
+
+  private void createGyro() {
+    gyro = new Gyro(new GyroIOPigeon2(getPigeon2()));
   }
 
   private void startSimThread() {
@@ -235,6 +277,45 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
               updateSimState(deltaTime, RobotController.getBatteryVoltage());
             });
     m_simNotifier.startPeriodic(kSimLoopPeriod);
+  }
+
+  /** Returns the module states (turn angles and drive velocities) for all of the modules. */
+  @AutoLogOutput(key = "SwerveStates/Measured")
+  private SwerveModuleState[] getModuleStates() {
+    return getState().ModuleStates;
+  }
+
+  // ** Returns the module setpoints */
+  @AutoLogOutput(key = "SwerveStates/Setpoints")
+  private SwerveModuleState[] getModuleSetpoints() {
+    return getState().ModuleTargets;
+  }
+
+  /** Returns the measured chassis speeds of the robot. */
+  @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
+  private ChassisSpeeds getChassisSpeeds() {
+    return getState().Speeds;
+  }
+
+  /** Returns the target chassis speed of the robot. */
+  @AutoLogOutput(key = "SwerveChassisSpeeds/Setpoints")
+  private ChassisSpeeds getChassisSetpoint() {
+    return getKinematics().toChassisSpeeds(getModuleSetpoints());
+  }
+
+  /** Returns the current odometry pose. */
+  @AutoLogOutput(key = "Odometry/Robot")
+  public Pose2d getPose() {
+    return getState().Pose;
+  }
+
+  /** Returns the current odometry rotation. */
+  public Rotation2d getRotation() {
+    return getPose().getRotation();
+  }
+
+  public AngularVelocity getYawVelocity() {
+    return gyro.getYawVelocity();
   }
 
   public record VisionParameters(Pose2d robotPose, double yawVelocityRadPerSec) {}
