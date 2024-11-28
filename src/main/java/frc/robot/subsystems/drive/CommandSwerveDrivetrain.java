@@ -232,6 +232,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                 m_hasAppliedOperatorPerspective = true;
               });
     }
+    updateIOLayers();
   }
 
   private void updateIOLayers() {
@@ -297,7 +298,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
               /* use the measured time delta, get battery voltage from WPILib */
               updateSimState(deltaTime, RobotController.getBatteryVoltage());
-              updateIOLayers();
             });
     m_simNotifier.startPeriodic(kSimLoopPeriod);
   }
