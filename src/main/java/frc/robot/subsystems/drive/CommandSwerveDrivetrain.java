@@ -22,12 +22,9 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
 import frc.robot.subsystems.drive.gyro.Gyro;
-import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.module.Module;
-import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOAll;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -124,10 +121,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
   public CommandSwerveDrivetrain(
       SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants... modules) {
     super(drivetrainConstants, modules);
+    createIOLayers();
     if (Utils.isSimulation()) {
       startSimThread();
     }
-    createIOLayers();
   }
 
   /**
@@ -146,10 +143,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
       double OdometryUpdateFrequency,
       SwerveModuleConstants... modules) {
     super(drivetrainConstants, OdometryUpdateFrequency, modules);
+    createIOLayers();
     if (Utils.isSimulation()) {
       startSimThread();
     }
-    createIOLayers();
   }
 
   /**
@@ -177,10 +174,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         odometryStandardDeviation,
         visionStandardDeviation,
         modules);
+    createIOLayers();
     if (Utils.isSimulation()) {
       startSimThread();
     }
-    createIOLayers();
   }
 
   /**
@@ -256,31 +253,36 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
   }
 
   private void createModules() {
-    switch (Constants.currentMode) {
-      case REAL, SIM:
-        for (int i = 0; i < getModules().length; i++) {
-          modules[i] = new Module(new ModuleIOAll(getModule(i)), i);
-        }
-        break;
+    // switch (Constants.currentMode) {
+    //   case REAL, SIM:
+    //     for (int i = 0; i < getModules().length; i++) {
+    //       modules[i] = new Module(new ModuleIOAll(getModule(i)), i);
+    //     }
+    //     break;
 
-      case REPLAY:
-        for (int i = 0; i < getModules().length; i++) {
-          modules[i] = new Module(new ModuleIO() {}, i);
-        }
-        break;
+    //   case REPLAY:
+    //     for (int i = 0; i < getModules().length; i++) {
+    //       modules[i] = new Module(new ModuleIO() {}, i);
+    //     }
+    //     break;
+    // }
+    for (int i = 0; i < getModules().length; i++) {
+      modules[i] = new Module(new ModuleIOAll(getModule(i)), i);
     }
   }
 
   private void createGyro() {
-    switch (Constants.currentMode) {
-      case REAL, SIM:
-        gyro = new Gyro(new GyroIOPigeon2(getPigeon2()));
-        break;
+    gyro = new Gyro(new GyroIOPigeon2(getPigeon2()));
 
-      case REPLAY:
-        gyro = new Gyro(new GyroIO() {});
-        break;
-    }
+    // switch (Constants.currentMode) {
+    //   case REAL, SIM:
+    //     gyro = new Gyro(new GyroIOPigeon2(getPigeon2()));
+    //     break;
+
+    //   case REPLAY:
+    //     gyro = new Gyro(new GyroIO() {});
+    //     break;
+    // }
   }
 
   private void startSimThread() {
@@ -298,6 +300,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
               updateSimState(deltaTime, RobotController.getBatteryVoltage());
             });
     m_simNotifier.startPeriodic(kSimLoopPeriod);
+    updateIOLayers();
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */

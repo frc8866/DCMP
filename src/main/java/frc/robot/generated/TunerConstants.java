@@ -76,7 +76,7 @@ public class TunerConstants {
   private static final boolean kInvertLeftSide = false;
   private static final boolean kInvertRightSide = true;
 
-  private static final CANBus kCANBus = new CANBus("", "./logs/example.hoot");
+  private static final CANBus kCANBus = new CANBus("");
   private static final int kPigeonId = 13;
 
   // These are only used for simulation
