@@ -8,15 +8,27 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
+  private final Vision vision;
+
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   private double MaxAngularRate =
@@ -25,7 +37,9 @@ public class RobotContainer {
 
   private final CommandXboxController joystick = new CommandXboxController(0);
 
-  public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  private final LoggedDashboardChooser<Command> autoChooser;
+
+  public final Swerve drivetrain;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final SwerveRequest.FieldCentric drive =
@@ -38,6 +52,73 @@ public class RobotContainer {
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   public RobotContainer() {
+    switch (Constants.currentMode) {
+      case REAL:
+        // Real robot, instantiate hardware IO implementations
+        drivetrain = new Swerve(TunerConstants.createDrivetrain());
+
+        vision =
+            new Vision(
+                drivetrain::addVisionData,
+                new VisionIOLimelight("limelight-fl", drivetrain::getVisionParameters),
+                new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
+                new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
+                new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
+        break;
+
+      case SIM:
+        // Sim robot, instantiate physics sim IO implementations
+        drivetrain = new Swerve(TunerConstants.createDrivetrain());
+        vision =
+            new Vision(
+                drivetrain::addVisionData,
+                new VisionIOPhotonVisionSIM(
+                    "Front Camera",
+                    new Transform3d(
+                        new Translation3d(0.2, 0.0, 0.8),
+                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(0))),
+                    drivetrain::getVisionParameters),
+                new VisionIOPhotonVisionSIM(
+                    "Back Camera",
+                    new Transform3d(
+                        new Translation3d(-0.2, 0.0, 0.8),
+                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(180))),
+                    drivetrain::getVisionParameters),
+                new VisionIOPhotonVisionSIM(
+                    "Left Camera",
+                    new Transform3d(
+                        new Translation3d(0.0, 0.2, 0.8),
+                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
+                    drivetrain::getVisionParameters),
+                new VisionIOPhotonVisionSIM(
+                    "Right Camera",
+                    new Transform3d(
+                        new Translation3d(0.0, -0.2, 0.8),
+                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(-90))),
+                    drivetrain::getVisionParameters));
+        break;
+
+      default:
+        // Replayed robot, disable IO implementations
+        drivetrain = new Swerve(TunerConstants.createDrivetrain());
+        vision = new Vision(drivetrain::addVisionData, new VisionIO() {});
+        break;
+    }
+
+    // Set up auto routines
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+    // Set up SysId routines
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Forward)",
+        drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Quasistatic Reverse)",
+        drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Forward)", drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    autoChooser.addOption(
+        "Drive SysId (Dynamic Reverse)", drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     configureBindings();
   }
 

@@ -18,7 +18,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.LimelightHelpers.PoseObservation;
 import frc.robot.LimelightHelpers.RawFiducial;
-import frc.robot.subsystems.drive.CommandSwerveDrivetrain.VisionParameters;
+import frc.robot.subsystems.swerve.Swerve.VisionParameters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;

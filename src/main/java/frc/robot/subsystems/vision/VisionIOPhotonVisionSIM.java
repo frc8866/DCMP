@@ -4,16 +4,13 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import frc.robot.subsystems.drive.CommandSwerveDrivetrain.VisionParameters;
+import frc.robot.subsystems.swerve.Swerve.VisionParameters;
 import java.util.function.Supplier;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
 
 public class VisionIOPhotonVisionSIM extends VisionIOPhotonVision {
-
-  private Supplier<VisionParameters> visionParams;
-
   private VisionSystemSim visionSim;
   private PhotonCameraSim cameraSim;
 
@@ -27,8 +24,6 @@ public class VisionIOPhotonVisionSIM extends VisionIOPhotonVision {
   public VisionIOPhotonVisionSIM(
       String cameraName, Transform3d robotToCamera, Supplier<VisionParameters> visionParams) {
     super(cameraName, robotToCamera, visionParams);
-    this.visionParams = visionParams;
-    // Initialize vision sim
     // Initialize vision sim
     if (visionSim == null) {
       visionSim = new VisionSystemSim("main");

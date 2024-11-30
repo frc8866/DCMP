@@ -5,7 +5,7 @@ import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseObservation;
-import frc.robot.subsystems.drive.CommandSwerveDrivetrain.VisionParameters;
+import frc.robot.subsystems.swerve.Swerve.VisionParameters;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
