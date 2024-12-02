@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.RobotController;
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem so it can be used
  * in command-based projects easily.
  */
-@SuppressWarnings("PMD.SingularField")
 public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
   private static final double kSimLoopPeriod = 0.005; // 5 ms
   private Notifier m_simNotifier;
