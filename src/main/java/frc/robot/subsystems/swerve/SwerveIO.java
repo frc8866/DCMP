@@ -1,44 +1,58 @@
 package frc.robot.subsystems.swerve;
 
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface SwerveIO {
 
   @AutoLog
-  public static class SwerveIOInputs {
-    public Pose2d Pose = new Pose2d();
-    public ChassisSpeeds Speeds = new ChassisSpeeds();
+  public static class SwerveIOInputs extends SwerveDriveState {
+    SwerveIOInputs() {
+      this.Pose = Pose2d.kZero;
+    }
 
-    public SwerveModuleState[] ModuleStates = new SwerveModuleState[4];
-    public SwerveModuleState[] ModuleTargets = new SwerveModuleState[4];
-    public SwerveModulePosition[] ModulePositions = new SwerveModulePosition[4];
+    public void fromSwerveDriveState(SwerveDriveState state) {
+      this.Pose = state.Pose;
+      this.Speeds = state.Speeds;
 
-    public double OdometryPeriod = 0.0;
-    public int SuccessfulDaqs = 0;
-    public int FailedDaqs = 0;
+      this.ModuleStates = state.ModuleStates;
+      this.ModuleTargets = state.ModuleTargets;
+      this.ModulePositions = state.ModulePositions;
+
+      this.OdometryPeriod = state.OdometryPeriod;
+      this.SuccessfulDaqs = state.SuccessfulDaqs;
+      this.FailedDaqs = state.FailedDaqs;
+    }
   }
 
-  default void updateInputs(SwerveIOInputs inputs) {}
+  void updateInputs(SwerveIOInputs inputs);
 
-  default void setOperatorPerspectiveForward(Rotation2d fieldDirection) {}
+  void logModules(SwerveDriveState driveState);
 
-  default void resetPose(Pose2d pose) {}
+  void resetPose(Pose2d pose);
 
-  default void setControl(SwerveRequest request) {}
+  Pose2d getPose();
 
-  default void seedFieldCentric() {}
+  Translation2d[] getModuleLocations();
 
-  default void addVisionMeasurement(
+  void setControl(SwerveRequest request);
+
+  Command applyRequest(Supplier<SwerveRequest> requestSupplier, Subsystem subsystemRequired);
+
+  void setOperatorPerspectiveForward(Rotation2d forward);
+
+  void addVisionMeasurement(
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {}
+      Matrix<N3, N1> visionMeasurementStdDevs);
 }

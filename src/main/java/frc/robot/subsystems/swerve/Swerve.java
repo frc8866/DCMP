@@ -197,6 +197,7 @@ public class Swerve extends SubsystemBase {
      * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
      */
     io.updateInputs(inputs);
+    io.logModules(inputs);
     if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
       DriverStation.getAlliance()
           .ifPresent(
@@ -213,7 +214,7 @@ public class Swerve extends SubsystemBase {
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
-    return inputs.Pose;
+    return io.getPose();
   }
 
   public ChassisSpeeds getSpeeds() {
@@ -225,7 +226,7 @@ public class Swerve extends SubsystemBase {
   }
 
   public double getRotationSpeed() {
-    return inputs.Speeds.omegaRadiansPerSecond;
+    return getSpeeds().omegaRadiansPerSecond;
   }
 
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
@@ -258,10 +259,6 @@ public class Swerve extends SubsystemBase {
 
   public void setControl(SwerveRequest request) {
     io.setControl(request);
-  }
-
-  public void seedFieldCentric() {
-    io.seedFieldCentric();
   }
 
   public VisionParameters getVisionParameters() {

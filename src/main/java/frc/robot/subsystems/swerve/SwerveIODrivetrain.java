@@ -1,23 +1,20 @@
 package frc.robot.subsystems.swerve;
 
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.RobotState;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Subsystem;
+import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class SwerveIODrivetrain extends SwerveDrivetrain implements SwerveIO {
-
-  private static final double kSimLoopPeriod = 0.005; // 5 ms
-  private Notifier m_simNotifier = null;
-  private double m_lastSimTime;
-
-  private RobotState robotState;
 
   /**
    * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -31,9 +28,6 @@ public class SwerveIODrivetrain extends SwerveDrivetrain implements SwerveIO {
   public SwerveIODrivetrain(
       SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants... modules) {
     super(drivetrainConstants, modules);
-    if (Utils.isSimulation()) {
-      startSimThread();
-    }
   }
 
   /**
@@ -52,9 +46,6 @@ public class SwerveIODrivetrain extends SwerveDrivetrain implements SwerveIO {
       double OdometryUpdateFrequency,
       SwerveModuleConstants... modules) {
     super(drivetrainConstants, OdometryUpdateFrequency, modules);
-    if (Utils.isSimulation()) {
-      startSimThread();
-    }
   }
 
   /**
@@ -82,40 +73,59 @@ public class SwerveIODrivetrain extends SwerveDrivetrain implements SwerveIO {
         odometryStandardDeviation,
         visionStandardDeviation,
         modules);
-    if (Utils.isSimulation()) {
-      startSimThread();
-    }
+  }
+
+  public Pose2d getPose() {
+    return this.getState().Pose;
+  }
+
+  public Command applyRequest(
+      Supplier<SwerveRequest> requestSupplier, Subsystem subsystemRequired) {
+    return Commands.run(() -> this.setControl(requestSupplier.get()), subsystemRequired);
   }
 
   @Override
   public void updateInputs(SwerveIOInputs inputs) {
-    SwerveDriveState swerveState = super.getState();
-    inputs.Pose = swerveState.Pose;
-    inputs.Speeds = swerveState.Speeds;
-
-    inputs.ModuleStates = swerveState.ModuleStates;
-    inputs.ModuleTargets = swerveState.ModuleTargets;
-    inputs.ModulePositions = swerveState.ModulePositions;
-
-    inputs.OdometryPeriod = swerveState.OdometryPeriod;
-    inputs.SuccessfulDaqs = swerveState.SuccessfulDaqs;
-    inputs.FailedDaqs = swerveState.FailedDaqs;
+    inputs.fromSwerveDriveState(super.getState());
   }
 
-  private void startSimThread() {
-    m_lastSimTime = Utils.getCurrentTimeSeconds();
-
-    /* Run simulation at a faster rate so PID gains behave more reasonably */
-    m_simNotifier =
-        new Notifier(
-            () -> {
-              final double currentTime = Utils.getCurrentTimeSeconds();
-              double deltaTime = currentTime - m_lastSimTime;
-              m_lastSimTime = currentTime;
-
-              /* use the measured time delta, get battery voltage from WPILib */
-              updateSimState(deltaTime, RobotController.getBatteryVoltage());
-            });
-    m_simNotifier.startPeriodic(kSimLoopPeriod);
+  @Override
+  public void logModules(SwerveDriveState driveState) {
+    final String[] moduleNames = {"Drive/FL/", "Drive/FR/", "Drive/BL/", "Drive/BR/"};
+    for (int i = 0; i < driveState.ModuleStates.length; i++) {
+      Logger.recordOutput(
+          moduleNames[i] + "Drive Position",
+          getModule(i).getDriveMotor().getPosition().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Drive Velocity",
+          getModule(i).getDriveMotor().getVelocity().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Drive Applied Voltage",
+          getModule(i).getDriveMotor().getMotorVoltage().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Drive Stator Current",
+          getModule(i).getDriveMotor().getStatorCurrent().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Drive Supply Current",
+          getModule(i).getDriveMotor().getSupplyCurrent().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Turn Absolute Position",
+          getModule(i).getCANcoder().getPosition().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Turn Position",
+          getModule(i).getSteerMotor().getPosition().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Turn Velocity",
+          getModule(i).getSteerMotor().getVelocity().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Turn Applied Voltage",
+          getModule(i).getSteerMotor().getMotorVoltage().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Turn Stator Current",
+          getModule(i).getSteerMotor().getStatorCurrent().getValueAsDouble());
+      Logger.recordOutput(
+          moduleNames[i] + "Turn Supply Current",
+          getModule(i).getSteerMotor().getSupplyCurrent().getValueAsDouble());
+    }
   }
 }

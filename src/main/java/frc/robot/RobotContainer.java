@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.subsystems.swerve.SwerveIOSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -68,7 +69,14 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drivetrain = new Swerve(TunerConstants.createDrivetrain());
+        drivetrain =
+            new Swerve(
+                new SwerveIOSim(
+                    TunerConstants.DrivetrainConstants,
+                    TunerConstants.FrontLeft,
+                    TunerConstants.FrontRight,
+                    TunerConstants.BackLeft,
+                    TunerConstants.BackRight));
         vision =
             new Vision(
                 drivetrain::addVisionData,
@@ -100,8 +108,21 @@ public class RobotContainer {
 
       default:
         // Replayed robot, disable IO implementations
-        drivetrain = new Swerve(TunerConstants.createDrivetrain());
-        vision = new Vision(drivetrain::addVisionData, new VisionIO() {});
+        drivetrain =
+            new Swerve(
+                new SwerveIOSim(
+                    TunerConstants.DrivetrainConstants,
+                    TunerConstants.FrontLeft,
+                    TunerConstants.FrontRight,
+                    TunerConstants.BackLeft,
+                    TunerConstants.BackRight));
+        vision =
+            new Vision(
+                drivetrain::addVisionData,
+                new VisionIO() {},
+                new VisionIO() {},
+                new VisionIO() {},
+                new VisionIO() {});
         break;
     }
 
@@ -156,7 +177,7 @@ public class RobotContainer {
     joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
     // reset the field-centric heading on left bumper press
-    joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
+    // joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldCentric()));
   }
 
   public Command getAutonomousCommand() {
