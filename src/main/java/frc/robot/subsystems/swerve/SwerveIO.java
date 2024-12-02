@@ -1,58 +1,48 @@
+// Copyright (c) 2024 CurtinFRC
+// Open Source Software, you can modify it according to the terms
+// of the MIT License at the root of this project
+
 package frc.robot.subsystems.swerve;
 
-import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Subsystem;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface SwerveIO {
-
   @AutoLog
-  public static class SwerveIOInputs extends SwerveDriveState {
-    SwerveIOInputs() {
-      this.Pose = Pose2d.kZero;
-    }
+  public static class SwerveIOInputs {
+    public SwerveModuleState[] moduleStates = new SwerveModuleState[4];
+    public SwerveModuleState[] moduleTargetStates = new SwerveModuleState[4];
+    public Pose2d pose = new Pose2d();
+    public ChassisSpeeds speeds = new ChassisSpeeds();
+    public double odometryPeriodSeconds;
+    public int successfulDaqs;
+    public int failedDaqs;
 
-    public void fromSwerveDriveState(SwerveDriveState state) {
-      this.Pose = state.Pose;
-      this.Speeds = state.Speeds;
-
-      this.ModuleStates = state.ModuleStates;
-      this.ModuleTargets = state.ModuleTargets;
-      this.ModulePositions = state.ModulePositions;
-
-      this.OdometryPeriod = state.OdometryPeriod;
-      this.SuccessfulDaqs = state.SuccessfulDaqs;
-      this.FailedDaqs = state.FailedDaqs;
-    }
+    public double gyroRate;
+    public Rotation3d rotation3d = new Rotation3d();
+    public boolean odometryIsValid;
   }
 
-  void updateInputs(SwerveIOInputs inputs);
+  public default void updateInputs(SwerveIOInputs inputs) {}
 
-  void logModules(SwerveDriveState driveState);
+  public default void setOperatorPerspectiveForward(Rotation2d fieldDirection) {}
 
-  void resetPose(Pose2d pose);
+  public default void setControl(SwerveRequest request) {}
 
-  Pose2d getPose();
+  public default void seedFieldCentric() {}
 
-  Translation2d[] getModuleLocations();
+  public default void addVisionMeasurement(Pose2d visionMeasurement, double timestampSeconds) {}
 
-  void setControl(SwerveRequest request);
+  public default void addVisionMeasurement(
+      Pose2d visionMeasurement, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {}
 
-  Command applyRequest(Supplier<SwerveRequest> requestSupplier, Subsystem subsystemRequired);
-
-  void setOperatorPerspectiveForward(Rotation2d forward);
-
-  void addVisionMeasurement(
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs);
+  public default void resetPose(Pose2d pose) {}
 }

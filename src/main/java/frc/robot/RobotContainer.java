@@ -20,7 +20,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.subsystems.swerve.SwerveIOSim;
+import frc.robot.subsystems.swerve.SwerveIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -28,7 +28,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
-  private final Vision vision;
 
   private double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -58,71 +57,56 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         drivetrain = new Swerve(TunerConstants.createDrivetrain());
 
-        vision =
-            new Vision(
-                drivetrain::addVisionData,
-                new VisionIOLimelight("limelight-fl", drivetrain::getVisionParameters),
-                new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
-                new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
-                new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
+        new Vision(
+            drivetrain::addVisionData,
+            new VisionIOLimelight("limelight-fl", drivetrain::getVisionParameters),
+            new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
+            new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
+            new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
         break;
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drivetrain =
-            new Swerve(
-                new SwerveIOSim(
-                    TunerConstants.DrivetrainConstants,
-                    TunerConstants.FrontLeft,
-                    TunerConstants.FrontRight,
-                    TunerConstants.BackLeft,
-                    TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drivetrain::addVisionData,
-                new VisionIOPhotonVisionSIM(
-                    "Front Camera",
-                    new Transform3d(
-                        new Translation3d(0.2, 0.0, 0.8),
-                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(0))),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVisionSIM(
-                    "Back Camera",
-                    new Transform3d(
-                        new Translation3d(-0.2, 0.0, 0.8),
-                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(180))),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVisionSIM(
-                    "Left Camera",
-                    new Transform3d(
-                        new Translation3d(0.0, 0.2, 0.8),
-                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVisionSIM(
-                    "Right Camera",
-                    new Transform3d(
-                        new Translation3d(0.0, -0.2, 0.8),
-                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(-90))),
-                    drivetrain::getVisionParameters));
+        drivetrain = new Swerve(TunerConstants.createDrivetrain());
+
+        new Vision(
+            drivetrain::addVisionData,
+            new VisionIOPhotonVisionSIM(
+                "Front Camera",
+                new Transform3d(
+                    new Translation3d(0.2, 0.0, 0.8),
+                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(0))),
+                drivetrain::getVisionParameters),
+            new VisionIOPhotonVisionSIM(
+                "Back Camera",
+                new Transform3d(
+                    new Translation3d(-0.2, 0.0, 0.8),
+                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(180))),
+                drivetrain::getVisionParameters),
+            new VisionIOPhotonVisionSIM(
+                "Left Camera",
+                new Transform3d(
+                    new Translation3d(0.0, 0.2, 0.8),
+                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
+                drivetrain::getVisionParameters),
+            new VisionIOPhotonVisionSIM(
+                "Right Camera",
+                new Transform3d(
+                    new Translation3d(0.0, -0.2, 0.8),
+                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(-90))),
+                drivetrain::getVisionParameters));
         break;
 
       default:
         // Replayed robot, disable IO implementations
-        drivetrain =
-            new Swerve(
-                new SwerveIOSim(
-                    TunerConstants.DrivetrainConstants,
-                    TunerConstants.FrontLeft,
-                    TunerConstants.FrontRight,
-                    TunerConstants.BackLeft,
-                    TunerConstants.BackRight));
-        vision =
-            new Vision(
-                drivetrain::addVisionData,
-                new VisionIO() {},
-                new VisionIO() {},
-                new VisionIO() {},
-                new VisionIO() {});
+        drivetrain = new Swerve(new SwerveIO() {});
+
+        new Vision(
+            drivetrain::addVisionData,
+            new VisionIO() {},
+            new VisionIO() {},
+            new VisionIO() {},
+            new VisionIO() {});
         break;
     }
 
