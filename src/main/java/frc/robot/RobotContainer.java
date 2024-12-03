@@ -21,6 +21,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.subsystems.swerve.SwerveIO;
+import frc.robot.subsystems.swerve.SwerveIOCTRE;
+import frc.robot.subsystems.swerve.module.ModuleIO;
+import frc.robot.subsystems.swerve.module.ModuleIOCTRE;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -52,10 +55,18 @@ public class RobotContainer {
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   public RobotContainer() {
+    SwerveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
+
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        drivetrain = new Swerve(TunerConstants.createDrivetrain());
+        drivetrain =
+            new Swerve(
+                currentDriveTrain,
+                new ModuleIOCTRE(currentDriveTrain.getModule(0)),
+                new ModuleIOCTRE(currentDriveTrain.getModule(1)),
+                new ModuleIOCTRE(currentDriveTrain.getModule(2)),
+                new ModuleIOCTRE(currentDriveTrain.getModule(3)));
 
         new Vision(
             drivetrain::addVisionData,
@@ -67,7 +78,13 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drivetrain = new Swerve(TunerConstants.createDrivetrain());
+        drivetrain =
+            new Swerve(
+                currentDriveTrain,
+                new ModuleIOCTRE(currentDriveTrain.getModule(0)),
+                new ModuleIOCTRE(currentDriveTrain.getModule(1)),
+                new ModuleIOCTRE(currentDriveTrain.getModule(2)),
+                new ModuleIOCTRE(currentDriveTrain.getModule(3)));
 
         new Vision(
             drivetrain::addVisionData,
@@ -99,7 +116,13 @@ public class RobotContainer {
 
       default:
         // Replayed robot, disable IO implementations
-        drivetrain = new Swerve(new SwerveIO() {});
+        drivetrain =
+            new Swerve(
+                new SwerveIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {});
 
         new Vision(
             drivetrain::addVisionData,

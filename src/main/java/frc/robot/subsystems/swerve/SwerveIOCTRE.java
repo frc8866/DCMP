@@ -52,9 +52,9 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
     inputs.successfulDaqs = state.SuccessfulDaqs;
     inputs.failedDaqs = state.FailedDaqs;
 
-    inputs.rotation3d = getRotation3d();
-    inputs.gyroRate = getPigeon2().getAngularVelocityZWorld().getValueAsDouble();
-    inputs.odometryIsValid = isOdometryValid();
+    inputs.rotation3d = super.getRotation3d();
+    inputs.gyroRate = super.getPigeon2().getAngularVelocityZWorld().getValueAsDouble();
+    inputs.odometryIsValid = super.isOdometryValid();
   }
 
   private void startSimThread() {

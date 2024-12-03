@@ -24,22 +24,17 @@ import java.util.List;
 import java.util.function.Supplier;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 /** IO implementation for real PhotonVision hardware. */
 public class VisionIOPhotonVision implements VisionIO {
-  protected final PhotonCamera camera;
-  protected final Transform3d robotToCamera;
-  protected final Supplier<VisionParameters> visionParams;
+  final PhotonCamera camera;
+  private final Transform3d robotToCamera;
+  final Supplier<VisionParameters> visionParams;
 
-  /**
-   * Creates a new VisionIOPhotonVision.
-   *
-   * @param name The configured name of the camera.
-   * @param rotationSupplier The 3D position of the camera relative to the robot.
-   */
   public VisionIOPhotonVision(
       String cameraName, Transform3d robotToCamera, Supplier<VisionParameters> visionParams) {
-    camera = new PhotonCamera(cameraName);
+    this.camera = new PhotonCamera(cameraName);
     this.robotToCamera = robotToCamera;
     this.visionParams = visionParams;
   }
@@ -47,68 +42,66 @@ public class VisionIOPhotonVision implements VisionIO {
   @Override
   public void updateInputs(VisionIOInputs inputs) {
     inputs.connected = camera.isConnected();
-    PoseObservation poseObservations = getEstimatedGlobalPose();
-    inputs.poseEstimateMT1 = poseObservations.poseEstimate();
-    inputs.rawFiducialsMT1 = poseObservations.rawFiducials();
+    PoseObservation observation = getEstimatedGlobalPose();
+    inputs.poseEstimateMT1 = observation.poseEstimate();
+    inputs.rawFiducialsMT1 = observation.rawFiducials();
   }
 
-  public PoseObservation getEstimatedGlobalPose() {
-    List<PhotonPipelineResult> allResults = camera.getAllUnreadResults();
-    if (allResults.isEmpty() || allResults.size() - 1 < 0) {
+  private PoseObservation getEstimatedGlobalPose() {
+    List<PhotonPipelineResult> results = camera.getAllUnreadResults();
+    if (results.isEmpty()) return new PoseObservation();
+
+    PhotonPipelineResult latestResult = results.get(results.size() - 1);
+    if (!latestResult.hasTargets() || latestResult.getMultiTagResult().isEmpty()) {
       return new PoseObservation();
     }
 
-    PhotonPipelineResult result = allResults.get(allResults.size() - 1);
-    if (result.hasTargets() && result.getMultiTagResult().isPresent()) {
-      var multitagResult = result.multitagResult.get();
-      Transform3d fieldToCamera = multitagResult.estimatedPose.best;
-      Transform3d fieldToRobot = fieldToCamera.plus(robotToCamera.inverse());
-      Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
+    var multitagResult = latestResult.getMultiTagResult().get();
+    Transform3d fieldToRobot = multitagResult.estimatedPose.best.plus(robotToCamera.inverse());
+    Pose3d robotPose = new Pose3d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
 
-      // Calculate average tag distance
-      double totalTagDistance = 0.0;
-      double totalTagArea = 0.0;
-      List<RawFiducial> rawFiducialsList = new ArrayList<>();
-      for (var target : result.targets) {
-        totalTagDistance += target.bestCameraToTarget.getTranslation().getNorm();
-        totalTagArea += target.area;
-        rawFiducialsList.add(
-            new RawFiducial(
-                target.getFiducialId(),
-                0,
-                0,
-                target.area,
-                target
-                    .bestCameraToTarget
-                    .getTranslation()
-                    .minus(robotToCamera.getTranslation())
-                    .getNorm(),
-                target.bestCameraToTarget.getTranslation().getNorm(),
-                target.poseAmbiguity));
-      }
-      int tagCount = result.targets.size();
-      double avgTagDistance = tagCount > 0 ? totalTagDistance / tagCount : 0.0;
-      double avgTagArea = tagCount > 0 ? totalTagArea / tagCount : 0.0;
-      double ambiguity = tagCount > 0 ? rawFiducialsList.get(0).ambiguity() : 0.0;
+    return buildPoseObservation(latestResult, robotPose);
+  }
 
-      RawFiducial[] rawFiducials = rawFiducialsList.toArray(new RawFiducial[0]);
-      VisionParameters currentParams = this.visionParams.get();
-      PoseEstimate poseEstimate =
-          new PoseEstimate(
-              robotPose,
-              result.getTimestampSeconds(),
-              0.0,
-              tagCount,
-              0.0,
-              avgTagDistance,
-              avgTagArea,
-              ambiguity,
-              currentParams.yawVelocityRadPerSec(),
-              currentParams.robotPose(),
-              false);
+  private PoseObservation buildPoseObservation(PhotonPipelineResult result, Pose3d robotPose) {
+    List<RawFiducial> rawFiducialsList = new ArrayList<>();
+    double totalDistance = 0.0, totalArea = 0.0;
 
-      return new PoseObservation(poseEstimate, rawFiducials);
+    for (var target : result.targets) {
+      totalDistance += target.bestCameraToTarget.getTranslation().getNorm();
+      totalArea += target.area;
+      rawFiducialsList.add(createRawFiducial(target));
     }
-    return new PoseObservation();
+
+    int tagCount = result.targets.size();
+    double avgDistance = tagCount > 0 ? totalDistance / tagCount : 0.0;
+    double avgArea = tagCount > 0 ? totalArea / tagCount : 0.0;
+    double ambiguity = tagCount > 0 ? rawFiducialsList.get(0).ambiguity() : 0.0;
+
+    return new PoseObservation(
+        new PoseEstimate(
+            robotPose,
+            result.getTimestampSeconds(),
+            0.0,
+            tagCount,
+            0.0,
+            avgDistance,
+            avgArea,
+            ambiguity,
+            visionParams.get().yawVelocityRadPerSec(),
+            visionParams.get().robotPose(),
+            false),
+        rawFiducialsList.toArray(new RawFiducial[0]));
+  }
+
+  private RawFiducial createRawFiducial(PhotonTrackedTarget target) {
+    return new RawFiducial(
+        target.getFiducialId(),
+        0,
+        0,
+        target.area,
+        target.bestCameraToTarget.getTranslation().minus(robotToCamera.getTranslation()).getNorm(),
+        target.bestCameraToTarget.getTranslation().getNorm(),
+        target.poseAmbiguity);
   }
 }

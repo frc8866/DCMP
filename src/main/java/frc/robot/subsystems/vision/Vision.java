@@ -20,6 +20,7 @@ public class Vision extends SubsystemBase {
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputs[] inputs;
+  //  private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
 
   private static final VisionMode mode = VisionMode.MA;
@@ -48,6 +49,7 @@ public class Vision extends SubsystemBase {
     for (int i = 0; i < io.length; i++) {
       io[i].updateInputs(inputs[i]);
       disconnectedAlerts[i].set(!inputs[i].connected);
+      // Logger.processInputs(VISION_PATH + Integer.toString(i), inputs[i]);
     }
     VisionData visionData = processAllCameras();
     logSummary(visionData);
