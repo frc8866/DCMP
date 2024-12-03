@@ -1,4 +1,4 @@
-// Copyright (c) 2024 CurtinFRC
+// Copyright (c) 2024 FRC 5712
 // Open Source Software, you can modify it according to the terms
 // of the MIT License at the root of this project
 
@@ -38,8 +38,6 @@ public interface SwerveIO {
   public default void setControl(SwerveRequest request) {}
 
   public default void seedFieldCentric() {}
-
-  public default void addVisionMeasurement(Pose2d visionMeasurement, double timestampSeconds) {}
 
   public default void addVisionMeasurement(
       Pose2d visionMeasurement, double timestampSeconds, Matrix<N3, N1> visionMeasurementStdDevs) {}

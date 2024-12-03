@@ -1,4 +1,4 @@
-// Copyright (c) 2024 CurtinFRC
+// Copyright (c) 2024 FRC 5712
 // Open Source Software, you can modify it according to the terms
 // of the MIT License at the root of this project
 
@@ -43,7 +43,6 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
   @Override
   public void updateInputs(SwerveIOInputs inputs) {
     SwerveDriveState state = getState();
-
     inputs.moduleStates = state.ModuleStates;
     inputs.moduleTargetStates = state.ModuleTargets;
     inputs.pose = state.Pose;

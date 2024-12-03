@@ -233,14 +233,15 @@ public class Swerve extends SubsystemBase {
      */
 
     io.updateInputs(inputs);
-    Logger.processInputs("Drive", inputs);
+    Logger.processInputs("Swerve", inputs);
 
-    state.FailedDaqs = inputs.failedDaqs;
-    state.ModuleStates = inputs.moduleStates;
-    state.ModuleTargets = inputs.moduleTargetStates;
-    state.OdometryPeriod = inputs.odometryPeriodSeconds;
-    state.Pose = inputs.pose;
-    state.SuccessfulDaqs = inputs.successfulDaqs;
+    state.moduleStates = inputs.ModuleStates;
+    state.moduleTargetStates = inputs.ModuleTargets;
+    state.pose = inputs.Pose;
+    state.speeds = inputs.Speeds;
+    state.odometryPeriodSeconds = inputs.OdometryPeriod;
+    state.successfulDaqs = inputs.SuccessfulDaqs;
+    state.failedDaqs = inputs.FailedDaqs;
 
     for (Module module : modules) {
       module.periodic();
