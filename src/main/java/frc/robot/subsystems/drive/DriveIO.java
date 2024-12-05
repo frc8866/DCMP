@@ -2,7 +2,7 @@
 // Open Source Software, you can modify it according to the terms
 // of the MIT License at the root of this project
 
-package frc.robot.subsystems.swerve;
+package frc.robot.subsystems.drive;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
@@ -15,9 +15,9 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import org.littletonrobotics.junction.AutoLog;
 
-public interface SwerveIO {
+public interface DriveIO {
   @AutoLog
-  public static class SwerveIOInputs {
+  public static class DriveIOInputs {
     public SwerveModuleState[] moduleStates = new SwerveModuleState[4];
     public SwerveModuleState[] moduleTargets = new SwerveModuleState[4];
     public Pose2d pose = new Pose2d();
@@ -31,7 +31,7 @@ public interface SwerveIO {
     public boolean odometryIsValid;
   }
 
-  public default void updateInputs(SwerveIOInputs inputs) {}
+  public default void updateInputs(DriveIOInputs inputs) {}
 
   public default void setOperatorPerspectiveForward(Rotation2d fieldDirection) {}
 

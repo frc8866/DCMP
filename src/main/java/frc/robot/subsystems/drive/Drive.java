@@ -1,4 +1,4 @@
-package frc.robot.subsystems.swerve;
+package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -21,8 +21,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.swerve.module.Module;
-import frc.robot.subsystems.swerve.module.ModuleIO;
+import frc.robot.subsystems.drive.module.Module;
+import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
 import java.util.List;
 import java.util.function.Supplier;
@@ -33,9 +33,9 @@ import org.littletonrobotics.junction.Logger;
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements Subsystem so it can easily
  * be used in command-based projects.
  */
-public class Swerve extends SubsystemBase {
-  private final SwerveIO io;
-  private final SwerveIOInputsAutoLogged inputs;
+public class Drive extends SubsystemBase {
+  private final DriveIO io;
+  private final DriveIOInputsAutoLogged inputs;
   private final SwerveDriveState state;
 
   private Module[] modules = new Module[4];
@@ -140,8 +140,8 @@ public class Swerve extends SubsystemBase {
   /* The SysId routine to test */
   private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
-  public Swerve(
-      SwerveIO io,
+  public Drive(
+      DriveIO io,
       ModuleIO flModuleIO,
       ModuleIO frModuleIO,
       ModuleIO blModuleIO,
@@ -149,7 +149,7 @@ public class Swerve extends SubsystemBase {
 
     this.io = io;
     state = new SwerveDriveState();
-    inputs = new SwerveIOInputsAutoLogged();
+    inputs = new DriveIOInputsAutoLogged();
 
     modules[0] = new Module(flModuleIO, 0);
     modules[1] = new Module(frModuleIO, 1);

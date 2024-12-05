@@ -6,7 +6,7 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseObservation;
-import frc.robot.subsystems.swerve.Swerve.VisionParameters;
+import frc.robot.subsystems.drive.Drive.VisionParameters;
 import java.util.function.Supplier;
 
 public class VisionIOLimelight implements VisionIO {

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.swerve.module;
+package frc.robot.subsystems.drive.module;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -12,7 +12,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.subsystems.swerve.Swerve;
+import frc.robot.subsystems.drive.Drive;
 
 public class ModuleIOCTRE implements ModuleIO {
   // Hardware objects
@@ -58,7 +58,7 @@ public class ModuleIOCTRE implements ModuleIO {
     turnCurrent = turnTalon.getStatorCurrent();
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        Swerve.ODOMETRY_FREQUENCY, drivePosition, turnPosition);
+        Drive.ODOMETRY_FREQUENCY, drivePosition, turnPosition);
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0,
         driveVelocity,

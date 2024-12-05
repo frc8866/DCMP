@@ -4,7 +4,7 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import frc.robot.subsystems.swerve.Swerve.VisionParameters;
+import frc.robot.subsystems.drive.Drive.VisionParameters;
 import java.util.function.Supplier;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;

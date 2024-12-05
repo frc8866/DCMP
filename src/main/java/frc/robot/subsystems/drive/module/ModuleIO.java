@@ -10,7 +10,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.swerve.module;
+package frc.robot.subsystems.drive.module;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Radians;

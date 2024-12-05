@@ -2,7 +2,7 @@
 // Open Source Software, you can modify it according to the terms
 // of the MIT License at the root of this project
 
-package frc.robot.subsystems.swerve;
+package frc.robot.subsystems.drive;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
@@ -15,12 +15,12 @@ import edu.wpi.first.wpilibj.RobotController;
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem so it can be used
  * in command-based projects easily.
  */
-public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
+public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
   private static final double kSimLoopPeriod = 0.005; // 5 ms
   private Notifier m_simNotifier;
   private double m_lastSimTime;
 
-  public SwerveIOCTRE(
+  public DriveIOCTRE(
       SwerveDrivetrainConstants driveTrainConstants,
       double OdometryUpdateFrequency,
       SwerveModuleConstants... modules) {
@@ -31,7 +31,7 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
     }
   }
 
-  public SwerveIOCTRE(
+  public DriveIOCTRE(
       SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
     super(driveTrainConstants, modules);
 
@@ -41,7 +41,7 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
   }
 
   @Override
-  public void updateInputs(SwerveIOInputs inputs) {
+  public void updateInputs(DriveIOInputs inputs) {
     SwerveDriveState state = getState();
     inputs.moduleStates = state.ModuleStates;
     inputs.moduleTargets = state.ModuleTargets;

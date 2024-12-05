@@ -19,11 +19,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
-import frc.robot.subsystems.swerve.Swerve;
-import frc.robot.subsystems.swerve.SwerveIO;
-import frc.robot.subsystems.swerve.SwerveIOCTRE;
-import frc.robot.subsystems.swerve.module.ModuleIO;
-import frc.robot.subsystems.swerve.module.ModuleIOCTRE;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveIO;
+import frc.robot.subsystems.drive.DriveIOCTRE;
+import frc.robot.subsystems.drive.module.ModuleIO;
+import frc.robot.subsystems.drive.module.ModuleIOCTRE;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -42,7 +42,7 @@ public class RobotContainer {
 
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  public final Swerve drivetrain;
+  public final Drive drivetrain;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final SwerveRequest.FieldCentric drive =
@@ -55,13 +55,13 @@ public class RobotContainer {
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   public RobotContainer() {
-    SwerveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
+    DriveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
 
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
         drivetrain =
-            new Swerve(
+            new Drive(
                 currentDriveTrain,
                 new ModuleIOCTRE(currentDriveTrain.getModule(0)),
                 new ModuleIOCTRE(currentDriveTrain.getModule(1)),
@@ -79,7 +79,7 @@ public class RobotContainer {
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
         drivetrain =
-            new Swerve(
+            new Drive(
                 currentDriveTrain,
                 new ModuleIOCTRE(currentDriveTrain.getModule(0)),
                 new ModuleIOCTRE(currentDriveTrain.getModule(1)),
@@ -117,8 +117,8 @@ public class RobotContainer {
       default:
         // Replayed robot, disable IO implementations
         drivetrain =
-            new Swerve(
-                new SwerveIO() {},
+            new Drive(
+                new DriveIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},

@@ -9,7 +9,7 @@ import frc.robot.subsystems.vision.VisionIO.VisionIOInputs;
 import frc.robot.subsystems.vision.VisionUtil.VisionData;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
 import frc.robot.subsystems.vision.VisionUtil.VisionMode;
-import frc.robot.util.FieldConstants;
+import frc.robot.utils.FieldConstants;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
