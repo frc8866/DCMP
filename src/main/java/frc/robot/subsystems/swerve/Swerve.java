@@ -13,6 +13,7 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -80,8 +81,12 @@ public class Swerve extends SubsystemBase {
                   .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
               TunerConstants.FrontLeft.SlipCurrent,
               1),
-          Math.abs(TunerConstants.FrontLeft.LocationY - TunerConstants.FrontRight.LocationY),
-          Math.abs(TunerConstants.FrontLeft.LocationX - TunerConstants.BackLeft.LocationX));
+          new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
+          new Translation2d(
+              TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
+          new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
+          new Translation2d(
+              TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY));
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
   private final SysIdRoutine m_sysIdRoutineTranslation =
@@ -235,13 +240,13 @@ public class Swerve extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Swerve", inputs);
 
-    state.moduleStates = inputs.ModuleStates;
-    state.moduleTargetStates = inputs.ModuleTargets;
-    state.pose = inputs.Pose;
-    state.speeds = inputs.Speeds;
-    state.odometryPeriodSeconds = inputs.OdometryPeriod;
-    state.successfulDaqs = inputs.SuccessfulDaqs;
-    state.failedDaqs = inputs.FailedDaqs;
+    state.ModuleStates = inputs.moduleStates;
+    state.ModuleTargets = inputs.moduleTargets;
+    state.Pose = inputs.pose;
+    state.Speeds = inputs.speeds;
+    state.OdometryPeriod = inputs.odometryPeriod;
+    state.SuccessfulDaqs = inputs.successfulDaqs;
+    state.FailedDaqs = inputs.failedDaqs;
 
     for (Module module : modules) {
       module.periodic();

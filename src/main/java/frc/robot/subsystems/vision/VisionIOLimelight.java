@@ -3,11 +3,11 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.LimelightHelpers;
 import frc.robot.LimelightHelpers.PoseObservation;
 import frc.robot.subsystems.swerve.Swerve.VisionParameters;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.Logger;
 
 public class VisionIOLimelight implements VisionIO {
 
@@ -39,7 +39,7 @@ public class VisionIOLimelight implements VisionIO {
   public void updateInputs(VisionIOInputs inputs) {
     // Update connection status based on whether an update has been seen in the last 250ms
     VisionParameters currentParams = this.visionParams.get();
-    inputs.connected = (Logger.getRealTimestamp() - latencySubscriber.getLastChange()) < 250;
+    inputs.connected = (RobotController.getFPGATime() - latencySubscriber.getLastChange()) < 250;
     double rotationSpeed = Units.radiansToDegrees(currentParams.yawVelocityRadPerSec());
 
     LimelightHelpers.SetRobotOrientation(

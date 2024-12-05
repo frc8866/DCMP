@@ -44,10 +44,10 @@ public class SwerveIOCTRE extends SwerveDrivetrain implements SwerveIO {
   public void updateInputs(SwerveIOInputs inputs) {
     SwerveDriveState state = getState();
     inputs.moduleStates = state.ModuleStates;
-    inputs.moduleTargetStates = state.ModuleTargets;
+    inputs.moduleTargets = state.ModuleTargets;
     inputs.pose = state.Pose;
     inputs.speeds = state.Speeds;
-    inputs.odometryPeriodSeconds = state.OdometryPeriod;
+    inputs.odometryPeriod = state.OdometryPeriod;
     inputs.successfulDaqs = state.SuccessfulDaqs;
     inputs.failedDaqs = state.FailedDaqs;
 
