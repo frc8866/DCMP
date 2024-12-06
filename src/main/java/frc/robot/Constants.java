@@ -13,10 +13,21 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Kilogram;
+import static edu.wpi.first.units.Units.KilogramSquareMeters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.RobotConfig;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Mass;
+import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.generated.TunerConstants;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -29,6 +40,32 @@ public final class Constants {
 
   public static final AngularVelocity MaxAngularRate = RotationsPerSecond.of(0.75);
   public static final AngularVelocity MaxModuleRate = RotationsPerSecond.of(20.0);
+
+  // PathPlanner config constants
+  private static final Mass ROBOT_MASS = Kilogram.of(69.78);
+  private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(15.1702655465);
+  private static final double WHEEL_COF = 1.9;
+  private static final SwerveModuleConstants SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
+  private static final Translation2d[] SWERVE_MODULE_OFFSETS =
+      new Translation2d[] {
+        new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
+        new Translation2d(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
+        new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
+        new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
+      };
+
+  public static final RobotConfig PP_CONFIG =
+      new RobotConfig(
+          ROBOT_MASS,
+          ROBOT_MOI,
+          new ModuleConfig(
+              SWERVE_MODULE_CONSTANTS.WheelRadius,
+              TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
+              WHEEL_COF,
+              DCMotor.getKrakenX60Foc(1).withReduction(SWERVE_MODULE_CONSTANTS.DriveMotorGearRatio),
+              SWERVE_MODULE_CONSTANTS.SlipCurrent,
+              1),
+          SWERVE_MODULE_OFFSETS);
 
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
