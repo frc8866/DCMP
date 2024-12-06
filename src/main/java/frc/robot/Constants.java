@@ -13,7 +13,15 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
+import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.drive.DriveIOCTRE;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -21,7 +29,19 @@ import edu.wpi.first.wpilibj.RobotBase;
  * (log replay from a file).
  */
 public final class Constants {
+
   public static final Mode simMode = Mode.SIM;
+  public static final DriveConstants DRIVE_CONSTANTS =
+      DriveConstants.from(
+          TunerConstants.kSpeedAt12Volts,
+          RotationsPerSecond.of(0.75),
+          TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0,
+          TunerConstants.DrivetrainConstants,
+          TunerConstants.FrontLeft,
+          TunerConstants.FrontRight,
+          TunerConstants.BackLeft,
+          TunerConstants.BackRight);
+
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
   public static enum Mode {
@@ -33,5 +53,32 @@ public final class Constants {
 
     /** Replaying from a log file. */
     REPLAY
+  }
+
+  public static record DriveConstants(
+      LinearVelocity kSpeedAt12Volts,
+      AngularVelocity kMaxTurnRate,
+      double frequency,
+      double WheelRadius,
+      double DriveMotorGearRatio,
+      double SlipCurrent,
+      SwerveDrivetrainConstants drivetrainConstants,
+      DriveIOCTRE drivetrain) {
+    public static DriveConstants from(
+        LinearVelocity kSpeedAt12Volts,
+        AngularVelocity kMaxTurnRate,
+        double frequency,
+        SwerveDrivetrainConstants drivetrainConstants,
+        SwerveModuleConstants... modules) {
+      return new DriveConstants(
+          kSpeedAt12Volts,
+          kMaxTurnRate,
+          frequency,
+          modules[0].WheelRadius,
+          modules[0].DriveMotorGearRatio,
+          modules[0].SlipCurrent,
+          drivetrainConstants,
+          new DriveIOCTRE(drivetrainConstants, modules));
+    }
   }
 }
