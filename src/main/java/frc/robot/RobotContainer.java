@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -18,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
@@ -31,8 +34,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
 
-  private LinearVelocity MaxSpeed = Constants.DRIVE_CONSTANTS.kSpeedAt12Volts();
-  private AngularVelocity MaxAngularRate = Constants.DRIVE_CONSTANTS.kMaxTurnRate();
+  private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
+  private AngularVelocity MaxAngularRate = RotationsPerSecond.of(0.75);
 
   private final CommandXboxController joystick = new CommandXboxController(0);
 
@@ -51,7 +54,7 @@ public class RobotContainer {
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   public RobotContainer() {
-    DriveIOCTRE currentDriveTrain = Constants.DRIVE_CONSTANTS.drivetrain();
+    DriveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations

@@ -12,13 +12,14 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
+import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
@@ -69,14 +70,19 @@ public class Drive extends SubsystemBase {
           ROBOT_MASS_KG,
           ROBOT_MOI,
           new ModuleConfig(
-              Constants.DRIVE_CONSTANTS.WheelRadius(),
-              Constants.DRIVE_CONSTANTS.kSpeedAt12Volts().in(MetersPerSecond),
+              TunerConstants.FrontLeft.WheelRadius,
+              TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
               WHEEL_COF,
               DCMotor.getKrakenX60Foc(1)
-                  .withReduction(Constants.DRIVE_CONSTANTS.DriveMotorGearRatio()),
-              Constants.DRIVE_CONSTANTS.SlipCurrent(),
+                  .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
+              TunerConstants.FrontLeft.SlipCurrent,
               1),
-          Constants.DRIVE_CONSTANTS.drivetrain().getModuleLocations());
+          new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
+          new Translation2d(
+              TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
+          new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
+          new Translation2d(
+              TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY));
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
   private final SysIdRoutine m_sysIdRoutineTranslation =

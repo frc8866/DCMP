@@ -12,7 +12,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants;
+import frc.robot.generated.TunerConstants;
 
 public class ModuleIOCTRE implements ModuleIO {
   // Hardware objects
@@ -57,7 +57,7 @@ public class ModuleIOCTRE implements ModuleIO {
     turnAppliedVolts = turnTalon.getMotorVoltage();
     turnCurrent = turnTalon.getStatorCurrent();
     BaseStatusSignal.setUpdateFrequencyForAll(
-        Constants.DRIVE_CONSTANTS.frequency(), drivePosition, turnPosition);
+        TunerConstants.kCANBus.isNetworkFD() ? 250.0 : 100.0, drivePosition, turnPosition);
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0,
         driveVelocity,
