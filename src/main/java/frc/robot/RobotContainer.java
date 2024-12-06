@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -13,7 +11,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -33,10 +30,7 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
-
   private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
-  private AngularVelocity MaxAngularRate = RotationsPerSecond.of(0.75);
-
   private final CommandXboxController joystick = new CommandXboxController(0);
 
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -47,7 +41,7 @@ public class RobotContainer {
   private final SwerveRequest.FieldCentric drive =
       new SwerveRequest.FieldCentric()
           .withDeadband(MaxSpeed.times(0.1))
-          .withRotationalDeadband(MaxAngularRate.times(0.1)) // Add a 10% deadband
+          .withRotationalDeadband(Constants.MaxAngularRate.times(0.1)) // Add a 10% deadband
           .withDriveRequestType(
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -162,7 +156,7 @@ public class RobotContainer {
                     .withVelocityY(
                         MaxSpeed.times(-joystick.getLeftX())) // Drive left with negative X (left)
                     .withRotationalRate(
-                        MaxAngularRate.times(
+                        Constants.MaxAngularRate.times(
                             -joystick.getRightX())) // Drive counterclockwise with negative X (left)
             ));
 

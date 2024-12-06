@@ -13,6 +13,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -23,6 +26,9 @@ import edu.wpi.first.wpilibj.RobotBase;
 public final class Constants {
 
   public static final Mode simMode = Mode.SIM;
+
+  public static final AngularVelocity MaxAngularRate = RotationsPerSecond.of(0.75);
+  public static final AngularVelocity MaxModuleRate = RotationsPerSecond.of(20.0);
 
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 

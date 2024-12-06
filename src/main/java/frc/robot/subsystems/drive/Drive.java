@@ -4,21 +4,28 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.module.ModuleIO;
@@ -65,24 +72,31 @@ public class Drive extends SubsystemBase {
   private static final double ROBOT_MASS_KG = 69.78;
   private static final double ROBOT_MOI = 15.1702655465;
   private static final double WHEEL_COF = 1.9;
+  private static final SwerveModuleConstants SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
+  private static final Translation2d[] SWERVE_MODULE_OFFSETS =
+      new Translation2d[] {
+        new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
+        new Translation2d(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
+        new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
+        new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
+      };
+
   public static final RobotConfig PP_CONFIG =
       new RobotConfig(
           ROBOT_MASS_KG,
           ROBOT_MOI,
           new ModuleConfig(
-              TunerConstants.FrontLeft.WheelRadius,
+              SWERVE_MODULE_CONSTANTS.WheelRadius,
               TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
               WHEEL_COF,
-              DCMotor.getKrakenX60Foc(1)
-                  .withReduction(TunerConstants.FrontLeft.DriveMotorGearRatio),
-              TunerConstants.FrontLeft.SlipCurrent,
+              DCMotor.getKrakenX60Foc(1).withReduction(SWERVE_MODULE_CONSTANTS.DriveMotorGearRatio),
+              SWERVE_MODULE_CONSTANTS.SlipCurrent,
               1),
-          new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
-          new Translation2d(
-              TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY),
-          new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
-          new Translation2d(
-              TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY));
+          SWERVE_MODULE_OFFSETS);
+
+  // Swerve Setpoint Gen
+  private final SwerveSetpointGenerator setpointGenerator;
+  private SwerveSetpoint previousSetpoint;
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
   private final SysIdRoutine m_sysIdRoutineTranslation =
@@ -152,7 +166,9 @@ public class Drive extends SubsystemBase {
     modules[2] = new Module(blModuleIO, 2);
     modules[3] = new Module(brModuleIO, 3);
 
+    setpointGenerator = new SwerveSetpointGenerator(PP_CONFIG, Constants.MaxModuleRate);
     configureAutoBuilder();
+    configurePrevSetpoint();
   }
 
   private void configureAutoBuilder() {
@@ -177,6 +193,14 @@ public class Drive extends SubsystemBase {
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this // Subsystem for requirements
         );
+  }
+
+  private void configurePrevSetpoint() {
+    ChassisSpeeds currentSpeeds = getState().Speeds;
+    SwerveModuleState[] currentStates = getState().ModuleStates;
+    previousSetpoint =
+        new SwerveSetpoint(
+            currentSpeeds, currentStates, DriveFeedforwards.zeros(SWERVE_MODULE_OFFSETS.length));
   }
 
   /**
