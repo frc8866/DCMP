@@ -2,9 +2,10 @@ package frc.robot.subsystems.vision;
 
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.LimelightHelpers.RawFiducial;
+import org.littletonrobotics.junction.AutoLog;
 
 public interface VisionIO {
-  // @AutoLog
+  @AutoLog
   public static class VisionIOInputs {
     boolean connected = false;
     PoseEstimate poseEstimateMT1 = new PoseEstimate();

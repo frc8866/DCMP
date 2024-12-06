@@ -144,16 +144,13 @@ tasks.withType(JavaCompile) {
 // Create version file
 project.compileJava.dependsOn(createVersionFile)
 gversion {
-    srcDir       = "${buildDir}/generated/main/java/"
+    srcDir       = "src/main/java/"
     classPackage = "frc.robot"
     className    = "BuildConstants"
     dateFormat   = "yyyy-MM-dd HH:mm:ss z"
     timeZone     = "America/New_York"
     indent       = "  "
 }
-sourceSets.main.java.srcDirs += [
-    "${buildDir}/generated/main/java/"
-]
 
 // Create commit with working changes on event branches
 task(eventDeploy) {
