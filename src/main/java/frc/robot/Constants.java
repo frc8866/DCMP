@@ -21,8 +21,10 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
@@ -43,7 +45,7 @@ public final class Constants {
 
   // PathPlanner config constants
   private static final Mass ROBOT_MASS = Kilogram.of(69.78);
-  private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(15.1702655465);
+  private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6.0);
   private static final double WHEEL_COF = 1.9;
   private static final SwerveModuleConstants SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
   private static final Translation2d[] SWERVE_MODULE_OFFSETS =
@@ -66,6 +68,9 @@ public final class Constants {
               SWERVE_MODULE_CONSTANTS.SlipCurrent,
               1),
           SWERVE_MODULE_OFFSETS);
+
+  public static final SwerveSetpointGenerator setpointGenerator =
+      new SwerveSetpointGenerator(Constants.PP_CONFIG, Units.rotationsToRadians(10.0));
 
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 

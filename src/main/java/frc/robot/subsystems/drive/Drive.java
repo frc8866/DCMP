@@ -8,13 +8,8 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.util.DriveFeedforwards;
-import com.pathplanner.lib.util.swerve.SwerveSetpoint;
-import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -61,10 +56,6 @@ public class Drive extends SubsystemBase {
       new SwerveRequest.SysIdSwerveSteerGains();
   private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
       new SwerveRequest.SysIdSwerveRotation();
-
-  // Swerve Setpoint Gen
-  private final SwerveSetpointGenerator setpointGenerator;
-  private SwerveSetpoint previousSetpoint;
 
   /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
   private final SysIdRoutine m_sysIdRoutineTranslation =
@@ -134,9 +125,7 @@ public class Drive extends SubsystemBase {
     modules[2] = new Module(blModuleIO, 2);
     modules[3] = new Module(brModuleIO, 3);
 
-    setpointGenerator = new SwerveSetpointGenerator(Constants.PP_CONFIG, Constants.MaxModuleRate);
     configureAutoBuilder();
-    configurePrevSetpoint();
   }
 
   private void configureAutoBuilder() {
@@ -161,14 +150,6 @@ public class Drive extends SubsystemBase {
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this // Subsystem for requirements
         );
-  }
-
-  private void configurePrevSetpoint() {
-    ChassisSpeeds currentSpeeds = getState().Speeds;
-    SwerveModuleState[] currentStates = getState().ModuleStates;
-    previousSetpoint =
-        new SwerveSetpoint(
-            currentSpeeds, currentStates, DriveFeedforwards.zeros(Constants.PP_CONFIG.numModules));
   }
 
   /**
