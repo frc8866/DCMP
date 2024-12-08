@@ -98,9 +98,10 @@ public class SwerveSetpointGen implements SwerveRequest {
 
   public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
 
-    double linearMagnitude = MathUtil.applyDeadband(VelocityX, Deadband);
+    double linearMagnitude = MathUtil.applyDeadband(Math.hypot(VelocityX, VelocityY), Deadband);
 
     double omega = MathUtil.applyDeadband(RotationalRate, RotationalDeadband);
+    omega = Math.copySign(omega * omega, omega);
 
     var currentAngle = parameters.currentPose.getRotation();
     if (ForwardPerspective == ForwardPerspectiveValue.OperatorPerspective) {
@@ -109,7 +110,9 @@ public class SwerveSetpointGen implements SwerveRequest {
     }
     ChassisSpeeds desiredStateRobotRelative =
         new ChassisSpeeds(
-            VelocityX * linearMagnitude, VelocityY * linearMagnitude, RotationalRate * omega);
+            VelocityX * linearMagnitude,
+            VelocityY * linearMagnitude,
+            Constants.MaxAngularRate.times(omega).baseUnitMagnitude());
 
     desiredStateRobotRelative.toRobotRelativeSpeeds(currentAngle);
     previousSetpoint =
@@ -121,8 +124,8 @@ public class SwerveSetpointGen implements SwerveRequest {
 
     return m_swerveSetpoint
         .withSpeeds(previousSetpoint.robotRelativeSpeeds())
-        // .withWheelForceFeedforwardsX(previousSetpoint.feedforwards().robotRelativeForcesX())
-        // .withWheelForceFeedforwardsY(previousSetpoint.feedforwards().robotRelativeForcesY())
+        .withWheelForceFeedforwardsX(previousSetpoint.feedforwards().robotRelativeForcesX())
+        .withWheelForceFeedforwardsY(previousSetpoint.feedforwards().robotRelativeForcesY())
         .withCenterOfRotation(CenterOfRotation)
         .withDriveRequestType(DriveRequestType)
         .withSteerRequestType(SteerRequestType)
