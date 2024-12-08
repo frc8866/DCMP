@@ -11,7 +11,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -23,7 +22,6 @@ import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOCTRE;
-import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
 import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -41,12 +39,14 @@ public class RobotContainer {
 
   /* Setting up bindings for necessary control of the swerve drive platform */
 
+  // Custom Swerve Request that use PathPlanner Setpoint Generator
   private final SwerveSetpointGen drive =
       new SwerveSetpointGen()
           .withDeadband(MaxSpeed.times(0.1))
           .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+  // Default CTRE Swerve Drive Code
   //   private final SwerveRequest.FieldCentric drive =
   //       new SwerveRequest.FieldCentric()
   //           .withDeadband(MaxSpeed.times(0.1))
@@ -54,15 +54,17 @@ public class RobotContainer {
   //           .withDriveRequestType(
   //               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-  private final ProfiledFieldCentricFacingAngle driveFacingAngle =
-      new ProfiledFieldCentricFacingAngle(
-              new TrapezoidProfile.Constraints(
-                  Constants.MaxAngularRate.baseUnitMagnitude(),
-                  Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()))
-          .withDeadband(MaxSpeed.times(0.1))
-          .withRotationalDeadband(
-              Constants.MaxAngularRate.times(0.1).baseUnitMagnitude()) // Add a 10% deadband
-          .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+  // If you use this you will need to disable the right joystick
+  //   private final ProfiledFieldCentricFacingAngle drive =
+  //       new ProfiledFieldCentricFacingAngle(
+  //               new TrapezoidProfile.Constraints(
+  //                   Constants.MaxAngularRate.baseUnitMagnitude(),
+  //                   Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()))
+  //           .withDeadband(MaxSpeed.times(0.1))
+  //           .withTargetDirection(Rotation2d.fromDegrees(45))
+  //           .withRotationalDeadband(
+  //               Constants.MaxAngularRate.times(0.1).baseUnitMagnitude()) // Add a 10% deadband
+  //           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
