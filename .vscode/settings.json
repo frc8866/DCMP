@@ -1,5 +1,6 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.gradle.annotationProcessing.enabled": false,
   "java.server.launchMode": "Standard",
   "files.exclude": {
     "**/.git": true,
@@ -25,8 +26,7 @@
         "LD_LIBRARY_PATH": "${workspaceFolder}/build/jni/release",
         "DYLD_LIBRARY_PATH": "${workspaceFolder}/build/jni/release"
       }
-    },
-    null
+    }
   ],
   "java.test.defaultConfig": "WPIlibUnitTests",
   "spotlessGradle.format.enable": true,
