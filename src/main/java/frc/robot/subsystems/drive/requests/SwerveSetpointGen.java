@@ -119,13 +119,13 @@ public class SwerveSetpointGen implements SwerveRequest {
         Constants.setpointGenerator.generateSetpoint(
             previousSetpoint, // The previous setpoint
             desiredStateRobotRelative, // The desired target speeds
-            0.004 // The loop time of the robot code, in seconds
+            parameters.updatePeriod // The loop time of the robot code, in seconds
             );
 
     return m_swerveSetpoint
         .withSpeeds(previousSetpoint.robotRelativeSpeeds())
-        .withWheelForceFeedforwardsX(previousSetpoint.feedforwards().robotRelativeForcesX())
-        .withWheelForceFeedforwardsY(previousSetpoint.feedforwards().robotRelativeForcesY())
+        // .withWheelForceFeedforwardsX(previousSetpoint.feedforwards().robotRelativeForcesX())
+        // .withWheelForceFeedforwardsY(previousSetpoint.feedforwards().robotRelativeForcesY())
         .withCenterOfRotation(CenterOfRotation)
         .withDriveRequestType(DriveRequestType)
         .withSteerRequestType(SteerRequestType)
