@@ -3,13 +3,14 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -32,7 +33,6 @@ import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
   private final DriveIO io;
   private final DriveIOInputsAutoLogged inputs;
-  private final SwerveDriveState state;
 
   private Module[] modules = new Module[4];
 
@@ -118,7 +118,6 @@ public class Drive extends SubsystemBase {
       ModuleIO brModuleIO) {
 
     this.io = io;
-    state = new SwerveDriveState();
     inputs = new DriveIOInputsAutoLogged();
 
     modules[0] = new Module(flModuleIO, 0);
@@ -131,9 +130,9 @@ public class Drive extends SubsystemBase {
 
   private void configureAutoBuilder() {
     AutoBuilder.configure(
-        () -> getState().Pose, // Supplier of current robot pose
+        this::getPose, // Supplier of current robot pose
         this::resetPose, // Consumer for seeding pose against auto
-        () -> getState().Speeds, // Supplier of current robot speeds
+        this::getChassisSpeeds, // Supplier of current robot speeds
         // Consumer of ChassisSpeeds and feedforwards to drive the robot
         (speeds, feedforwards) ->
             io.setControl(
@@ -171,10 +170,6 @@ public class Drive extends SubsystemBase {
     return applyRequest(() -> brakeRequest);
   }
 
-  public SwerveDriveState getState() {
-    return state;
-  }
-
   /**
    * Runs the SysId Quasistatic test in the given direction for the routine specified by {@link
    * #m_sysIdRoutineToApply}.
@@ -210,14 +205,6 @@ public class Drive extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Swerve", inputs);
 
-    state.ModuleStates = inputs.moduleStates;
-    state.ModuleTargets = inputs.moduleTargets;
-    state.Pose = inputs.pose;
-    state.Speeds = inputs.speeds;
-    state.OdometryPeriod = inputs.odometryPeriod;
-    state.SuccessfulDaqs = inputs.successfulDaqs;
-    state.FailedDaqs = inputs.failedDaqs;
-
     for (Module module : modules) {
       module.periodic();
     }
@@ -243,9 +230,10 @@ public class Drive extends SubsystemBase {
     io.resetPose(pose);
   }
 
+  /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
-    return state.Pose;
+    return inputs.pose;
   }
 
   public Rotation2d getRotation() {
@@ -258,6 +246,39 @@ public class Drive extends SubsystemBase {
       values[i] = modules[i].getDrivePosition();
     }
     return values;
+  }
+
+  /** Returns the module states (turn angles and drive velocities) for all of the modules. */
+  @AutoLogOutput(key = "SwerveStates/Measured")
+  public SwerveModuleState[] getModuleStates() {
+    if (inputs.moduleStates == null
+        || inputs.moduleStates.length != Constants.PP_CONFIG.numModules
+        || inputs.moduleStates[0] == null) {
+      return new SwerveModuleState[] {
+        new SwerveModuleState(),
+        new SwerveModuleState(),
+        new SwerveModuleState(),
+        new SwerveModuleState()
+      };
+    }
+    return inputs.moduleStates;
+  }
+
+  /** Returns the module target states (turn angles and drive velocities) for all of the modules. */
+  @AutoLogOutput(key = "SwerveStates/Setpoints")
+  public SwerveModuleState[] getModuleTarget() {
+    if (inputs.moduleTargets == null
+        || inputs.moduleTargets.length != Constants.PP_CONFIG.numModules
+        || inputs.moduleTargets[0] == null) {
+      return new SwerveModuleState[] {};
+    }
+    return inputs.moduleTargets;
+  }
+
+  /** Returns the measured chassis speeds of the robot. */
+  @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
+  public ChassisSpeeds getChassisSpeeds() {
+    return inputs.speeds;
   }
 
   /**
@@ -278,7 +299,7 @@ public class Drive extends SubsystemBase {
   }
 
   public VisionParameters getVisionParameters() {
-    return new VisionParameters(state.Pose, state.Speeds.omegaRadiansPerSecond);
+    return new VisionParameters(getPose(), getChassisSpeeds().omegaRadiansPerSecond);
   }
 
   public record VisionParameters(Pose2d robotPose, double yawVelocityRadPerSec) {}
