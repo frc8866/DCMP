@@ -47,7 +47,7 @@ public final class Constants {
   private static final Mass ROBOT_MASS = Kilogram.of(69.78);
   private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6.0);
   private static final double WHEEL_COF = 1.9;
-  private static final SwerveModuleConstants SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
+  public static final SwerveModuleConstants SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
   private static final Translation2d[] SWERVE_MODULE_OFFSETS =
       new Translation2d[] {
         new Translation2d(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontLeft.LocationY),
@@ -55,6 +55,15 @@ public final class Constants {
         new Translation2d(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
         new Translation2d(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)
       };
+
+  public static final double DRIVE_BASE_RADIUS =
+      Math.max(
+          Math.max(
+              Math.hypot(TunerConstants.FrontLeft.LocationX, TunerConstants.FrontRight.LocationY),
+              Math.hypot(TunerConstants.FrontRight.LocationX, TunerConstants.FrontRight.LocationY)),
+          Math.max(
+              Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
+              Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
 
   public static final RobotConfig PP_CONFIG =
       new RobotConfig(

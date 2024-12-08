@@ -12,6 +12,7 @@
 
 package frc.robot.subsystems.drive.module;
 
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
@@ -48,5 +49,9 @@ public class Module {
     driveDisconnectedAlert.set(!inputs.driveConnected);
     turnDisconnectedAlert.set(!inputs.turnConnected);
     turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
+  }
+
+  public Angle getDrivePosition() {
+    return inputs.drivePosition;
   }
 }

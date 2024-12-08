@@ -10,6 +10,7 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -245,6 +246,18 @@ public class Drive extends SubsystemBase {
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
     return state.Pose;
+  }
+
+  public Rotation2d getRotation() {
+    return getPose().getRotation();
+  }
+
+  public Angle[] getDrivePositions() {
+    Angle[] values = new Angle[4];
+    for (int i = 0; i < 4; i++) {
+      values[i] = modules[i].getDrivePosition();
+    }
+    return values;
   }
 
   /**
