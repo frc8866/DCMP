@@ -9,16 +9,12 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
-import frc.robot.generated.TunerConstants;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner, maintaining a specified heading angle to
@@ -78,13 +74,7 @@ public class SwerveSetpointGen implements SwerveRequest {
 
   private final ApplyRobotSpeeds m_swerveSetpoint = new ApplyRobotSpeeds();
 
-  private SwerveSetpoint previousSetpoint =
-      new SwerveSetpoint(
-          new ChassisSpeeds(),
-          new SwerveModuleState[Constants.PP_CONFIG.numModules],
-          DriveFeedforwards.zeros(Constants.PP_CONFIG.numModules));
-
-  private SwerveSetpoint fieldSetpoint;
+  private SwerveSetpoint previousSetpoint;
 
   /**
    * Creates a new profiled SwerveSetpoint request with the given constraints.
@@ -92,24 +82,25 @@ public class SwerveSetpointGen implements SwerveRequest {
    * @param constraints Constraints for the trapezoid profile
    */
   public SwerveSetpointGen() {
-    fieldSetpoint = previousSetpoint;
+    ChassisSpeeds currentSpeeds =
+        new ChassisSpeeds(); // Method to get current robot-relative chassis speeds
+    SwerveModuleState[] currentStates =
+        new SwerveModuleState[] {
+          new SwerveModuleState(),
+          new SwerveModuleState(),
+          new SwerveModuleState(),
+          new SwerveModuleState(),
+        }; // Method to get the current swerve module states
+    previousSetpoint =
+        new SwerveSetpoint(
+            currentSpeeds, currentStates, DriveFeedforwards.zeros(Constants.PP_CONFIG.numModules));
   }
 
   public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
 
-    double linearMagnitude = MathUtil.applyDeadband(Math.hypot(VelocityX, VelocityY), Deadband);
-    Rotation2d linearDirection = new Rotation2d(Math.atan2(VelocityY, VelocityX));
-
-    // Square magnitude for more precise control
-    linearMagnitude = linearMagnitude * linearMagnitude;
-
-    Translation2d linearVelocity =
-        new Pose2d(new Translation2d(), linearDirection)
-            .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
-            .getTranslation();
+    double linearMagnitude = MathUtil.applyDeadband(VelocityX, Deadband);
 
     double omega = MathUtil.applyDeadband(RotationalRate, RotationalDeadband);
-    omega = Math.copySign(omega * omega, omega);
 
     var currentAngle = parameters.currentPose.getRotation();
     if (ForwardPerspective == ForwardPerspectiveValue.OperatorPerspective) {
@@ -118,21 +109,18 @@ public class SwerveSetpointGen implements SwerveRequest {
     }
     ChassisSpeeds desiredStateRobotRelative =
         new ChassisSpeeds(
-            TunerConstants.kSpeedAt12Volts.times(linearVelocity.getX()),
-            TunerConstants.kSpeedAt12Volts.times(linearVelocity.getY()),
-            Constants.MaxAngularRate.times(omega));
-    desiredStateRobotRelative.toRobotRelativeSpeeds(currentAngle);
-    // previousSetpoint =
-    //     Constants.setpointGenerator.generateSetpoint(
-    //         previousSetpoint, // The previous setpoint
-    //         desiredStateRobotRelative, // The desired target speeds
-    //         0.02 // The loop time of the robot code, in seconds
-    //         );
+            VelocityX * linearMagnitude, VelocityY * linearMagnitude, RotationalRate * omega);
 
-    // fieldSetpoint = previousSetpoint;
-    // fieldSetpoint.robotRelativeSpeeds().toFieldRelativeSpeeds(currentAngle);
+    desiredStateRobotRelative.toRobotRelativeSpeeds(currentAngle);
+    previousSetpoint =
+        Constants.setpointGenerator.generateSetpoint(
+            previousSetpoint, // The previous setpoint
+            desiredStateRobotRelative, // The desired target speeds
+            0.004 // The loop time of the robot code, in seconds
+            );
+
     return m_swerveSetpoint
-        .withSpeeds(desiredStateRobotRelative)
+        .withSpeeds(previousSetpoint.robotRelativeSpeeds())
         // .withWheelForceFeedforwardsX(previousSetpoint.feedforwards().robotRelativeForcesX())
         // .withWheelForceFeedforwardsY(previousSetpoint.feedforwards().robotRelativeForcesY())
         .withCenterOfRotation(CenterOfRotation)
