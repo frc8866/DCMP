@@ -119,7 +119,7 @@ public class SwerveSetpointGen implements SwerveRequest {
         Constants.setpointGenerator.generateSetpoint(
             previousSetpoint, // The previous setpoint
             desiredStateRobotRelative, // The desired target speeds
-            parameters.updatePeriod // The loop time of the robot code, in seconds
+            0.004 // The loop time of the robot code, in seconds
             );
 
     return m_swerveSetpoint
