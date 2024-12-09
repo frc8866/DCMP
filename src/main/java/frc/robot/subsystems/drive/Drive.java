@@ -270,7 +270,12 @@ public class Drive extends SubsystemBase {
     if (inputs.moduleTargets == null
         || inputs.moduleTargets.length != Constants.PP_CONFIG.numModules
         || inputs.moduleTargets[0] == null) {
-      return new SwerveModuleState[] {};
+      return new SwerveModuleState[] {
+        new SwerveModuleState(),
+        new SwerveModuleState(),
+        new SwerveModuleState(),
+        new SwerveModuleState()
+      };
     }
     return inputs.moduleTargets;
   }

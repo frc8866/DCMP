@@ -48,6 +48,8 @@ public class RobotContainer {
               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
   // Custom Swerve Request that use PathPlanner Setpoint Generator
+  // WARNING THE SETPOINT GENERATION IS CURRENTLY RUNNING AT 250 HZ. WE ARE LOOKING TO SWITCH THIS
+  // TO 50 HZ.
   //   private final SwerveSetpointGen drive =
   //       new SwerveSetpointGen()
   //           .withDeadband(MaxSpeed.times(0.1))
