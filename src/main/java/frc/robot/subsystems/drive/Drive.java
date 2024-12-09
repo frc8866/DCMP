@@ -65,7 +65,7 @@ public class Drive extends SubsystemBase {
               null, // Use default ramp rate (1 V/s)
               Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
               null, // Use default timeout (10 s)
-              // Log state with SignalLogger class
+              // Log state with Logger class
               state -> Logger.recordOutput("SysIdTranslation_State", state.toString())),
           new SysIdRoutine.Mechanism(
               output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
@@ -77,7 +77,7 @@ public class Drive extends SubsystemBase {
               null, // Use default ramp rate (1 V/s)
               Volts.of(7), // Use dynamic voltage of 7 V
               null, // Use default timeout (10 s)
-              // Log state with SignalLogger class
+              // Log state with Logger class
               state -> Logger.recordOutput("SysIdSteer_State", state.toString())),
           new SysIdRoutine.Mechanism(
               volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
@@ -90,12 +90,12 @@ public class Drive extends SubsystemBase {
   private final SysIdRoutine m_sysIdRoutineRotation =
       new SysIdRoutine(
           new SysIdRoutine.Config(
-              /* This is in radians per second², but SysId only supports "volts per second" */
+              /* This is in radians per second squared, but SysId only supports "volts per second" */
               Volts.of(Math.PI / 6).per(Second),
               /* This is in radians per second, but SysId only supports "volts" */
               Volts.of(Math.PI),
               null, // Use default timeout (10 s)
-              // Log state with SignalLogger class
+              // Log state with Logger class
               state -> Logger.recordOutput("SysIdRotation_State", state.toString())),
           new SysIdRoutine.Mechanism(
               output -> {
