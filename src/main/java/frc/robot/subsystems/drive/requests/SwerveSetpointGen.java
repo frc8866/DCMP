@@ -5,10 +5,9 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
-import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.NativeSwerveRequest;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -31,7 +30,7 @@ import frc.robot.Constants;
  * <p>This control request is especially useful for autonomous control, where the robot should be
  * facing a changing direction throughout the motion.
  */
-public class SwerveSetpointGen implements SwerveRequest {
+public class SwerveSetpointGen implements NativeSwerveRequest {
   /**
    * The velocity in the X direction, in m/s. X is defined as forward according to WPILib
    * convention, so this determines how fast to travel forward.
@@ -72,7 +71,7 @@ public class SwerveSetpointGen implements SwerveRequest {
   /** The perspective to use when determining which direction is forward. */
   public ForwardPerspectiveValue ForwardPerspective = ForwardPerspectiveValue.OperatorPerspective;
 
-  private final ApplyRobotSpeeds m_swerveSetpoint = new ApplyRobotSpeeds();
+  private final FieldCentric m_swerveSetpoint = new FieldCentric();
 
   private SwerveSetpoint previousSetpoint;
 
@@ -97,40 +96,29 @@ public class SwerveSetpointGen implements SwerveRequest {
   }
 
   public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
+    return StatusCode.OK;
+  }
 
-    double linearMagnitude = MathUtil.applyDeadband(Math.hypot(VelocityX, VelocityY), Deadband);
-
-    double omega = MathUtil.applyDeadband(RotationalRate, RotationalDeadband);
-    omega = Math.copySign(omega * omega, omega);
-
-    var currentAngle = parameters.currentPose.getRotation();
-    if (ForwardPerspective == ForwardPerspectiveValue.OperatorPerspective) {
-      /* If we're operator perspective, rotate our current heading back by the angle */
-      currentAngle = currentAngle.rotateBy(parameters.operatorForwardDirection.unaryMinus());
-    }
-    ChassisSpeeds desiredStateRobotRelative =
-        new ChassisSpeeds(
-            VelocityX * linearMagnitude,
-            VelocityY * linearMagnitude,
-            Constants.MaxAngularRate.times(omega).baseUnitMagnitude());
-
-    desiredStateRobotRelative.toRobotRelativeSpeeds(currentAngle);
+  public void applyNative(int id) {
     previousSetpoint =
         Constants.setpointGenerator.generateSetpoint(
             previousSetpoint, // The previous setpoint
-            desiredStateRobotRelative, // The desired target speeds
-            0.004 // The loop time of the robot code, in seconds
+            new ChassisSpeeds(VelocityX, VelocityY, RotationalRate), // The desired target speeds
+            0.02 // The loop time of the robot code, in seconds
             );
 
-    return m_swerveSetpoint
-        .withSpeeds(previousSetpoint.robotRelativeSpeeds())
-        // .withWheelForceFeedforwardsX(previousSetpoint.feedforwards().robotRelativeForcesX())
-        // .withWheelForceFeedforwardsY(previousSetpoint.feedforwards().robotRelativeForcesY())
+    m_swerveSetpoint
+        .withVelocityX(previousSetpoint.robotRelativeSpeeds().vxMetersPerSecond)
+        .withVelocityY(previousSetpoint.robotRelativeSpeeds().vyMetersPerSecond)
+        .withRotationalRate(previousSetpoint.robotRelativeSpeeds().omegaRadiansPerSecond)
+        .withDeadband(Deadband)
+        .withRotationalDeadband(RotationalDeadband)
         .withCenterOfRotation(CenterOfRotation)
         .withDriveRequestType(DriveRequestType)
         .withSteerRequestType(SteerRequestType)
         .withDesaturateWheelSpeeds(DesaturateWheelSpeeds)
-        .apply(parameters, modulesToApply);
+        .withForwardPerspective(ForwardPerspective)
+        .applyNative(id);
   }
 
   /**
