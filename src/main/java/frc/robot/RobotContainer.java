@@ -37,35 +37,11 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
 
   public final Drive drivetrain;
+  // private final SwerveRequest.FieldCentric drive;
+  private final SwerveSetpointGen drive;
+  // private final ProfiledFieldCentricFacingAngle drive;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
-
-  // Default CTRE Swerve Drive Code
-  //   private final SwerveRequest.FieldCentric drive =
-  //       new SwerveRequest.FieldCentric()
-  //           .withDeadband(MaxSpeed.times(0.1))
-  //           .withRotationalDeadband(Constants.MaxAngularRate.times(0.1)) // Add a 10% deadband
-  //           .withDriveRequestType(
-  //               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
-
-  // Custom Swerve Request that use PathPlanner Setpoint Generator
-  private final SwerveSetpointGen drive =
-      new SwerveSetpointGen()
-          .withDeadband(MaxSpeed.times(0.1))
-          .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
-          .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-
-  // If you use this you will need to disable the right joystick
-  //   private final ProfiledFieldCentricFacingAngle drive =
-  //       new ProfiledFieldCentricFacingAngle(
-  //               new TrapezoidProfile.Constraints(
-  //                   Constants.MaxAngularRate.baseUnitMagnitude(),
-  //                   Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()))
-  //           .withDeadband(MaxSpeed.times(0.1))
-  //           .withTargetDirection(Rotation2d.fromDegrees(45))
-  //           .withRotationalDeadband(
-  //               Constants.MaxAngularRate.times(0.1).baseUnitMagnitude()) // Add a 10% deadband
-  //           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
@@ -147,6 +123,34 @@ public class RobotContainer {
             new VisionIO() {});
         break;
     }
+
+    // Default CTRE Swerve Drive Code
+    //   drive =
+    //       new SwerveRequest.FieldCentric()
+    //           .withDeadband(MaxSpeed.times(0.1))
+    //           .withRotationalDeadband(Constants.MaxAngularRate.times(0.1)) // Add a 10% deadband
+    //           .withDriveRequestType(
+    //               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
+    // Custom Swerve Request that use PathPlanner Setpoint Generator. You will need to tune
+    // PP_CONFIG for this
+    drive =
+        new SwerveSetpointGen(drivetrain.getChassisSpeeds(), drivetrain.getModuleStates())
+            .withDeadband(MaxSpeed.times(0.1))
+            .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+    // If you use this you will need to disable the right joystick
+    //   drive =
+    //       new ProfiledFieldCentricFacingAngle(
+    //               new TrapezoidProfile.Constraints(
+    //                   Constants.MaxAngularRate.baseUnitMagnitude(),
+    //                   Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()))
+    //           .withDeadband(MaxSpeed.times(0.1))
+    //           .withTargetDirection(Rotation2d.fromDegrees(45))
+    //           .withRotationalDeadband(
+    //               Constants.MaxAngularRate.times(0.1).baseUnitMagnitude()) // Add a 10% deadband
+    //           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());

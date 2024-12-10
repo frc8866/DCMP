@@ -8,7 +8,6 @@ import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest.NativeSwerveRequest;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -56,7 +55,7 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
   /** The rotational deadband of the request, in radians per second. */
   public double RotationalDeadband = 0;
   /* The current rotation of the robot */
-  public Rotation2d Rotation = new Rotation2d();
+  public Rotation2d CurrentRotation = Rotation2d.kZero;
   /**
    * The center of rotation the robot should rotate around. This is (0,0) by default, which will
    * rotate around the center of the robot.
@@ -74,6 +73,9 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
    */
   public boolean DesaturateWheelSpeeds = false;
 
+  /** The perspective to use when determining which direction is forward. */
+  public ForwardPerspectiveValue ForwardPerspective = ForwardPerspectiveValue.OperatorPerspective;
+
   private final ApplyRobotSpeeds m_swerveSetpoint = new ApplyRobotSpeeds();
 
   private SwerveSetpoint previousSetpoint;
@@ -83,16 +85,7 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
    *
    * @param constraints Constraints for the trapezoid profile
    */
-  public SwerveSetpointGen() {
-    ChassisSpeeds currentSpeeds =
-        new ChassisSpeeds(); // Method to get current robot-relative chassis speeds
-    SwerveModuleState[] currentStates =
-        new SwerveModuleState[] {
-          new SwerveModuleState(),
-          new SwerveModuleState(),
-          new SwerveModuleState(),
-          new SwerveModuleState(),
-        }; // Method to get the current swerve module states
+  public SwerveSetpointGen(ChassisSpeeds currentSpeeds, SwerveModuleState[] currentStates) {
     previousSetpoint =
         new SwerveSetpoint(
             currentSpeeds, currentStates, DriveFeedforwards.zeros(Constants.PP_CONFIG.numModules));
@@ -103,25 +96,38 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
   }
 
   public void applyNative(int id) {
-    double linearMagnitude = MathUtil.applyDeadband(Math.hypot(VelocityX, VelocityY), Deadband);
-    double omega = MathUtil.applyDeadband(RotationalRate, RotationalDeadband);
-    var currentAngle =
-        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
-            ? Rotation.plus(Rotation2d.kPi)
-            : Rotation;
+    double toApplyX = VelocityX;
+    double toApplyY = VelocityY;
+    double toApplyOmega = RotationalRate;
+    Rotation2d toApplyRotation = CurrentRotation;
 
-    ChassisSpeeds fieldSpeeds =
-        new ChassisSpeeds(
-            VelocityX * linearMagnitude,
-            VelocityY * linearMagnitude,
-            Math.copySign(omega * omega * RotationalRate, omega));
+    if (ForwardPerspective == ForwardPerspectiveValue.OperatorPerspective) {
+      /* If we're operator perspective, modify the X/Y translation by the angle */
+      Translation2d tmp = new Translation2d(toApplyX, toApplyY);
+      tmp =
+          tmp.rotateBy(
+              DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+                  ? Rotation2d.kPi
+                  : Rotation2d.kZero);
+      toApplyX = tmp.getX();
+      toApplyY = tmp.getY();
+    }
 
-    fieldSpeeds.toRobotRelativeSpeeds(currentAngle);
+    if (Math.hypot(toApplyX, toApplyY) < Deadband) {
+      toApplyX = 0;
+      toApplyY = 0;
+    }
+    if (Math.abs(toApplyOmega) < RotationalDeadband) {
+      toApplyOmega = 0;
+    }
+
+    ChassisSpeeds speeds = new ChassisSpeeds(toApplyX, toApplyY, toApplyOmega);
+    speeds.toRobotRelativeSpeeds(toApplyRotation);
 
     previousSetpoint =
         Constants.setpointGenerator.generateSetpoint(
             previousSetpoint, // The previous setpoint
-            fieldSpeeds, // The desired target speeds
+            speeds, // The desired target speeds
             0.02 // The loop time of the robot code, in seconds
             );
 
@@ -281,7 +287,7 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
    * @return this object
    */
   public SwerveSetpointGen withRotation(Rotation2d newRotation) {
-    this.Rotation = newRotation;
+    this.CurrentRotation = newRotation;
     return this;
   }
 
@@ -336,6 +342,19 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
    */
   public SwerveSetpointGen withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
     this.DesaturateWheelSpeeds = newDesaturateWheelSpeeds;
+    return this;
+  }
+
+  /**
+   * Modifies the ForwardPerspective parameter and returns itself.
+   *
+   * <p>The perspective to use when determining which direction is forward.
+   *
+   * @param newForwardPerspective Parameter to modify
+   * @return this object
+   */
+  public SwerveSetpointGen withForwardPerspective(ForwardPerspectiveValue newForwardPerspective) {
+    this.ForwardPerspective = newForwardPerspective;
     return this;
   }
 }
