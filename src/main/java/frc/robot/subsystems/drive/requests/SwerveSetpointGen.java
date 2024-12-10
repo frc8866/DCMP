@@ -18,7 +18,6 @@ import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import frc.robot.Constants;
-import java.util.Optional;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner, maintaining a specified heading angle to
@@ -106,11 +105,10 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
   public void applyNative(int id) {
     double linearMagnitude = MathUtil.applyDeadband(Math.hypot(VelocityX, VelocityY), Deadband);
     double omega = MathUtil.applyDeadband(RotationalRate, RotationalDeadband);
-    var currentAngle = Rotation;
-    Optional<Alliance> currentAlliance = DriverStation.getAlliance();
-    if (currentAlliance.isPresent() && currentAlliance.get() == Alliance.Red) {
-      currentAngle = currentAngle.plus(Rotation2d.kPi);
-    }
+    var currentAngle =
+        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+            ? Rotation.plus(Rotation2d.kPi)
+            : Rotation;
 
     ChassisSpeeds fieldSpeeds =
         new ChassisSpeeds(
@@ -119,6 +117,7 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
             Math.copySign(omega * omega * RotationalRate, omega));
 
     fieldSpeeds.toRobotRelativeSpeeds(currentAngle);
+
     previousSetpoint =
         Constants.setpointGenerator.generateSetpoint(
             previousSetpoint, // The previous setpoint
