@@ -203,7 +203,7 @@ public class Drive extends SubsystemBase {
      */
 
     io.updateInputs(inputs);
-    Logger.processInputs("Swerve", inputs);
+    Logger.processInputs("Drive", inputs);
 
     for (Module module : modules) {
       module.periodic();

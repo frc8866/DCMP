@@ -23,6 +23,7 @@ import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOCTRE;
+import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -40,19 +41,19 @@ public class RobotContainer {
   /* Setting up bindings for necessary control of the swerve drive platform */
 
   // Default CTRE Swerve Drive Code
-  private final SwerveRequest.FieldCentric drive =
-      new SwerveRequest.FieldCentric()
-          .withDeadband(MaxSpeed.times(0.1))
-          .withRotationalDeadband(Constants.MaxAngularRate.times(0.1)) // Add a 10% deadband
-          .withDriveRequestType(
-              DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+  //   private final SwerveRequest.FieldCentric drive =
+  //       new SwerveRequest.FieldCentric()
+  //           .withDeadband(MaxSpeed.times(0.1))
+  //           .withRotationalDeadband(Constants.MaxAngularRate.times(0.1)) // Add a 10% deadband
+  //           .withDriveRequestType(
+  //               DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
   // Custom Swerve Request that use PathPlanner Setpoint Generator
-  //   private final SwerveSetpointGen drive =
-  //       new SwerveSetpointGen()
-  //           .withDeadband(MaxSpeed.times(0.1))
-  //           .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
-  //           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+  private final SwerveSetpointGen drive =
+      new SwerveSetpointGen()
+          .withDeadband(MaxSpeed.times(0.1))
+          .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
+          .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
   // If you use this you will need to disable the right joystick
   //   private final ProfiledFieldCentricFacingAngle drive =
@@ -183,7 +184,7 @@ public class RobotContainer {
                     .withRotationalRate(
                         Constants.MaxAngularRate.times(
                             -joystick.getRightX())) // Drive counterclockwise with negative X (left)
-            ));
+                    .withRotation(drivetrain.getRotation())));
 
     joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
     joystick
