@@ -1,7 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -11,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -23,6 +20,8 @@ import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOCTRE;
+import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
+import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -37,8 +36,6 @@ public class RobotContainer {
 
   public final Drive drivetrain;
   private final SwerveRequest.FieldCentric drive;
-  //   private final SwerveSetpointGen drive;
-  // private final ProfiledFieldCentricFacingAngle drive;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
 
@@ -131,26 +128,6 @@ public class RobotContainer {
             .withDriveRequestType(
                 DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
-    // Custom Swerve Request that use PathPlanner Setpoint Generator. You will need to tune
-    // PP_CONFIG for this
-    // drive =
-    //     new SwerveSetpointGen(drivetrain.getChassisSpeeds(), drivetrain.getModuleStates())
-    //         .withDeadband(MaxSpeed.times(0.1))
-    //         .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
-    //         .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-
-    // If you use this you will need to disable the right joystick
-    //   drive =
-    //       new ProfiledFieldCentricFacingAngle(
-    //               new TrapezoidProfile.Constraints(
-    //                   Constants.MaxAngularRate.baseUnitMagnitude(),
-    //                   Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()))
-    //           .withDeadband(MaxSpeed.times(0.1))
-    //           .withTargetDirection(Rotation2d.fromDegrees(45))
-    //           .withRotationalDeadband(
-    //               Constants.MaxAngularRate.times(0.1).baseUnitMagnitude()) // Add a 10% deadband
-    //           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
@@ -165,10 +142,10 @@ public class RobotContainer {
         "Drive SysId (Dynamic Forward)", drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    configureBindings();
     autoChooser.addOption(
         "Drive Wheel Radius Characterization",
         DriveCommands.wheelRadiusCharacterization(drivetrain));
+    configureBindings();
   }
 
   private void configureBindings() {
@@ -198,6 +175,37 @@ public class RobotContainer {
                 () ->
                     point.withModuleDirection(
                         new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
+
+    // Custom Swerve Request that use PathPlanner Setpoint Generator. You will need to tune
+    joystick.x().whileTrue(
+        drivetrain.applyRequest(() ->
+            new SwerveSetpointGen(drivetrain.getChassisSpeeds(), drivetrain.getModuleStates())
+                .withVelocityX(-joystick.getLeftY() * MaxSpeed)
+                .withVelocityY(-joystick.getLeftX() * MaxSpeed)
+                .withRotationalRate(-joystick.getRightX() * Constants.MaxAngularRate)
+                .withRotation(drivetrain.getRotation())
+        )
+    );
+
+    ProfiledFieldCentricFacingAngle driveFacingAngle = new ProfiledFieldCentricFacingAngle(
+        new TrapezoidProfile.Constraints(
+            Constants.MaxAngularRate.baseUnitMagnitude(),
+            Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()
+        )
+    );
+    driveFacingAngle.HeadingController.setPID(7, 0, 0);
+    // Add button binding for ProfiledFieldCentricFacingAngle
+    joystick.y().whileTrue(
+        drivetrain.runOnce(() -> driveFacingAngle.resetProfile(drivetrain.getPose().getRotation()))
+            .andThen(
+            drivetrain.applyRequest(() ->
+                driveFacingAngle
+                    .withVelocityX(-joystick.getLeftY() * MaxSpeed)
+                    .withVelocityY(-joystick.getLeftX() * MaxSpeed)
+                    .withTargetDirection(new Rotation2d(-joystick.getRightY(), -joystick.getRightX()))
+            )
+        )
+    );
 
     // Run SysId routines when holding back/start and X/Y.
     // Note that each routine should be run exactly once in a single log.
