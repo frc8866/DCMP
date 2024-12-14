@@ -165,7 +165,6 @@ public class RobotContainer {
                         Constants.MaxAngularRate.times(
                             -joystick
                                 .getRightX())))); // Drive counterclockwise with negative X (left)
-    // .withRotation(drivetrain.getRotation())));
 
     joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
     joystick
@@ -177,35 +176,53 @@ public class RobotContainer {
                         new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
 
     // Custom Swerve Request that use PathPlanner Setpoint Generator. You will need to tune
-    joystick.x().whileTrue(
-        drivetrain.applyRequest(() ->
-            new SwerveSetpointGen(drivetrain.getChassisSpeeds(), drivetrain.getModuleStates())
-                .withVelocityX(-joystick.getLeftY() * MaxSpeed)
-                .withVelocityY(-joystick.getLeftX() * MaxSpeed)
-                .withRotationalRate(-joystick.getRightX() * Constants.MaxAngularRate)
-                .withRotation(drivetrain.getRotation())
-        )
-    );
+    SwerveSetpointGen setpointGen =
+        new SwerveSetpointGen(
+                drivetrain.getChassisSpeeds(),
+                drivetrain.getModuleStates(),
+                drivetrain::getRotation)
+            .withDeadband(MaxSpeed.times(0.1))
+            .withRotationalDeadband(Constants.MaxAngularRate.times(0.1))
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+    joystick
+        .x()
+        .whileTrue(
+            drivetrain.applyRequest(
+                () ->
+                    setpointGen
+                        .withVelocityX(
+                            MaxSpeed.times(
+                                -joystick.getLeftY())) // Drive forward with negative Y (forward)
+                        .withVelocityY(MaxSpeed.times(-joystick.getLeftX()))
+                        .withRotationalRate(Constants.MaxAngularRate.times(-joystick.getRightX()))
+                        .withOperatorForwardDirection(drivetrain.getOperatorForwardDirection())));
 
-    ProfiledFieldCentricFacingAngle driveFacingAngle = new ProfiledFieldCentricFacingAngle(
-        new TrapezoidProfile.Constraints(
-            Constants.MaxAngularRate.baseUnitMagnitude(),
-            Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()
-        )
-    );
+    ProfiledFieldCentricFacingAngle driveFacingAngle =
+        new ProfiledFieldCentricFacingAngle(
+                new TrapezoidProfile.Constraints(
+                    Constants.MaxAngularRate.baseUnitMagnitude(),
+                    Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()))
+            .withDeadband(MaxSpeed.times(0.1))
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
     driveFacingAngle.HeadingController.setPID(7, 0, 0);
     // Add button binding for ProfiledFieldCentricFacingAngle
-    joystick.y().whileTrue(
-        drivetrain.runOnce(() -> driveFacingAngle.resetProfile(drivetrain.getPose().getRotation()))
-            .andThen(
-            drivetrain.applyRequest(() ->
-                driveFacingAngle
-                    .withVelocityX(-joystick.getLeftY() * MaxSpeed)
-                    .withVelocityY(-joystick.getLeftX() * MaxSpeed)
-                    .withTargetDirection(new Rotation2d(-joystick.getRightY(), -joystick.getRightX()))
-            )
-        )
-    );
+    joystick
+        .y()
+        .whileTrue(
+            drivetrain
+                .runOnce(() -> driveFacingAngle.resetProfile(drivetrain.getRotation()))
+                .andThen(
+                    drivetrain.applyRequest(
+                        () ->
+                            driveFacingAngle
+                                .withVelocityX(
+                                    MaxSpeed.times(
+                                        -joystick
+                                            .getLeftY())) // Drive forward with negative Y (forward)
+                                .withVelocityY(MaxSpeed.times(-joystick.getLeftX()))
+                                .withTargetDirection(
+                                    new Rotation2d(
+                                        -joystick.getRightY(), -joystick.getRightX())))));
 
     // Run SysId routines when holding back/start and X/Y.
     // Note that each routine should be run exactly once in a single log.
