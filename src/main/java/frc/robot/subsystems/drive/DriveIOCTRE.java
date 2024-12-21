@@ -10,6 +10,8 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem so it can be used
@@ -45,11 +47,13 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
     SwerveDriveState state = super.getState();
     inputs.moduleStates = state.ModuleStates;
     inputs.moduleTargets = state.ModuleTargets;
+    inputs.modulePositions = state.ModulePositions;
     inputs.pose = state.Pose;
     inputs.speeds = state.Speeds;
     inputs.odometryPeriod = state.OdometryPeriod;
     inputs.successfulDaqs = state.SuccessfulDaqs;
     inputs.failedDaqs = state.FailedDaqs;
+    inputs.timestamp = Timer.getFPGATimestamp() - (Utils.getCurrentTimeSeconds() - state.Timestamp);
 
     inputs.gyroRate = super.getPigeon2().getAngularVelocityZWorld().getValue();
     inputs.operatorForwardDirection = super.getOperatorForwardDirection();
@@ -71,10 +75,5 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
               updateSimState(deltaTime, RobotController.getBatteryVoltage());
             });
     m_simNotifier.startPeriodic(kSimLoopPeriod);
-  }
-
-  @Override
-  public void samplePoseAt(DriveIOInputs inputs, double timestampSeconds) {
-    inputs.samplePose = super.samplePoseAt(timestampSeconds).orElse(getState().Pose);
   }
 }

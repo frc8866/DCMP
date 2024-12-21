@@ -2,14 +2,16 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -36,6 +38,18 @@ public class Drive extends SubsystemBase {
   private final DriveIOInputsAutoLogged inputs;
 
   private Module[] modules = new Module[4];
+
+  private SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
+  private SwerveModulePosition[] initPositions =
+      new SwerveModulePosition[] {
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition()
+      };
+  private SwerveDrivePoseEstimator poseEstimator =
+      new SwerveDrivePoseEstimator(kinematics, Rotation2d.kZero, initPositions, new Pose2d());
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -221,6 +235,8 @@ public class Drive extends SubsystemBase {
                 m_hasAppliedOperatorPerspective = true;
               });
     }
+    poseEstimator.updateWithTime(
+        inputs.timestamp, inputs.pose.getRotation(), inputs.modulePositions);
   }
 
   public Command seedFieldCentric() {
@@ -228,13 +244,14 @@ public class Drive extends SubsystemBase {
   }
 
   public void resetPose(Pose2d pose) {
+    poseEstimator.resetPose(pose);
     io.resetPose(pose);
   }
 
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
-    return inputs.pose;
+    return poseEstimator.getEstimatedPosition();
   }
 
   public Rotation2d getRotation() {
@@ -260,28 +277,12 @@ public class Drive extends SubsystemBase {
   /** Returns the module states (turn angles and drive velocities) for all of the modules. */
   @AutoLogOutput(key = "SwerveStates/Measured")
   public SwerveModuleState[] getModuleStates() {
-    if (inputs.successfulDaqs == 0) {
-      return new SwerveModuleState[] {
-        new SwerveModuleState(),
-        new SwerveModuleState(),
-        new SwerveModuleState(),
-        new SwerveModuleState()
-      };
-    }
     return inputs.moduleStates;
   }
 
   /** Returns the module target states (turn angles and drive velocities) for all of the modules. */
   @AutoLogOutput(key = "SwerveStates/Setpoints")
   public SwerveModuleState[] getModuleTarget() {
-    if (inputs.successfulDaqs == 0) {
-      return new SwerveModuleState[] {
-        new SwerveModuleState(),
-        new SwerveModuleState(),
-        new SwerveModuleState(),
-        new SwerveModuleState()
-      };
-    }
     return inputs.moduleTargets;
   }
 
@@ -298,9 +299,7 @@ public class Drive extends SubsystemBase {
    * @return The pose at the given timestamp (or current pose if the buffer is empty).
    */
   public Pose2d samplePoseAt(double timestampSeconds) {
-    io.samplePoseAt(inputs, Utils.fpgaToCurrentTime(timestampSeconds));
-    Logger.processInputs("Drive", inputs);
-    return inputs.samplePose;
+    return poseEstimator.sampleAt(timestampSeconds).orElse(getPose());
   }
 
   /**
@@ -310,9 +309,9 @@ public class Drive extends SubsystemBase {
    * @param timestamp The timestamp of the vision measurement in seconds.
    */
   public void addVisionMeasurement(VisionMeasurement visionMeasurement) {
-    io.addVisionMeasurement(
+    poseEstimator.addVisionMeasurement(
         visionMeasurement.poseEstimate().pose().toPose2d(),
-        Utils.fpgaToCurrentTime(visionMeasurement.poseEstimate().timestampSeconds()),
+        visionMeasurement.poseEstimate().timestampSeconds(),
         visionMeasurement.visionMeasurementStdDevs());
   }
 
