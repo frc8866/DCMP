@@ -96,17 +96,17 @@ public class TunableController extends CommandXboxController {
    */
   public enum TunableControllerType {
     /** Linear scaling (1:1 relationship) */
-    LINEAR(1),
+    LINEAR(1.0),
 
     /** Quadratic scaling (more precise at low inputs) */
-    QUADRATIC(2),
+    QUADRATIC(2.0),
 
     /** Cubic scaling (even more precise at low inputs) */
-    CUBIC(3);
+    CUBIC(3.0);
 
-    private final int exponent;
+    private final double exponent;
 
-    TunableControllerType(int exponent) {
+    TunableControllerType(double exponent) {
       this.exponent = exponent;
     }
   }
