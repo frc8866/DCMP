@@ -2,6 +2,7 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -17,6 +18,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -235,8 +237,13 @@ public class Drive extends SubsystemBase {
                 m_hasAppliedOperatorPerspective = true;
               });
     }
-    poseEstimator.updateWithTime(
-        inputs.timestamp, inputs.pose.getRotation(), inputs.modulePositions);
+
+    for (int i = 0; i < inputs.timestamp.length; i++) {
+      poseEstimator.updateWithTime(
+          Timer.getFPGATimestamp() - (Utils.getCurrentTimeSeconds() - inputs.timestamp[i]),
+          inputs.gyroYaw[i],
+          inputs.modulePositions[i]);
+    }
   }
 
   public Command seedFieldCentric() {

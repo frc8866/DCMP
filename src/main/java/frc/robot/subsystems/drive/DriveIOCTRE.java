@@ -8,10 +8,16 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.Timer;
-import java.util.concurrent.atomic.AtomicReference;
+import frc.robot.Constants;
+import frc.robot.Constants.Mode;
+import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements subsystem so it can be used
@@ -22,13 +28,20 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
   private Notifier m_simNotifier;
   private double m_lastSimTime;
 
+  // queues for odometry updates from CTRE's thread
+  private final Lock odometryLock = new ReentrantLock();
+  Queue<SwerveModulePosition[]> swervePositionQueues = new ArrayBlockingQueue<>(20);
+  Queue<Double> gyroYawQueue = new ArrayBlockingQueue<>(20);
+  Queue<Double> timestampQueue = new ArrayBlockingQueue<>(20);
+
   public DriveIOCTRE(
       SwerveDrivetrainConstants driveTrainConstants,
       double OdometryUpdateFrequency,
       SwerveModuleConstants... modules) {
     super(driveTrainConstants, OdometryUpdateFrequency, modules);
 
-    if (Utils.isSimulation()) {
+    this.registerTelemetry(this::updateTelemetry);
+    if (Constants.currentMode == Mode.SIM) {
       startSimThread();
     }
   }
@@ -37,7 +50,8 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
       SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
     super(driveTrainConstants, modules);
 
-    if (Utils.isSimulation()) {
+    this.registerTelemetry(this::updateTelemetry);
+    if (Constants.currentMode == Mode.SIM) {
       startSimThread();
     }
   }
@@ -47,17 +61,42 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
     SwerveDriveState state = super.getState();
     inputs.moduleStates = state.ModuleStates;
     inputs.moduleTargets = state.ModuleTargets;
-    inputs.modulePositions = state.ModulePositions;
     inputs.pose = state.Pose;
     inputs.speeds = state.Speeds;
     inputs.odometryPeriod = state.OdometryPeriod;
     inputs.successfulDaqs = state.SuccessfulDaqs;
     inputs.failedDaqs = state.FailedDaqs;
-    inputs.timestamp = Timer.getFPGATimestamp() - (Utils.getCurrentTimeSeconds() - state.Timestamp);
 
     inputs.gyroRate = super.getPigeon2().getAngularVelocityZWorld().getValue();
     inputs.operatorForwardDirection = super.getOperatorForwardDirection();
     inputs.odometryIsValid = super.isOdometryValid();
+
+    this.odometryLock.lock();
+
+    inputs.timestamp = this.timestampQueue.stream().mapToDouble(Double::valueOf).toArray();
+    this.timestampQueue.clear();
+
+    inputs.gyroYaw =
+        this.gyroYawQueue.stream().map(Rotation2d::fromDegrees).toArray(Rotation2d[]::new);
+    this.gyroYawQueue.clear();
+
+    inputs.modulePositions =
+        this.swervePositionQueues.stream().toArray(SwerveModulePosition[][]::new);
+    this.swervePositionQueues.clear();
+
+    this.odometryLock.unlock();
+  }
+
+  private void updateTelemetry(SwerveDriveState state) {
+    this.odometryLock.lock();
+
+    this.swervePositionQueues.offer(state.ModulePositions);
+
+    this.gyroYawQueue.offer(state.RawHeading.getDegrees());
+
+    this.timestampQueue.offer(state.Timestamp);
+
+    this.odometryLock.unlock();
   }
 
   private void startSimThread() {

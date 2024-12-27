@@ -32,21 +32,17 @@ public interface DriveIO {
           new SwerveModuleState(),
           new SwerveModuleState()
         };
-    public SwerveModulePosition[] modulePositions =
-        new SwerveModulePosition[] {
-          new SwerveModulePosition(),
-          new SwerveModulePosition(),
-          new SwerveModulePosition(),
-          new SwerveModulePosition()
-        };
+    public SwerveModulePosition[][] modulePositions = new SwerveModulePosition[][] {};
     public Pose2d pose = Pose2d.kZero;
     public ChassisSpeeds speeds = new ChassisSpeeds();
     public double odometryPeriod = 0.0;
     public int successfulDaqs = 0;
     public int failedDaqs = 0;
-    public double timestamp = 0.0;
+    public double timestamp[] = new double[] {};
 
+    public Rotation2d[] gyroYaw = new Rotation2d[] {};
     public AngularVelocity gyroRate = RotationsPerSecond.of(0.0);
+
     public Rotation2d operatorForwardDirection = new Rotation2d();
     public boolean odometryIsValid = false;
   }
