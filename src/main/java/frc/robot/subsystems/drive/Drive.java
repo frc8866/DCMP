@@ -239,9 +239,8 @@ public class Drive extends SubsystemBase {
   public Pose2d getPose() {
     if (Constants.currentMode == Mode.REPLAY) {
       return modeEstimator.getPose();
-    } else {
-      return inputs.pose;
     }
+    return inputs.pose;
   }
 
   public Rotation2d getRotation() {

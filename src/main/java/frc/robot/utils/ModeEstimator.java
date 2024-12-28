@@ -50,9 +50,8 @@ public class ModeEstimator {
   public void resetPose(Pose2d pose) {
     if (Constants.currentMode == Mode.REPLAY) {
       poseEstimator.resetPose(pose);
-    } else {
-      io.resetPose(pose);
     }
+    io.resetPose(pose);
   }
 
   /**
