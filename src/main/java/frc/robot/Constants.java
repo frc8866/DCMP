@@ -101,6 +101,7 @@ public final class Constants {
       // Check if the GUI settings match the constants
       PPUtil.compareConfigs(config, PP_CONFIG);
     } catch (Exception e) {
+      PPUtil.badGUI();
       e.printStackTrace();
     }
   }
