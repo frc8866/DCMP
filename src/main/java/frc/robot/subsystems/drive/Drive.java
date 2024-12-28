@@ -123,7 +123,7 @@ public class Drive extends SubsystemBase {
 
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
-    modeEstimator = new ModeEstimator(io);
+    modeEstimator = new ModeEstimator(io, inputs.modulePositions);
 
     modules[0] = new Module(flModuleIO, 0);
     modules[1] = new Module(frModuleIO, 1);
@@ -226,7 +226,8 @@ public class Drive extends SubsystemBase {
               });
     }
 
-    modeEstimator.updateWithTime(inputs.timestamp, inputs.gyroYaw, inputs.modulePositions);
+    modeEstimator.updateWithTime(
+        inputs.timestamp, inputs.gyroYaw, inputs.drivePositions, inputs.steerPositions);
   }
 
   public void resetPose(Pose2d pose) {

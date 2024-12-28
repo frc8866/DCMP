@@ -4,9 +4,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,8 +21,6 @@ import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
 import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOLimelight;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
@@ -59,12 +54,18 @@ public class RobotContainer {
                 new ModuleIOCTRE(currentDriveTrain.getModule(2)),
                 new ModuleIOCTRE(currentDriveTrain.getModule(3)));
 
+        // new Vision(
+        //     drivetrain::addVisionData,
+        //     new VisionIOLimelight("limelight-fl", drivetrain::getVisionParameters),
+        //     new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
+        //     new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
+        //     new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
         new Vision(
             drivetrain::addVisionData,
-            new VisionIOLimelight("limelight-fl", drivetrain::getVisionParameters),
-            new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
-            new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
-            new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
+            new VisionIO() {},
+            new VisionIO() {},
+            new VisionIO() {},
+            new VisionIO() {});
         break;
 
       case SIM:
@@ -76,33 +77,39 @@ public class RobotContainer {
                 new ModuleIOCTRE(currentDriveTrain.getModule(1)),
                 new ModuleIOCTRE(currentDriveTrain.getModule(2)),
                 new ModuleIOCTRE(currentDriveTrain.getModule(3)));
-
         new Vision(
             drivetrain::addVisionData,
-            new VisionIOPhotonVisionSIM(
-                "Front Camera",
-                new Transform3d(
-                    new Translation3d(0.2, 0.0, 0.8),
-                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(0))),
-                drivetrain::getVisionParameters),
-            new VisionIOPhotonVisionSIM(
-                "Back Camera",
-                new Transform3d(
-                    new Translation3d(-0.2, 0.0, 0.8),
-                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(180))),
-                drivetrain::getVisionParameters),
-            new VisionIOPhotonVisionSIM(
-                "Left Camera",
-                new Transform3d(
-                    new Translation3d(0.0, 0.2, 0.8),
-                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
-                drivetrain::getVisionParameters),
-            new VisionIOPhotonVisionSIM(
-                "Right Camera",
-                new Transform3d(
-                    new Translation3d(0.0, -0.2, 0.8),
-                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(-90))),
-                drivetrain::getVisionParameters));
+            new VisionIO() {},
+            new VisionIO() {},
+            new VisionIO() {},
+            new VisionIO() {});
+
+        // new Vision(
+        //     drivetrain::addVisionData,
+        //     new VisionIOPhotonVisionSIM(
+        //         "Front Camera",
+        //         new Transform3d(
+        //             new Translation3d(0.2, 0.0, 0.8),
+        //             new Rotation3d(0, Math.toRadians(20), Math.toRadians(0))),
+        //         drivetrain::getVisionParameters),
+        //     new VisionIOPhotonVisionSIM(
+        //         "Back Camera",
+        //         new Transform3d(
+        //             new Translation3d(-0.2, 0.0, 0.8),
+        //             new Rotation3d(0, Math.toRadians(20), Math.toRadians(180))),
+        //         drivetrain::getVisionParameters),
+        //     new VisionIOPhotonVisionSIM(
+        //         "Left Camera",
+        //         new Transform3d(
+        //             new Translation3d(0.0, 0.2, 0.8),
+        //             new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
+        //         drivetrain::getVisionParameters),
+        //     new VisionIOPhotonVisionSIM(
+        //         "Right Camera",
+        //         new Transform3d(
+        //             new Translation3d(0.0, -0.2, 0.8),
+        //             new Rotation3d(0, Math.toRadians(20), Math.toRadians(-90))),
+        //         drivetrain::getVisionParameters));
         break;
 
       default:

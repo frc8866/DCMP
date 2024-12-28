@@ -19,18 +19,14 @@ public class ModeEstimator {
   private DriveIO io;
   private SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
-  private SwerveModulePosition[] initPositions =
-      new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
-  private SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(kinematics, Rotation2d.kZero, initPositions, new Pose2d());
+  private SwerveDrivePoseEstimator poseEstimator;
+  private SwerveModulePosition[] modulePositions;
 
-  public ModeEstimator(DriveIO io) {
+  public ModeEstimator(DriveIO io, SwerveModulePosition[] modulePositions) {
     this.io = io;
+    this.modulePositions = modulePositions;
+    poseEstimator =
+        new SwerveDrivePoseEstimator(kinematics, Rotation2d.kZero, modulePositions, new Pose2d());
   }
 
   public void resetPose(Pose2d pose) {
@@ -68,10 +64,18 @@ public class ModeEstimator {
   }
 
   public void updateWithTime(
-      double[] timestamp, Rotation2d[] gyroYaw, SwerveModulePosition[][] modulePositions) {
+      double[] timestamp,
+      Rotation2d[] gyroYaw,
+      double[][] drivePosition,
+      Rotation2d[][] steerPosition) {
     if (Constants.currentMode == Mode.REPLAY) {
       for (int i = 0; i < timestamp.length; i++) {
-        poseEstimator.updateWithTime(timestamp[i], gyroYaw[i], modulePositions[i]);
+        for (int moduleIndex = 0; moduleIndex < this.modulePositions.length; moduleIndex++) {
+          this.modulePositions[moduleIndex].distanceMeters = drivePosition[moduleIndex][i];
+          this.modulePositions[moduleIndex].angle = steerPosition[moduleIndex][i];
+        }
+
+        poseEstimator.updateWithTime(timestamp[i], gyroYaw[i], modulePositions);
       }
     }
   }

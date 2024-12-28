@@ -11,7 +11,6 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Notifier;
@@ -19,6 +18,8 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
@@ -35,15 +36,21 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
 
   // queues for odometry updates from CTRE's thread
   private final Lock odometryLock = new ReentrantLock();
-  Queue<SwerveModulePosition[]> swervePositionQueues = new ArrayBlockingQueue<>(20);
-  Queue<Double> gyroYawQueue = new ArrayBlockingQueue<>(20);
+  Queue<Rotation2d> gyroYawQueue = new ArrayBlockingQueue<>(20);
   Queue<Double> timestampQueue = new ArrayBlockingQueue<>(20);
+  List<Queue<Double>> drivePositionQueues = new ArrayList<>();
+  List<Queue<Rotation2d>> steerPositionQueues = new ArrayList<>();
 
   public DriveIOCTRE(
       SwerveDrivetrainConstants driveTrainConstants,
       double OdometryUpdateFrequency,
       SwerveModuleConstants... modules) {
     super(driveTrainConstants, OdometryUpdateFrequency, modules);
+
+    for (int i = 0; i < 4; i++) {
+      this.drivePositionQueues.add(new ArrayBlockingQueue<>(20));
+      this.steerPositionQueues.add(new ArrayBlockingQueue<>(20));
+    }
 
     this.registerTelemetry(this::updateTelemetry);
     if (Constants.currentMode == Mode.SIM) {
@@ -54,6 +61,11 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
   public DriveIOCTRE(
       SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
     super(driveTrainConstants, modules);
+
+    for (int i = 0; i < 4; i++) {
+      this.drivePositionQueues.add(new ArrayBlockingQueue<>(20));
+      this.steerPositionQueues.add(new ArrayBlockingQueue<>(20));
+    }
 
     this.registerTelemetry(this::updateTelemetry);
     if (Constants.currentMode == Mode.SIM) {
@@ -81,13 +93,18 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
     inputs.timestamp = this.timestampQueue.stream().mapToDouble(Double::valueOf).toArray();
     this.timestampQueue.clear();
 
-    inputs.gyroYaw =
-        this.gyroYawQueue.stream().map(Rotation2d::fromDegrees).toArray(Rotation2d[]::new);
+    inputs.gyroYaw = this.gyroYawQueue.stream().toArray(Rotation2d[]::new);
     this.gyroYawQueue.clear();
 
-    inputs.modulePositions =
-        this.swervePositionQueues.stream().toArray(SwerveModulePosition[][]::new);
-    this.swervePositionQueues.clear();
+    for (int i = 0; i < this.getModules().length; i++) {
+      inputs.drivePositions[i] =
+          this.drivePositionQueues.get(i).stream().mapToDouble(Double::valueOf).toArray();
+      inputs.steerPositions[i] =
+          this.steerPositionQueues.get(i).stream().toArray(Rotation2d[]::new);
+
+      this.drivePositionQueues.get(i).clear();
+      this.steerPositionQueues.get(i).clear();
+    }
 
     this.odometryLock.unlock();
   }
@@ -95,9 +112,12 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
   private void updateTelemetry(SwerveDriveState state) {
     this.odometryLock.lock();
 
-    this.swervePositionQueues.offer(state.ModulePositions);
+    for (int i = 0; i < state.ModuleStates.length; i++) {
+      this.drivePositionQueues.get(i).offer(state.ModulePositions[i].distanceMeters);
+      this.steerPositionQueues.get(i).offer(state.ModuleStates[i].angle);
+    }
 
-    this.gyroYawQueue.offer(state.RawHeading.getDegrees());
+    this.gyroYawQueue.offer(state.RawHeading);
 
     this.timestampQueue.offer(
         Timer.getFPGATimestamp() - (Utils.getCurrentTimeSeconds() - state.Timestamp));
