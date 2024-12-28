@@ -178,14 +178,10 @@ public final class PPUtil {
     // Compare module locations
     for (int i = 0; i < config1.moduleLocations.length; i++) {
       if (!config1.moduleLocations[i].equals(config2.moduleLocations[i])) {
-        // If there are multiple differences, separate them with a pipe
-        if (hasLocationDifferences) {
-          locationDifferences.append(" | ");
-        }
         // Append the difference to the alert message
         locationDifferences.append(
             String.format(
-                "Module %d: %s vs %s",
+                "Module %d: %s vs %s | ",
                 i, config1.moduleLocations[i].toString(), config2.moduleLocations[i].toString()));
         // Set the alert flag
         hasLocationDifferences = true;
