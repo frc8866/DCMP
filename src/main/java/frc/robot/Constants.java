@@ -38,7 +38,7 @@ import frc.robot.generated.TunerConstants;
  */
 public final class Constants {
 
-  public static final Mode simMode = Mode.SIM;
+  public static final Mode simMode = Mode.REPLAY;
 
   public static final AngularVelocity MaxAngularRate = RotationsPerSecond.of(0.75);
   public static final AngularVelocity MaxModuleRate = RotationsPerSecond.of(20.0);

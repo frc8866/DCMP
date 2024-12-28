@@ -2,30 +2,27 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
+import frc.robot.utils.ModeEstimator;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -41,17 +38,7 @@ public class Drive extends SubsystemBase {
 
   private Module[] modules = new Module[4];
 
-  private SwerveDriveKinematics kinematics =
-      new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
-  private SwerveModulePosition[] initPositions =
-      new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
-  private SwerveDrivePoseEstimator poseEstimator =
-      new SwerveDrivePoseEstimator(kinematics, Rotation2d.kZero, initPositions, new Pose2d());
+  private final ModeEstimator modeEstimator;
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -136,6 +123,7 @@ public class Drive extends SubsystemBase {
 
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
+    modeEstimator = new ModeEstimator(io);
 
     modules[0] = new Module(flModuleIO, 0);
     modules[1] = new Module(frModuleIO, 1);
@@ -238,27 +226,21 @@ public class Drive extends SubsystemBase {
               });
     }
 
-    for (int i = 0; i < inputs.timestamp.length; i++) {
-      poseEstimator.updateWithTime(
-          Timer.getFPGATimestamp() - (Utils.getCurrentTimeSeconds() - inputs.timestamp[i]),
-          inputs.gyroYaw[i],
-          inputs.modulePositions[i]);
-    }
-  }
-
-  public Command seedFieldCentric() {
-    return runOnce(io::seedFieldCentric);
+    modeEstimator.updateWithTime(inputs.timestamp, inputs.gyroYaw, inputs.modulePositions);
   }
 
   public void resetPose(Pose2d pose) {
-    poseEstimator.resetPose(pose);
-    io.resetPose(pose);
+    modeEstimator.resetPose(pose);
   }
 
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
-    return poseEstimator.getEstimatedPosition();
+    if (Constants.currentMode == Mode.REPLAY) {
+      return modeEstimator.getPose();
+    } else {
+      return inputs.pose;
+    }
   }
 
   public Rotation2d getRotation() {
@@ -306,7 +288,7 @@ public class Drive extends SubsystemBase {
    * @return The pose at the given timestamp (or current pose if the buffer is empty).
    */
   public Pose2d samplePoseAt(double timestampSeconds) {
-    return poseEstimator.sampleAt(timestampSeconds).orElse(getPose());
+    return modeEstimator.samplePoseAt(timestampSeconds).orElse(getPose());
   }
 
   /**
@@ -316,10 +298,7 @@ public class Drive extends SubsystemBase {
    * @param timestamp The timestamp of the vision measurement in seconds.
    */
   public void addVisionMeasurement(VisionMeasurement visionMeasurement) {
-    poseEstimator.addVisionMeasurement(
-        visionMeasurement.poseEstimate().pose().toPose2d(),
-        visionMeasurement.poseEstimate().timestampSeconds(),
-        visionMeasurement.visionMeasurementStdDevs());
+    modeEstimator.addVisionMeasurement(visionMeasurement);
   }
 
   public void addVisionData(List<VisionMeasurement> visionData) {

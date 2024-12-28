@@ -7,12 +7,16 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.AngularVelocity;
+import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface DriveIO {
@@ -53,7 +57,14 @@ public interface DriveIO {
 
   public default void setControl(SwerveRequest request) {}
 
-  public default void seedFieldCentric() {}
-
   public default void resetPose(Pose2d pose) {}
+
+  public default Optional<Pose2d> samplePoseAt(double timestamp) {
+    return Optional.empty();
+  }
+
+  public default void addVisionMeasurement(
+      Pose2d visionRobotPoseMeters,
+      double timestampSeconds,
+      Matrix<N3, N1> visionMeasurementStdDevs) {}
 }
