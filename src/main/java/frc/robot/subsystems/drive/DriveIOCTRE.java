@@ -114,7 +114,7 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
 
     for (int i = 0; i < state.ModuleStates.length; i++) {
       this.drivePositionQueues.get(i).offer(state.ModulePositions[i].distanceMeters);
-      this.steerPositionQueues.get(i).offer(state.ModuleStates[i].angle);
+      this.steerPositionQueues.get(i).offer(state.ModulePositions[i].angle);
     }
 
     this.gyroYawQueue.offer(state.RawHeading);
