@@ -10,7 +10,6 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveCommands;
@@ -26,11 +25,14 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
+import frc.robot.utils.TunableController;
+import frc.robot.utils.TunableController.TunableControllerType;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
   private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
-  private final CommandXboxController joystick = new CommandXboxController(0);
+  private final TunableController joystick =
+      new TunableController(0).withControllerType(TunableControllerType.QUADRATIC);
 
   private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -154,13 +156,17 @@ public class RobotContainer {
                 drive
                     .withVelocityX(
                         MaxSpeed.times(
-                            -joystick.getLeftY())) // Drive forward with negative Y (forward)
+                            -joystick
+                                .customLeft()
+                                .getY())) // Drive forward with negative Y (forward)
                     .withVelocityY(
-                        MaxSpeed.times(-joystick.getLeftX())) // Drive left with negative X (left)
+                        MaxSpeed.times(
+                            -joystick.customLeft().getX())) // Drive left with negative X (left)
                     .withRotationalRate(
                         Constants.MaxAngularRate.times(
                             -joystick
-                                .getRightX())))); // Drive counterclockwise with negative X (left)
+                                .customRight()
+                                .getX())))); // Drive counterclockwise with negative X (left)
 
     joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
     joystick
@@ -171,7 +177,8 @@ public class RobotContainer {
                     point.withModuleDirection(
                         new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
 
-    // Custom Swerve Request that use PathPlanner Setpoint Generator. You will need to tune PP_CONFIG first
+    // Custom Swerve Request that use PathPlanner Setpoint Generator. You will need to tune
+    // PP_CONFIG first
     SwerveSetpointGen setpointGen =
         new SwerveSetpointGen(
                 drivetrain.getChassisSpeeds(),
@@ -193,7 +200,8 @@ public class RobotContainer {
                         .withRotationalRate(Constants.MaxAngularRate.times(-joystick.getRightX()))
                         .withOperatorForwardDirection(drivetrain.getOperatorForwardDirection())));
 
-    // Custom Swerve Request that use ProfiledFieldCentricFacingAngle. Allows you to face specific direction while driving
+    // Custom Swerve Request that use ProfiledFieldCentricFacingAngle. Allows you to face specific
+    // direction while driving
     ProfiledFieldCentricFacingAngle driveFacingAngle =
         new ProfiledFieldCentricFacingAngle(
                 new TrapezoidProfile.Constraints(
@@ -201,7 +209,7 @@ public class RobotContainer {
                     Constants.MaxAngularRate.div(0.25).baseUnitMagnitude()))
             .withDeadband(MaxSpeed.times(0.1))
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
-            //Set PID for ProfiledFieldCentricFacingAngle
+    // Set PID for ProfiledFieldCentricFacingAngle
     driveFacingAngle.HeadingController.setPID(7, 0, 0);
     joystick
         .y()
