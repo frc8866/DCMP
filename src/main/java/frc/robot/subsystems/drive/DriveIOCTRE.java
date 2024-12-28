@@ -89,7 +89,7 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
     }
   }
 
-  /** Sets up telemetry and simulation if needed. */
+  /** Sets up simulation if needed. */
   private void setupSimulation() {
     if (Constants.currentMode == Mode.SIM) {
       startSimThread();
