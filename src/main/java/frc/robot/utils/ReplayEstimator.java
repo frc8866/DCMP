@@ -9,10 +9,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.Constants;
-import frc.robot.Constants.Mode;
-import frc.robot.subsystems.drive.DriveIO;
-import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -20,25 +16,25 @@ import java.util.Optional;
  * wraps WPILib's SwerveDrivePoseEstimator and provides additional functionality for handling vision
  * measurements and replaying recorded data.
  */
-public class ModeEstimator {
-  private final DriveIO io;
+public class ReplayEstimator {
   private final SwerveDriveKinematics kinematics;
-  private final SwerveDrivePoseEstimator poseEstimator;
-  private final SwerveModulePosition[] modulePositions;
+  private SwerveDrivePoseEstimator poseEstimator;
+  private SwerveModulePosition[] modulePositions;
 
   /**
    * Constructs a new ModeEstimator.
    *
-   * @param io The DriveIO interface for accessing real hardware or simulation
    * @param modulePositions Initial positions of all swerve modules
    */
-  public ModeEstimator(DriveIO io, SwerveModulePosition[] modulePositions) {
-    this.io = io;
-    this.modulePositions = modulePositions;
+  public ReplayEstimator() {
     this.kinematics = new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
-    this.poseEstimator =
-        new SwerveDrivePoseEstimator(
-            kinematics, Rotation2d.fromDegrees(0), modulePositions, new Pose2d());
+  }
+
+  public void setPoseEstimator(
+      Rotation2d gyroAngle, SwerveModulePosition[] modulePositions, Pose2d initialPoseMeters) {
+    this.modulePositions = modulePositions;
+    poseEstimator =
+        new SwerveDrivePoseEstimator(kinematics, gyroAngle, modulePositions, initialPoseMeters);
   }
 
   /**
@@ -48,10 +44,7 @@ public class ModeEstimator {
    * @param pose The pose to reset to
    */
   public void resetPose(Pose2d pose) {
-    if (Constants.currentMode == Mode.REPLAY) {
-      poseEstimator.resetPose(pose);
-    }
-    io.resetPose(pose);
+    poseEstimator.resetPose(pose);
   }
 
   /**
@@ -61,9 +54,7 @@ public class ModeEstimator {
    * @return Optional containing the pose at the given timestamp, or empty if not available
    */
   public Optional<Pose2d> samplePoseAt(double timestamp) {
-    return Constants.currentMode == Mode.REPLAY
-        ? poseEstimator.sampleAt(timestamp)
-        : io.samplePoseAt(timestamp);
+    return poseEstimator.sampleAt(timestamp);
   }
 
   /**
@@ -80,14 +71,12 @@ public class ModeEstimator {
       Rotation2d[] gyroYaw,
       double[][] drivePosition,
       Rotation2d[][] steerPosition) {
-    if (Constants.currentMode == Mode.REPLAY) {
-      for (int i = 0; i < timestamp.length; i++) {
-        for (int moduleIndex = 0; moduleIndex < modulePositions.length; moduleIndex++) {
-          modulePositions[moduleIndex].distanceMeters = drivePosition[moduleIndex][i];
-          modulePositions[moduleIndex].angle = steerPosition[moduleIndex][i];
-        }
-        poseEstimator.updateWithTime(timestamp[i], gyroYaw[i], modulePositions);
+    for (int i = 0; i < timestamp.length; i++) {
+      for (int moduleIndex = 0; moduleIndex < modulePositions.length; moduleIndex++) {
+        modulePositions[moduleIndex].distanceMeters = drivePosition[moduleIndex][i];
+        modulePositions[moduleIndex].angle = steerPosition[moduleIndex][i];
       }
+      poseEstimator.updateWithTime(timestamp[i], gyroYaw[i], modulePositions);
     }
   }
 
@@ -111,32 +100,7 @@ public class ModeEstimator {
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
-    if (Constants.currentMode == Mode.REPLAY) {
-      poseEstimator.addVisionMeasurement(
-          visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-    } else {
-      io.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-    }
-  }
-
-  /**
-   * Adds a vision measurement using the VisionMeasurement wrapper class.
-   *
-   * @param visionMeasurement The vision measurement to add
-   */
-  public void addVisionMeasurement(VisionMeasurement visionMeasurement) {
-    this.addVisionMeasurement(
-        visionMeasurement.poseEstimate().pose().toPose2d(),
-        visionMeasurement.poseEstimate().timestampSeconds(),
-        visionMeasurement.visionMeasurementStdDevs());
-  }
-
-  /**
-   * Adds multiple vision measurements from a list.
-   *
-   * @param visionData List of vision measurements to add
-   */
-  public void addVisionData(List<VisionMeasurement> visionData) {
-    visionData.forEach(this::addVisionMeasurement);
+    poseEstimator.addVisionMeasurement(
+        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
   }
 }

@@ -6,10 +6,14 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -22,7 +26,7 @@ import frc.robot.Constants.Mode;
 import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
-import frc.robot.utils.ModeEstimator;
+import frc.robot.utils.ReplayEstimator;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -38,7 +42,8 @@ public class Drive extends SubsystemBase {
 
   private Module[] modules = new Module[4];
 
-  private final ModeEstimator modeEstimator;
+  private final ReplayEstimator replayEstimator;
+  private boolean estiamtorSet = false;
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -123,7 +128,8 @@ public class Drive extends SubsystemBase {
 
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
-    modeEstimator = new ModeEstimator(io, inputs.modulePositions);
+
+    replayEstimator = new ReplayEstimator();
 
     modules[0] = new Module(flModuleIO, 0);
     modules[1] = new Module(frModuleIO, 1);
@@ -226,19 +232,30 @@ public class Drive extends SubsystemBase {
               });
     }
 
-    modeEstimator.updateWithTime(
-        inputs.timestamp, inputs.gyroYaw, inputs.drivePositions, inputs.steerPositions);
+    if (Constants.currentMode == Mode.REPLAY && inputs.odometryIsValid) {
+      if (!estiamtorSet) {
+        replayEstimator.setPoseEstimator(getRotation(), getModulePositions(), getPose());
+        estiamtorSet = true;
+      }
+      if (estiamtorSet) {
+        replayEstimator.updateWithTime(
+            inputs.timestamp, inputs.gyroYaw, inputs.drivePositions, inputs.steerPositions);
+      }
+    }
   }
 
   public void resetPose(Pose2d pose) {
-    modeEstimator.resetPose(pose);
+    if (Constants.currentMode == Mode.REPLAY && estiamtorSet) {
+      replayEstimator.resetPose(pose);
+    }
+    io.resetPose(pose);
   }
 
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
-    if (Constants.currentMode == Mode.REPLAY) {
-      return modeEstimator.getPose();
+    if (Constants.currentMode == Mode.REPLAY && estiamtorSet) {
+      return replayEstimator.getPose();
     }
     return inputs.pose;
   }
@@ -275,6 +292,10 @@ public class Drive extends SubsystemBase {
     return inputs.moduleTargets;
   }
 
+  public SwerveModulePosition[] getModulePositions() {
+    return inputs.modulePositions;
+  }
+
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
   public ChassisSpeeds getChassisSpeeds() {
@@ -288,7 +309,28 @@ public class Drive extends SubsystemBase {
    * @return The pose at the given timestamp (or current pose if the buffer is empty).
    */
   public Pose2d samplePoseAt(double timestampSeconds) {
-    return modeEstimator.samplePoseAt(timestampSeconds).orElse(getPose());
+    return Constants.currentMode == Mode.REPLAY && estiamtorSet
+        ? replayEstimator.samplePoseAt(timestampSeconds).orElse(getPose())
+        : io.samplePoseAt(timestampSeconds).orElse(getPose());
+  }
+
+  /**
+   * Adds a vision measurement to the pose estimator.
+   *
+   * @param visionRobotPoseMeters The measured robot pose from vision
+   * @param timestampSeconds The timestamp of the measurement
+   * @param visionMeasurementStdDevs Standard deviation matrix for the measurement
+   */
+  public void addVisionMeasurement(
+      Pose2d visionRobotPoseMeters,
+      double timestampSeconds,
+      Matrix<N3, N1> visionMeasurementStdDevs) {
+    if (Constants.currentMode == Mode.REPLAY && estiamtorSet) {
+      replayEstimator.addVisionMeasurement(
+          visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+    } else {
+      this.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+    }
   }
 
   /**
@@ -298,7 +340,10 @@ public class Drive extends SubsystemBase {
    * @param timestamp The timestamp of the vision measurement in seconds.
    */
   public void addVisionMeasurement(VisionMeasurement visionMeasurement) {
-    modeEstimator.addVisionMeasurement(visionMeasurement);
+    this.addVisionMeasurement(
+        visionMeasurement.poseEstimate().pose().toPose2d(),
+        visionMeasurement.poseEstimate().timestampSeconds(),
+        visionMeasurement.visionMeasurementStdDevs());
   }
 
   public void addVisionData(List<VisionMeasurement> visionData) {

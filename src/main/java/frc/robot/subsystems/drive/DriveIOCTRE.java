@@ -20,6 +20,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.locks.Lock;
@@ -41,7 +42,7 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
   // Queue configuration
   private static final int QUEUE_SIZE = 20;
 
-  // Thread-safe data storage
+  // Thread-safe storage
   private final Lock odometryLock = new ReentrantLock();
   private final Queue<Rotation2d> gyroYawQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
   private final Queue<Double> timestampQueue = new ArrayBlockingQueue<>(QUEUE_SIZE);
@@ -102,13 +103,14 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
     SwerveDriveState state = getState();
     inputs.moduleStates = state.ModuleStates;
     inputs.moduleTargets = state.ModuleTargets;
+    inputs.modulePositions = state.ModulePositions;
     inputs.pose = state.Pose;
     inputs.speeds = state.Speeds;
     inputs.odometryPeriod = state.OdometryPeriod;
     inputs.successfulDaqs = state.SuccessfulDaqs;
     inputs.failedDaqs = state.FailedDaqs;
 
-    // Update direct sensor inputs
+    // Update sensor inputs
     inputs.gyroRate = getPigeon2().getAngularVelocityZWorld().getValue();
     inputs.operatorForwardDirection = getOperatorForwardDirection();
     inputs.odometryIsValid = isOdometryValid();
@@ -118,13 +120,8 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
     try {
       // Process timestamps
       inputs.timestamp = timestampQueue.stream().mapToDouble(Double::valueOf).toArray();
-      timestampQueue.clear();
-
-      // Process gyro data
       inputs.gyroYaw = gyroYawQueue.stream().toArray(Rotation2d[]::new);
-      gyroYawQueue.clear();
 
-      // Process module positions
       for (int i = 0; i < getModules().length; i++) {
         inputs.drivePositions[i] =
             drivePositionQueues.get(i).stream().mapToDouble(Double::valueOf).toArray();
@@ -133,6 +130,9 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
         drivePositionQueues.get(i).clear();
         steerPositionQueues.get(i).clear();
       }
+
+      timestampQueue.clear();
+      gyroYawQueue.clear();
     } finally {
       odometryLock.unlock();
     }
@@ -184,6 +184,11 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
   public void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds) {
     // Converts our WPILib timestamp to CTRE timestamp
     super.addVisionMeasurement(visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds));
+  }
+
+  @Override
+  public Optional<Pose2d> samplePoseAt(double timestamp) {
+    return super.samplePoseAt(Utils.fpgaToCurrentTime(timestamp));
   }
 
   @Override
