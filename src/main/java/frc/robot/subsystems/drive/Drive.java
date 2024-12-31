@@ -363,7 +363,8 @@ public class Drive extends SubsystemBase {
 
     if (!estimatorTrigger.getAsBoolean()) {
       poseEstimator =
-          new SwerveDrivePoseEstimator(kinematics, getRotation(), getModulePositions(), getPose());
+          new SwerveDrivePoseEstimator(
+              kinematics, Rotation2d.kZero, getModulePositions(), Pose2d.kZero);
     }
 
     for (int timeIndex = 0; timeIndex < inputs.timestamp.length; timeIndex++) {
