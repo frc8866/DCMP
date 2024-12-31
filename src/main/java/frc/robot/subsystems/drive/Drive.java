@@ -7,9 +7,11 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
@@ -20,13 +22,13 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
-import frc.robot.utils.ReplayEstimator;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -42,8 +44,18 @@ public class Drive extends SubsystemBase {
 
   private Module[] modules = new Module[4];
 
-  private final ReplayEstimator replayEstimator;
-  private boolean estiamtorSet = false;
+  private final SwerveDriveKinematics kinematics =
+      new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
+  private SwerveDrivePoseEstimator poseEstimator = null;
+  private Trigger estimatorTrigger =
+      new Trigger(() -> poseEstimator != null).and(() -> Constants.currentMode == Mode.REPLAY);
+  private SwerveModulePosition[] currentPositions =
+      new SwerveModulePosition[] {
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition(),
+        new SwerveModulePosition()
+      };
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -128,8 +140,6 @@ public class Drive extends SubsystemBase {
 
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
-
-    replayEstimator = new ReplayEstimator();
 
     modules[0] = new Module(flModuleIO, 0);
     modules[1] = new Module(frModuleIO, 1);
@@ -231,22 +241,12 @@ public class Drive extends SubsystemBase {
                 m_hasAppliedOperatorPerspective = true;
               });
     }
-
-    if (Constants.currentMode == Mode.REPLAY && inputs.odometryIsValid) {
-      if (!estiamtorSet) {
-        replayEstimator.setPoseEstimator(getRotation(), getModulePositions(), getPose());
-        estiamtorSet = true;
-      }
-      if (estiamtorSet) {
-        replayEstimator.updateWithTime(
-            inputs.timestamp, inputs.gyroYaw, inputs.drivePositions, inputs.steerPositions);
-      }
-    }
+    updateWithTime();
   }
 
   public void resetPose(Pose2d pose) {
-    if (Constants.currentMode == Mode.REPLAY && estiamtorSet) {
-      replayEstimator.resetPose(pose);
+    if (estimatorTrigger.getAsBoolean()) {
+      poseEstimator.resetPose(pose);
     }
     io.resetPose(pose);
   }
@@ -254,8 +254,8 @@ public class Drive extends SubsystemBase {
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
-    if (Constants.currentMode == Mode.REPLAY && estiamtorSet) {
-      return replayEstimator.getPose();
+    if (estimatorTrigger.getAsBoolean()) {
+      return poseEstimator.getEstimatedPosition();
     }
     return inputs.pose;
   }
@@ -309,8 +309,8 @@ public class Drive extends SubsystemBase {
    * @return The pose at the given timestamp (or current pose if the buffer is empty).
    */
   public Pose2d samplePoseAt(double timestampSeconds) {
-    return Constants.currentMode == Mode.REPLAY && estiamtorSet
-        ? replayEstimator.samplePoseAt(timestampSeconds).orElse(getPose())
+    return estimatorTrigger.getAsBoolean()
+        ? poseEstimator.sampleAt(timestampSeconds).orElse(getPose())
         : io.samplePoseAt(timestampSeconds).orElse(getPose());
   }
 
@@ -325,11 +325,11 @@ public class Drive extends SubsystemBase {
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
-    if (Constants.currentMode == Mode.REPLAY && estiamtorSet) {
-      replayEstimator.addVisionMeasurement(
+    if (estimatorTrigger.getAsBoolean()) {
+      poseEstimator.addVisionMeasurement(
           visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
     } else {
-      this.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+      io.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
     }
   }
 
@@ -355,4 +355,28 @@ public class Drive extends SubsystemBase {
   }
 
   public record VisionParameters(Pose2d robotPose, AngularVelocity gyroRate) {}
+
+  public void updateWithTime() {
+    if (Constants.currentMode != Mode.REPLAY || !inputs.odometryIsValid) {
+      return;
+    }
+
+    if (!estimatorTrigger.getAsBoolean()) {
+      poseEstimator =
+          new SwerveDrivePoseEstimator(kinematics, getRotation(), getModulePositions(), getPose());
+    }
+
+    for (int timeIndex = 0; timeIndex < inputs.timestamp.length; timeIndex++) {
+      updateModulePositions(timeIndex);
+      poseEstimator.updateWithTime(
+          inputs.timestamp[timeIndex], inputs.gyroYaw[timeIndex], currentPositions);
+    }
+  }
+
+  private void updateModulePositions(int timeIndex) {
+    for (int moduleIndex = 0; moduleIndex < currentPositions.length; moduleIndex++) {
+      currentPositions[moduleIndex].distanceMeters = inputs.drivePositions[moduleIndex][timeIndex];
+      currentPositions[moduleIndex].angle = inputs.steerPositions[moduleIndex][timeIndex];
+    }
+  }
 }
