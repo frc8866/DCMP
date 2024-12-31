@@ -155,8 +155,9 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
 
       // Update gyro and timestamp data
       gyroYawQueue.offer(state.RawHeading);
-      timestampQueue.offer(
-          Timer.getFPGATimestamp() - (Utils.getCurrentTimeSeconds() - state.Timestamp));
+
+      double currentTime = Timer.getFPGATimestamp();
+      timestampQueue.offer(currentTime - (Utils.fpgaToCurrentTime(currentTime) - state.Timestamp));
     } finally {
       odometryLock.unlock();
     }
