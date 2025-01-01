@@ -5,8 +5,11 @@
 package frc.robot.subsystems.drive;
 
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -61,10 +64,7 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
       double odometryUpdateFrequency,
       SwerveModuleConstants... modules) {
     super(driveTrainConstants, odometryUpdateFrequency, modules);
-    initializeQueues();
-    // This pulls data from our Odometry thread or in this case at 250 Hz
-    registerTelemetry(this::updateTelemetry);
-    setupSimulation();
+    setup();
   }
 
   /**
@@ -76,6 +76,11 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
   public DriveIOCTRE(
       SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
     super(driveTrainConstants, modules);
+    setup();
+  }
+
+  /** Sets up the DriveIOCTRE with telemetry and simulation support if needed. */
+  private void setup() {
     initializeQueues();
     // This pulls data from our Odometry thread or in this case at 250 Hz
     registerTelemetry(this::updateTelemetry);
@@ -200,5 +205,40 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
     // Converts our WPILib timestamp to CTRE timestamp
     super.addVisionMeasurement(
         visionRobotPoseMeters, Utils.fpgaToCurrentTime(timestampSeconds), visionMeasurementStdDevs);
+  }
+
+  @Override
+  public void updateModules(ModuleIOInputs[] inputs) {
+    // Update modules with the given inputs
+    for (int i = 0; i < Constants.PP_CONFIG.numModules; i++) {
+      inputs[i] = updateModule(inputs[i], getModule(i));
+    }
+  }
+
+  private ModuleIOInputs updateModule(ModuleIOInputs inputs, SwerveModule module) {
+    // Get hardware objects
+    TalonFX driveTalon = module.getDriveMotor();
+    TalonFX turnTalon = module.getSteerMotor();
+    CANcoder cancoder = module.getCANcoder();
+
+    inputs.driveConnected = driveTalon.isConnected();
+    inputs.drivePosition = driveTalon.getPosition().getValue();
+    inputs.driveVelocity = driveTalon.getVelocity().getValue();
+    inputs.driveAppliedVolts = driveTalon.getMotorVoltage().getValue();
+    inputs.driveStatorCurrent = driveTalon.getStatorCurrent().getValue();
+    inputs.driveSupplyCurrent = driveTalon.getSupplyCurrent().getValue();
+
+    // Update turn inputs
+    inputs.turnConnected = turnTalon.isConnected();
+    inputs.turnEncoderConnected = cancoder.isConnected();
+    inputs.turnAbsolutePosition =
+        Rotation2d.fromRotations(cancoder.getAbsolutePosition().getValueAsDouble());
+    inputs.turnPosition = Rotation2d.fromRotations(turnTalon.getPosition().getValueAsDouble());
+    inputs.turnVelocity = turnTalon.getVelocity().getValue();
+    inputs.turnAppliedVolts = turnTalon.getMotorVoltage().getValue();
+    inputs.turnStatorCurrent = turnTalon.getStatorCurrent().getValue();
+    inputs.turnSupplyCurrent = turnTalon.getSupplyCurrent().getValue();
+
+    return inputs;
   }
 }

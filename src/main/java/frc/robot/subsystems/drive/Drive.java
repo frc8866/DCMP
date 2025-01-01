@@ -18,6 +18,8 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -26,8 +28,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
-import frc.robot.subsystems.drive.module.Module;
-import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
 import java.util.List;
 import java.util.function.Supplier;
@@ -41,8 +41,14 @@ import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
   private final DriveIO io;
   private final DriveIOInputsAutoLogged inputs;
-
-  private Module[] modules = new Module[4];
+  private final ModuleIOInputsAutoLogged[] modules =
+      new ModuleIOInputsAutoLogged[] {
+        new ModuleIOInputsAutoLogged(),
+        new ModuleIOInputsAutoLogged(),
+        new ModuleIOInputsAutoLogged(),
+        new ModuleIOInputsAutoLogged()
+      };
+  ;
 
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
@@ -56,6 +62,10 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition(),
         new SwerveModulePosition()
       };
+
+  private Alert[] driveDisconnectedAlert;
+  private Alert[] turnDisconnectedAlert;
+  private Alert[] turnEncoderDisconnectedAlert;
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -131,22 +141,27 @@ public class Drive extends SubsystemBase {
   /* The SysId routine to test */
   private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
-  public Drive(
-      DriveIO io,
-      ModuleIO flModuleIO,
-      ModuleIO frModuleIO,
-      ModuleIO blModuleIO,
-      ModuleIO brModuleIO) {
+  public Drive(DriveIO io) {
 
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
 
-    modules[0] = new Module(flModuleIO, 0);
-    modules[1] = new Module(frModuleIO, 1);
-    modules[2] = new Module(blModuleIO, 2);
-    modules[3] = new Module(brModuleIO, 3);
-
+    configureAlerts();
     configureAutoBuilder();
+  }
+
+  private void configureAlerts() {
+    for (int i = 0; i < modules.length; i++) {
+      driveDisconnectedAlert[i] =
+          new Alert(
+              "Disconnected drive motor on module " + Integer.toString(i) + ".", AlertType.kError);
+      turnDisconnectedAlert[i] =
+          new Alert(
+              "Disconnected turn motor on module " + Integer.toString(i) + ".", AlertType.kError);
+      turnEncoderDisconnectedAlert[i] =
+          new Alert(
+              "Disconnected turn encoder on module " + Integer.toString(i) + ".", AlertType.kError);
+    }
   }
 
   private void configureAutoBuilder() {
@@ -226,8 +241,12 @@ public class Drive extends SubsystemBase {
     io.updateInputs(inputs);
     Logger.processInputs("Drive", inputs);
 
-    for (Module module : modules) {
-      module.periodic();
+    io.updateModules(modules);
+    for (int i = 0; i < modules.length; i++) {
+      Logger.processInputs("Module" + i, modules[i]);
+      driveDisconnectedAlert[i].set(!modules[i].driveConnected);
+      turnDisconnectedAlert[i].set(!modules[i].turnConnected);
+      turnEncoderDisconnectedAlert[i].set(!modules[i].turnEncoderConnected);
     }
 
     if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
@@ -275,7 +294,7 @@ public class Drive extends SubsystemBase {
   public Angle[] getDrivePositions() {
     Angle[] values = new Angle[4];
     for (int i = 0; i < 4; i++) {
-      values[i] = modules[i].getDrivePosition();
+      values[i] = modules[i].drivePosition;
     }
     return values;
   }

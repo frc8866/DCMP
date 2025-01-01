@@ -20,8 +20,6 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
-import frc.robot.subsystems.drive.module.ModuleIO;
-import frc.robot.subsystems.drive.module.ModuleIOCTRE;
 import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
 import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
 import frc.robot.subsystems.vision.Vision;
@@ -53,13 +51,7 @@ public class RobotContainer {
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        drivetrain =
-            new Drive(
-                currentDriveTrain,
-                new ModuleIOCTRE(currentDriveTrain.getModule(0)),
-                new ModuleIOCTRE(currentDriveTrain.getModule(1)),
-                new ModuleIOCTRE(currentDriveTrain.getModule(2)),
-                new ModuleIOCTRE(currentDriveTrain.getModule(3)));
+        drivetrain = new Drive(currentDriveTrain);
 
         new Vision(
             drivetrain::addVisionData,
@@ -71,13 +63,7 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drivetrain =
-            new Drive(
-                currentDriveTrain,
-                new ModuleIOCTRE(currentDriveTrain.getModule(0)),
-                new ModuleIOCTRE(currentDriveTrain.getModule(1)),
-                new ModuleIOCTRE(currentDriveTrain.getModule(2)),
-                new ModuleIOCTRE(currentDriveTrain.getModule(3)));
+        drivetrain = new Drive(currentDriveTrain);
 
         new Vision(
             drivetrain::addVisionData,
@@ -109,13 +95,7 @@ public class RobotContainer {
 
       default:
         // Replayed robot, disable IO implementations
-        drivetrain =
-            new Drive(
-                new DriveIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
+        drivetrain = new Drive(new DriveIO() {});
 
         new Vision(
             drivetrain::addVisionData,

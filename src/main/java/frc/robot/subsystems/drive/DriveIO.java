@@ -4,10 +4,14 @@
 
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volt;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -15,7 +19,10 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Current;
+import edu.wpi.first.units.measure.Voltage;
 import java.util.Optional;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -70,7 +77,28 @@ public interface DriveIO {
     public Rotation2d[][] steerPositions = new Rotation2d[4][0];
   }
 
+  @AutoLog
+  public static class ModuleIOInputs {
+    public boolean driveConnected = false;
+    public Angle drivePosition = Radians.of(0.0);
+    public AngularVelocity driveVelocity = RotationsPerSecond.of(0.0);
+    public Voltage driveAppliedVolts = Volt.of(0.0);
+    public Current driveStatorCurrent = Amps.of(0.0);
+    public Current driveSupplyCurrent = Amps.of(0.0);
+
+    public boolean turnConnected = false;
+    public boolean turnEncoderConnected = false;
+    public Rotation2d turnAbsolutePosition = new Rotation2d();
+    public Rotation2d turnPosition = new Rotation2d();
+    public AngularVelocity turnVelocity = RotationsPerSecond.of(0.0);
+    public Voltage turnAppliedVolts = Volt.of(0.0);
+    public Current turnStatorCurrent = Amps.of(0.0);
+    public Current turnSupplyCurrent = Amps.of(0.0);
+  }
+
   default void updateInputs(DriveIOInputs inputs) {}
+
+  default void updateModules(ModuleIOInputs[] inputs) {}
 
   default void setOperatorPerspectiveForward(Rotation2d fieldDirection) {}
 
