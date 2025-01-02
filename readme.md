@@ -44,7 +44,7 @@ All of the documentation needed for setup and more can be found [on our document
 ```diff
 - import frc.robot.subsystems.CommandSwerveDrivetrain;
 + import frc.robot.subsystems.drive.DriveIOCTRE;
-``` 
+```
 
 ```diff
 - public static CommandSwerveDrivetrain createDrivetrain() {

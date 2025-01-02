@@ -25,6 +25,7 @@ public class Robot extends LoggedRobot {
   private final RobotContainer m_robotContainer;
 
   public Robot() {
+    Pathfinding.setPathfinder(new LocalADStarAK());
     // Set up data receivers & replay source
     switch (Constants.currentMode) {
       case REAL:
@@ -60,8 +61,6 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     // Warmup the PPLib library
-
-    Pathfinding.setPathfinder(new LocalADStarAK());
 
     FollowPathCommand.warmupCommand().schedule();
     PathfindingCommand.warmupCommand().schedule();
