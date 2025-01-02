@@ -48,7 +48,6 @@ public class Drive extends SubsystemBase {
         new ModuleIOInputsAutoLogged(),
         new ModuleIOInputsAutoLogged()
       };
-  ;
 
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
