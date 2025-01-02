@@ -79,6 +79,21 @@ public class DriveIOCTRE extends SwerveDrivetrain implements DriveIO {
     setup();
   }
 
+  public DriveIOCTRE(
+      SwerveDrivetrainConstants drivetrainConstants,
+      double odometryUpdateFrequency,
+      Matrix<N3, N1> odometryStandardDeviation,
+      Matrix<N3, N1> visionStandardDeviation,
+      SwerveModuleConstants... modules) {
+    super(
+        drivetrainConstants,
+        odometryUpdateFrequency,
+        odometryStandardDeviation,
+        visionStandardDeviation,
+        modules);
+    setup();
+  }
+
   /** Sets up the DriveIOCTRE with telemetry and simulation support if needed. */
   private void setup() {
     initializeQueues();

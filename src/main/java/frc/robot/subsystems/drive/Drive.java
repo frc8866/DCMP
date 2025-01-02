@@ -62,9 +62,9 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition()
       };
 
-  private Alert[] driveDisconnectedAlert;
-  private Alert[] turnDisconnectedAlert;
-  private Alert[] turnEncoderDisconnectedAlert;
+  private Alert[] driveDisconnectedAlert = new Alert[4];
+  private Alert[] turnDisconnectedAlert = new Alert[4];
+  private Alert[] turnEncoderDisconnectedAlert = new Alert[4];
 
   private Alert gyroDisconnectedAlert;
 
@@ -387,7 +387,7 @@ public class Drive extends SubsystemBase {
     if (!estimatorTrigger.getAsBoolean()) {
       poseEstimator =
           new SwerveDrivePoseEstimator(
-              kinematics, Rotation2d.kZero, getModulePositions(), Pose2d.kZero);
+              kinematics, inputs.pose.getRotation(), inputs.modulePositions, inputs.pose);
     }
 
     for (int timeIndex = 0; timeIndex < inputs.timestamp.length; timeIndex++) {
