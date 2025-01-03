@@ -46,7 +46,7 @@ public final class Constants {
 
   // PathPlanner config constants
   private static final Mass ROBOT_MASS = Kilogram.of(69.78);
-  //15.2
+  // 15.2
   private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6.0);
   private static final double WHEEL_COF = 1.9;
   public static final SwerveModuleConstants SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
