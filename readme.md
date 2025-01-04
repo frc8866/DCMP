@@ -6,8 +6,8 @@
 <!--- Auto version update for pathplanner and Phoenix 6 will need to be changed to the non beta since the vendor dependency file includes the -beta --->
 <p align="center">
 <img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Hemlock5712/2025SwerveTemplate/refs/heads/main/vendordeps/AdvantageKit.json&query=$.version&label=AdvantageKit&color=fbc30c&style=for-the-badge" alt="AdvantageKit Version">
-<img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Hemlock5712/2025SwerveTemplate/refs/heads/main/vendordeps/PathplannerLib-beta.json&query=$.version&label=PathPlanner&color=3F56CE&style=for-the-badge" alt="PathPlanner Version">
-<img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Hemlock5712/2025SwerveTemplate/refs/heads/main/vendordeps/Phoenix6-frc2025-beta-latest.json&query=$.version&label=Phoenix%206&color=97d700&style=for-the-badge" alt="Phoenix 6 Version">
+<img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Hemlock5712/2025SwerveTemplate/refs/heads/main/vendordeps/PathplannerLib.json&query=$.version&label=PathPlanner&color=3F56CE&style=for-the-badge" alt="PathPlanner Version">
+<img src="https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Hemlock5712/2025SwerveTemplate/refs/heads/main/vendordeps/Phoenix6-frc2025-latest.json&query=$.version&label=Phoenix%206&color=97d700&style=for-the-badge" alt="Phoenix 6 Version">
 </p>
 
 > Note: Release with officially released versions of libraries will be made as soon as possible.
