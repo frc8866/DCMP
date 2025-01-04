@@ -21,6 +21,10 @@ import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
 import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
 import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
+import frc.robot.subsystems.flywheel.Flywheel;
+import frc.robot.subsystems.flywheel.FlywheelIO;
+import frc.robot.subsystems.flywheel.FlywheelIOCTRE;
+import frc.robot.subsystems.flywheel.FlywheelIOSIM;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
@@ -43,6 +47,7 @@ public class RobotContainer {
           .withDeadband(MaxSpeed.times(0.1))
           .withRotationalDeadband(Constants.MaxAngularRate.times(0.1)) // Add a 10% deadband
           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+  private final Flywheel flywheel;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -61,6 +66,9 @@ public class RobotContainer {
             new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
+
+        flywheel = new Flywheel(new FlywheelIOCTRE());
+
         break;
 
       case SIM:
@@ -93,6 +101,8 @@ public class RobotContainer {
                     new Translation3d(0.0, -0.2, 0.8),
                     new Rotation3d(0, Math.toRadians(20), Math.toRadians(-90))),
                 drivetrain::getVisionParameters));
+
+        flywheel = new Flywheel(new FlywheelIOSIM());
         break;
 
       default:
@@ -105,6 +115,8 @@ public class RobotContainer {
             new VisionIO() {},
             new VisionIO() {},
             new VisionIO() {});
+
+        flywheel = new Flywheel(new FlywheelIO() {});
         break;
     }
 
