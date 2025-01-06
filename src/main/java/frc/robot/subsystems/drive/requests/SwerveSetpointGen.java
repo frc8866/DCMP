@@ -95,16 +95,14 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
       SwerveModuleState[] currentStates,
       Supplier<Rotation2d> currentRotation) {
     this.currentRotation = currentRotation;
-    ChassisSpeeds fieldRelativeSpeeds =
-        ChassisSpeeds.fromRobotRelativeSpeeds(currentSpeeds, currentRotation.get());
+    currentSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(currentSpeeds, currentRotation.get());
     previousSetpoint =
         new SwerveSetpoint(
-            fieldRelativeSpeeds,
-            currentStates,
-            DriveFeedforwards.zeros(Constants.PP_CONFIG.numModules));
+            currentSpeeds, currentStates, DriveFeedforwards.zeros(Constants.PP_CONFIG.numModules));
   }
 
-  public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
+  public StatusCode apply(
+      SwerveControlParameters parameters, SwerveModule<?, ?, ?>... modulesToApply) {
     return StatusCode.OK;
   }
 
@@ -131,8 +129,7 @@ public class SwerveSetpointGen implements NativeSwerveRequest {
     }
 
     ChassisSpeeds speeds =
-        ChassisSpeeds.fromFieldRelativeSpeeds(
-            new ChassisSpeeds(toApplyX, toApplyY, toApplyOmega), toApplyRotation);
+        ChassisSpeeds.fromFieldRelativeSpeeds(toApplyX, toApplyY, toApplyOmega, toApplyRotation);
 
     previousSetpoint =
         Constants.setpointGenerator.generateSetpoint(
