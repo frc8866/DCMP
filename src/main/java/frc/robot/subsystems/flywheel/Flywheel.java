@@ -1,5 +1,5 @@
-// Copyright 2021-2024 FRC 6328
-// http://github.com/Mechanical-Advantage
+// Copyright FRC 5712
+// https://hemlock5712.github.io/
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -20,7 +20,7 @@ import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SelectCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -70,33 +70,6 @@ public class Flywheel extends SubsystemBase {
     followerMotorAlert.set(!inputs.followerConnected);
   }
 
-  public ShotMode getMode() {
-    return currentMode;
-  }
-
-  public void setMode(ShotMode mode) {
-    getCommand.cancel();
-    currentMode = mode;
-    getCommand.schedule();
-  }
-
-  public enum ShotMode {
-    NONE,
-    AMP,
-    SPEAKER,
-    FEED
-  }
-
-  private final Command getCommand =
-      new SelectCommand<>(
-          // Maps selector values to commands
-          Map.ofEntries(
-              Map.entry(ShotMode.NONE, new PrintCommand("No command was selected!")),
-              Map.entry(ShotMode.AMP, new PrintCommand("Command one was selected!")),
-              Map.entry(ShotMode.SPEAKER, new PrintCommand("Command two was selected!")),
-              Map.entry(ShotMode.FEED, new PrintCommand("Command three was selected!"))),
-          this::getMode);
-
   /** Run open loop at the specified voltage. */
   public void runVoltage(Voltage volts) {
     io.setVoltage(volts);
@@ -125,5 +98,94 @@ public class Flywheel extends SubsystemBase {
   @AutoLogOutput
   public AngularVelocity getVelocity() {
     return inputs.velocity;
+  }
+
+  public enum ShotMode {
+    NONE(RPM.of(0)),
+    AMP(RPM.of(1500)), // Example target speeds - adjust as needed
+    SPEAKER(RPM.of(3000)),
+    FEED(RPM.of(1000));
+
+    public final AngularVelocity targetSpeed;
+    public final AngularVelocity speedTolerance;
+
+    ShotMode(AngularVelocity targetSpeed, AngularVelocity speedTolerance) {
+      this.targetSpeed = targetSpeed;
+      this.speedTolerance = speedTolerance;
+    }
+
+    ShotMode(AngularVelocity targetSpeed) {
+      this(targetSpeed, RPM.of(10));
+    }
+  }
+
+  public ShotMode getMode() {
+    return currentMode;
+  }
+
+  public void setMode(ShotMode mode) {
+    currentCommand.cancel();
+    currentMode = mode;
+    currentCommand.schedule();
+  }
+
+  // Command to run the flywheel in the current mode
+  private final Command currentCommand =
+      new SelectCommand<>(
+          Map.of(
+              ShotMode.NONE, Commands.runOnce(this::stop).withName("Stop Flywheel"),
+              ShotMode.AMP, createShotCommand(ShotMode.AMP),
+              ShotMode.SPEAKER, createShotCommand(ShotMode.SPEAKER),
+              ShotMode.FEED, createShotCommand(ShotMode.FEED)),
+          this::getMode);
+
+  private Command createShotCommand(ShotMode mode) {
+    return Commands.parallel(
+        // The main command that runs the flywheel
+        Commands.runOnce(() -> runVelocity(mode.targetSpeed)).withName("Run " + mode.toString()),
+        // The parallel command that continuously checks if we're at target
+        Commands.run(() -> checkAtTarget(mode)).withName("Check " + mode.toString() + " Target"));
+  }
+
+  @AutoLogOutput
+  private boolean isAtTarget() {
+    if (currentMode == ShotMode.NONE) return true;
+    return getVelocity().isNear(currentMode.targetSpeed, currentMode.speedTolerance);
+  }
+
+  private void checkAtTarget(ShotMode mode) {
+    boolean atTarget = isAtTarget();
+    Logger.recordOutput("Flywheel/AtTarget", atTarget);
+    Logger.recordOutput("Flywheel/TargetSpeed", mode.targetSpeed);
+  }
+
+  /**
+   * Creates a command to set the flywheel to a specific mode.
+   *
+   * @param mode The desired shot mode
+   * @return Command to set the mode
+   */
+  public Command setModeCommand(ShotMode mode) {
+    return Commands.runOnce(() -> setMode(mode))
+        .withName("SetFlywheelMode(" + mode.toString() + ")");
+  }
+
+  /**
+   * Factory methods for common mode commands. These make binding to buttons/triggers more concise.
+   */
+  public Command ampCommand() {
+    return setModeCommand(ShotMode.AMP);
+  }
+
+  public Command speakerCommand() {
+    return setModeCommand(ShotMode.SPEAKER);
+  }
+
+  public Command feedCommand() {
+    return setModeCommand(ShotMode.FEED);
+  }
+
+  public Command stopCommand() {
+    return setModeCommand(ShotMode.NONE);
   }
 }

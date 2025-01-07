@@ -23,7 +23,6 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -33,8 +32,8 @@ import edu.wpi.first.units.measure.Voltage;
 public class FlywheelIOCTRE implements FlywheelIO {
   public static final double GEAR_RATIO = 1.5;
 
-  public final TalonFX leader = new TalonFX(0);
-  private final TalonFX follower = new TalonFX(1);
+  public final TalonFX leader = new TalonFX(14);
+  public final TalonFX follower = new TalonFX(15);
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
@@ -47,7 +46,7 @@ public class FlywheelIOCTRE implements FlywheelIO {
   private final StatusSignal<Current> followerSupplyCurrent = follower.getSupplyCurrent();
 
   private final Debouncer leaderDebounce = new Debouncer(0.5);
-  private final Debouncer followerCDebounce = new Debouncer(0.5);
+  private final Debouncer followerDebounce = new Debouncer(0.5);
 
   public FlywheelIOCTRE() {
     var config = new TalonFXConfiguration();
@@ -85,7 +84,7 @@ public class FlywheelIOCTRE implements FlywheelIO {
     var followerStatus = BaseStatusSignal.refreshAll(followerStatorCurrent, followerSupplyCurrent);
 
     inputs.leaderConnected = leaderDebounce.calculate(leaderStatus.isOK());
-    inputs.followerConnected = followerCDebounce.calculate(followerStatus.isOK());
+    inputs.followerConnected = followerDebounce.calculate(followerStatus.isOK());
     inputs.position = leaderPosition.getValue().div(GEAR_RATIO);
     inputs.velocity = leaderVelocity.getValue().div(GEAR_RATIO);
     inputs.appliedVoltage = leaderAppliedVolts.getValue();
@@ -111,9 +110,5 @@ public class FlywheelIOCTRE implements FlywheelIO {
   @Override
   public void stop() {
     leader.stopMotor();
-  }
-
-  public TalonFXSimState getSimState() {
-    return leader.getSimState();
   }
 }
