@@ -28,15 +28,23 @@ import java.util.Map;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+/**
+ * The Flywheel subsystem controls a dual-motor flywheel mechanism used for shooting game pieces. It
+ * supports multiple shooting modes with different target speeds and provides both open-loop and
+ * closed-loop control options.
+ */
 public class Flywheel extends SubsystemBase {
+  // Hardware interface and inputs
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs;
 
+  // Alerts for motor connection status
   private final Alert leaderMotorAlert =
       new Alert("Flywheel leader motor isn't connected", AlertType.kError);
   private final Alert followerMotorAlert =
       new Alert("Flywheel follower motor isn't connected", AlertType.kError);
 
+  // System identification routine configuration
   private final SysIdRoutine sysId =
       new SysIdRoutine(
           new SysIdRoutine.Config(
@@ -53,9 +61,14 @@ public class Flywheel extends SubsystemBase {
               null,
               this));
 
+  // Current shooting mode of the flywheel
   private ShotMode currentMode = ShotMode.NONE;
 
-  /** Creates a new Flywheel. */
+  /**
+   * Creates a new Flywheel subsystem with the specified hardware interface.
+   *
+   * @param io The hardware interface implementation for the flywheel
+   */
   public Flywheel(FlywheelIO io) {
     this.io = io;
     this.inputs = new FlywheelIOInputsAutoLogged();
@@ -63,48 +76,74 @@ public class Flywheel extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Update and log inputs from hardware
     io.updateInputs(inputs);
     Logger.processInputs("Flywheel", inputs);
 
+    // Update motor connection status alerts
     leaderMotorAlert.set(!inputs.leaderConnected);
     followerMotorAlert.set(!inputs.followerConnected);
   }
 
-  /** Run open loop at the specified voltage. */
+  /**
+   * Runs the flywheel in open-loop mode at the specified voltage.
+   *
+   * @param volts The voltage to apply to the motors
+   */
   public void runVoltage(Voltage volts) {
     io.setVoltage(volts);
   }
 
+  /**
+   * Runs the flywheel in closed-loop velocity mode at the specified speed.
+   *
+   * @param velocity The target angular velocity
+   */
   public void runVelocity(AngularVelocity velocity) {
     io.setVelocity(velocity);
   }
 
-  /** Stops the flywheel. */
+  /** Stops the flywheel motors. */
   public void stop() {
     io.stop();
   }
 
-  /** Returns a command to run a quasistatic test in the specified direction. */
+  /**
+   * Returns a command to run a quasistatic system identification test.
+   *
+   * @param direction The direction to run the test
+   * @return The command to run the test
+   */
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return sysId.quasistatic(direction);
   }
 
-  /** Returns a command to run a dynamic test in the specified direction. */
+  /**
+   * Returns a command to run a dynamic system identification test.
+   *
+   * @param direction The direction to run the test
+   * @return The command to run the test
+   */
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     return sysId.dynamic(direction);
   }
 
-  /** Returns the current velocity in RPM. */
+  /**
+   * Returns the current velocity of the flywheel.
+   *
+   * @return The current angular velocity
+   */
   @AutoLogOutput
   public AngularVelocity getVelocity() {
     return inputs.velocity;
   }
 
+  /** Enumeration of available shooting modes with their corresponding target speeds. */
   public enum ShotMode {
     NONE(RotationsPerSecond.of(0)),
-    AMP(RotationsPerSecond.of(5)), // Example target speeds - adjust as needed
-    SPEAKER(RotationsPerSecond.of(10)),
-    FEED(RotationsPerSecond.of(20));
+    AMP(RotationsPerSecond.of(5)), // For scoring in the amp
+    SPEAKER(RotationsPerSecond.of(10)), // For scoring in the speaker
+    FEED(RotationsPerSecond.of(20)); // For intaking/feeding game pieces
 
     private AngularVelocity targetSpeed;
     private AngularVelocity speedTolerance;
@@ -119,17 +158,27 @@ public class Flywheel extends SubsystemBase {
     }
   }
 
+  /**
+   * Gets the current shooting mode.
+   *
+   * @return The current ShotMode
+   */
   public ShotMode getMode() {
     return currentMode;
   }
 
+  /**
+   * Sets a new shooting mode and schedules the corresponding command.
+   *
+   * @param mode The desired ShotMode
+   */
   public void setMode(ShotMode mode) {
     currentCommand.cancel();
     currentMode = mode;
     currentCommand.schedule();
   }
 
-  // Command to run the flywheel in the current mode
+  // Command that runs the appropriate routine based on the current mode
   private final Command currentCommand =
       new SelectCommand<>(
           Map.of(
@@ -142,20 +191,35 @@ public class Flywheel extends SubsystemBase {
               ShotMode.FEED, createShotCommand(ShotMode.FEED)),
           this::getMode);
 
+  /**
+   * Creates a command for a specific shooting mode that runs the flywheel and checks the target
+   * speed.
+   *
+   * @param mode The shooting mode to create a command for
+   * @return A command that implements the shooting mode
+   */
   private Command createShotCommand(ShotMode mode) {
     return Commands.parallel(
-        // The main command that runs the flywheel
         Commands.runOnce(() -> runVelocity(mode.targetSpeed)).withName("Run " + mode.toString()),
-        // The parallel command that continuously checks if we're at target
         Commands.run(() -> checkAtTarget(mode)).withName("Check " + mode.toString() + " Target"));
   }
 
+  /**
+   * Checks if the flywheel is at its target speed.
+   *
+   * @return true if at target speed, false otherwise
+   */
   @AutoLogOutput
   private boolean isAtTarget() {
     if (currentMode == ShotMode.NONE) return true;
     return getVelocity().isNear(currentMode.targetSpeed, currentMode.speedTolerance);
   }
 
+  /**
+   * Logs whether the flywheel is at its target speed for a given mode.
+   *
+   * @param mode The mode to check against
+   */
   private void checkAtTarget(ShotMode mode) {
     boolean atTarget = isAtTarget();
     Logger.recordOutput("Flywheel/AtTarget", atTarget);
@@ -176,18 +240,31 @@ public class Flywheel extends SubsystemBase {
   /**
    * Factory methods for common mode commands. These make binding to buttons/triggers more concise.
    */
+
+  /**
+   * @return Command to set the flywheel to AMP mode
+   */
   public Command amp() {
     return setModeCommand(ShotMode.AMP);
   }
 
+  /**
+   * @return Command to set the flywheel to SPEAKER mode
+   */
   public Command speaker() {
     return setModeCommand(ShotMode.SPEAKER);
   }
 
+  /**
+   * @return Command to set the flywheel to FEED mode
+   */
   public Command feed() {
     return setModeCommand(ShotMode.FEED);
   }
 
+  /**
+   * @return Command to stop the flywheel
+   */
   public Command stopCommand() {
     return setModeCommand(ShotMode.NONE);
   }
