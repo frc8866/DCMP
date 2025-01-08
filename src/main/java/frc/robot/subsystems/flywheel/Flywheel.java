@@ -37,8 +37,6 @@ public class Flywheel extends SubsystemBase {
   private final Alert followerMotorAlert =
       new Alert("Flywheel follower motor isn't connected", AlertType.kError);
 
-  private ShotMode currentMode = ShotMode.NONE;
-
   private final SysIdRoutine sysId =
       new SysIdRoutine(
           new SysIdRoutine.Config(
@@ -54,6 +52,8 @@ public class Flywheel extends SubsystemBase {
               },
               null,
               this));
+
+  private ShotMode currentMode = ShotMode.NONE;
 
   /** Creates a new Flywheel. */
   public Flywheel(FlywheelIO io) {
@@ -101,13 +101,13 @@ public class Flywheel extends SubsystemBase {
   }
 
   public enum ShotMode {
-    NONE(RPM.of(0)),
-    AMP(RPM.of(1500)), // Example target speeds - adjust as needed
-    SPEAKER(RPM.of(3000)),
-    FEED(RPM.of(1000));
+    NONE(RotationsPerSecond.of(0)),
+    AMP(RotationsPerSecond.of(5)), // Example target speeds - adjust as needed
+    SPEAKER(RotationsPerSecond.of(10)),
+    FEED(RotationsPerSecond.of(20));
 
-    public final AngularVelocity targetSpeed;
-    public final AngularVelocity speedTolerance;
+    private AngularVelocity targetSpeed;
+    private AngularVelocity speedTolerance;
 
     ShotMode(AngularVelocity targetSpeed, AngularVelocity speedTolerance) {
       this.targetSpeed = targetSpeed;
@@ -115,7 +115,7 @@ public class Flywheel extends SubsystemBase {
     }
 
     ShotMode(AngularVelocity targetSpeed) {
-      this(targetSpeed, RPM.of(10));
+      this(targetSpeed, RotationsPerSecond.of(1));
     }
   }
 
@@ -133,7 +133,10 @@ public class Flywheel extends SubsystemBase {
   private final Command currentCommand =
       new SelectCommand<>(
           Map.of(
-              ShotMode.NONE, Commands.runOnce(this::stop).withName("Stop Flywheel"),
+              ShotMode.NONE,
+                  Commands.runOnce(this::stop)
+                      .alongWith(Commands.run(() -> checkAtTarget(ShotMode.NONE)))
+                      .withName("Stop Flywheel"),
               ShotMode.AMP, createShotCommand(ShotMode.AMP),
               ShotMode.SPEAKER, createShotCommand(ShotMode.SPEAKER),
               ShotMode.FEED, createShotCommand(ShotMode.FEED)),
@@ -173,15 +176,15 @@ public class Flywheel extends SubsystemBase {
   /**
    * Factory methods for common mode commands. These make binding to buttons/triggers more concise.
    */
-  public Command ampCommand() {
+  public Command amp() {
     return setModeCommand(ShotMode.AMP);
   }
 
-  public Command speakerCommand() {
+  public Command speaker() {
     return setModeCommand(ShotMode.SPEAKER);
   }
 
-  public Command feedCommand() {
+  public Command feed() {
     return setModeCommand(ShotMode.FEED);
   }
 
