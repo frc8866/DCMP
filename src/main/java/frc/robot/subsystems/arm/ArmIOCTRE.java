@@ -9,7 +9,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.flywheel;
+package frc.robot.subsystems.arm;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -17,9 +17,11 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Angle;
@@ -27,11 +29,13 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 
-public class FlywheelIOCTRE implements FlywheelIO {
+public class ArmIOCTRE implements ArmIO {
   public static final double GEAR_RATIO = 1.5;
 
-  public final TalonFX leader = new TalonFX(14);
-  public final TalonFX follower = new TalonFX(15);
+  public final TalonFX leader = new TalonFX(20);
+  public final TalonFX follower = new TalonFX(21);
+
+  public final CANcoder leaderEncoder = new CANcoder(22);
 
   private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
@@ -42,15 +46,20 @@ public class FlywheelIOCTRE implements FlywheelIO {
   private final StatusSignal<Current> followerStatorCurrent = follower.getStatorCurrent();
   private final StatusSignal<Current> leaderSupplyCurrent = leader.getSupplyCurrent();
   private final StatusSignal<Current> followerSupplyCurrent = follower.getSupplyCurrent();
+  private final StatusSignal<Angle> encoderPosition = leaderEncoder.getPosition();
+  private final StatusSignal<AngularVelocity> encoderVelocity = leaderEncoder.getVelocity();
 
   private final Debouncer leaderDebounce = new Debouncer(0.5);
   private final Debouncer followerDebounce = new Debouncer(0.5);
+  private final Debouncer encoderDebounce = new Debouncer(0.5);
 
-  public FlywheelIOCTRE() {
+  public ArmIOCTRE() {
     var config = new TalonFXConfiguration();
     config.CurrentLimits.StatorCurrentLimit = 30.0;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    config.Feedback.FeedbackRemoteSensorID = leaderEncoder.getDeviceID();
+    config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
     config.Slot0.kP = 5;
     config.Slot0.kI = 0;
     config.Slot0.kD = 0;
@@ -66,11 +75,13 @@ public class FlywheelIOCTRE implements FlywheelIO {
         leaderStatorCurrent,
         followerStatorCurrent,
         leaderSupplyCurrent,
-        followerSupplyCurrent);
+        followerSupplyCurrent,
+        encoderPosition,
+        encoderVelocity);
   }
 
   @Override
-  public void updateInputs(FlywheelIOInputs inputs) {
+  public void updateInputs(ArmIOInputs inputs) {
     var leaderStatus =
         BaseStatusSignal.refreshAll(
             leaderPosition,
@@ -81,10 +92,18 @@ public class FlywheelIOCTRE implements FlywheelIO {
 
     var followerStatus = BaseStatusSignal.refreshAll(followerStatorCurrent, followerSupplyCurrent);
 
+    var encoderStatus = BaseStatusSignal.refreshAll(encoderPosition, encoderVelocity);
+
     inputs.leaderConnected = leaderDebounce.calculate(leaderStatus.isOK());
     inputs.followerConnected = followerDebounce.calculate(followerStatus.isOK());
-    inputs.position = leaderPosition.getValue().div(GEAR_RATIO);
-    inputs.velocity = leaderVelocity.getValue().div(GEAR_RATIO);
+    inputs.encoderConnected = encoderDebounce.calculate(encoderStatus.isOK());
+
+    inputs.leaderPosition = leaderPosition.getValue().div(GEAR_RATIO);
+    inputs.leaderVelocity = leaderVelocity.getValue().div(GEAR_RATIO);
+
+    inputs.encoderPosition = encoderPosition.getValue();
+    inputs.encoderVelocity = encoderVelocity.getValue();
+
     inputs.appliedVoltage = leaderAppliedVolts.getValue();
     inputs.leaderStatorCurrent = leaderStatorCurrent.getValue();
     inputs.followerStatorCurrent = followerStatorCurrent.getValue();
@@ -101,8 +120,8 @@ public class FlywheelIOCTRE implements FlywheelIO {
   }
 
   @Override
-  public void setVelocity(AngularVelocity velocity) {
-    leader.setControl(new VelocityVoltage(velocity));
+  public void setPosition(Angle angle) {
+    leader.setControl(new PositionVoltage(angle));
   }
 
   @Override

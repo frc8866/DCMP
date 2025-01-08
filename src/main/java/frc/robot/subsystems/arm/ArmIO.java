@@ -9,7 +9,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.subsystems.flywheel;
+package frc.robot.subsystems.arm;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Rotations;
@@ -22,13 +22,19 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import org.littletonrobotics.junction.AutoLog;
 
-public interface FlywheelIO {
+public interface ArmIO {
   @AutoLog
-  public static class FlywheelIOInputs {
+  public static class ArmIOInputs {
     public boolean leaderConnected = false;
     public boolean followerConnected = false;
-    public Angle position = Rotations.of(0);
-    public AngularVelocity velocity = RotationsPerSecond.of(0);
+    public boolean encoderConnected = false;
+
+    public Angle leaderPosition = Rotations.of(0);
+    public Angle encoderPosition = Rotations.of(0);
+
+    public AngularVelocity leaderVelocity = RotationsPerSecond.of(0);
+    public AngularVelocity encoderVelocity = RotationsPerSecond.of(0);
+
     public Voltage appliedVoltage = Volts.of(0.0);
     public Current leaderStatorCurrent = Amps.of(0);
     public Current followerStatorCurrent = Amps.of(0);
@@ -37,13 +43,13 @@ public interface FlywheelIO {
   }
 
   /** Updates the set of loggable inputs. */
-  public default void updateInputs(FlywheelIOInputs inputs) {}
+  public default void updateInputs(ArmIOInputs inputs) {}
 
   /** Run open loop at the specified voltage. */
   public default void setVoltage(Voltage volts) {}
 
   /** Run closed loop at the specified velocity. */
-  public default void setVelocity(AngularVelocity velocity) {}
+  public default void setPosition(Angle angle) {}
 
   /** Stop in open loop. */
   public default void stop() {}
