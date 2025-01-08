@@ -13,15 +13,13 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
 
   private final FlywheelSim motorSimModel;
   private final TalonFXSimState leaderSim;
-  private final TalonFXSimState followerSim;
 
   public FlywheelIOSIM() {
     super();
     leaderSim = leader.getSimState();
-    followerSim = follower.getSimState();
     DCMotor motor = DCMotor.getKrakenX60Foc(2).withReduction(GEAR_RATIO);
     LinearSystem<N1, N1, N1> linearSystem =
-        LinearSystemId.createFlywheelSystem(motor, 0.01, GEAR_RATIO);
+        LinearSystemId.createFlywheelSystem(motor, 0.00032, GEAR_RATIO);
     motorSimModel = new FlywheelSim(linearSystem, motor);
   }
 
@@ -29,7 +27,6 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
   public void updateInputs(FlywheelIOInputs inputs) {
     super.updateInputs(inputs);
     leaderSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-    followerSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
     // get the motor voltage of the TalonFX
     var motorVoltage = leaderSim.getMotorVoltage();
