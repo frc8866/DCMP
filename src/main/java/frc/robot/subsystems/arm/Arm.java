@@ -61,7 +61,7 @@ public class Arm extends SubsystemBase {
               this));
 
   // Current arm position mode
-  private ArmPosition currentPosition = ArmPosition.STOWED;
+  private ArmPosition currentMode = ArmPosition.STOWED;
 
   /**
    * Creates a new Arm subsystem with the specified hardware interface.
@@ -164,8 +164,8 @@ public class Arm extends SubsystemBase {
    *
    * @return The current ArmPosition
    */
-  public ArmPosition getArmPosition() {
-    return currentPosition;
+  public ArmPosition getMode() {
+    return currentMode;
   }
 
   /**
@@ -175,7 +175,7 @@ public class Arm extends SubsystemBase {
    */
   public void setArmPosition(ArmPosition position) {
     currentCommand.cancel();
-    currentPosition = position;
+    currentMode = position;
     currentCommand.schedule();
   }
 
@@ -195,7 +195,7 @@ public class Arm extends SubsystemBase {
               createPositionCommand(ArmPosition.AMP),
               ArmPosition.SPEAKER,
               createPositionCommand(ArmPosition.SPEAKER)),
-          this::getArmPosition);
+          this::getMode);
 
   /**
    * Creates a command for a specific arm position that moves the arm and checks the target
@@ -219,10 +219,8 @@ public class Arm extends SubsystemBase {
    */
   @AutoLogOutput
   private boolean isAtTarget() {
-    if (currentPosition == ArmPosition.STOWED) return true;
-    Angle currentPos = getPosition();
-    return Math.abs(currentPos.minus(currentPosition.targetAngle).in(Degrees))
-        <= currentPosition.angleTolerance.in(Degrees);
+    if (currentMode == ArmPosition.STOP) return true;
+    return getPosition().isNear(currentMode.targetAngle, currentMode.angleTolerance);
   }
 
   /**
