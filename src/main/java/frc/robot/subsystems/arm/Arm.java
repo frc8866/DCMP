@@ -41,6 +41,7 @@ public class Arm extends SubsystemBase {
       new Alert("Arm leader motor isn't connected", AlertType.kError);
   private final Alert followerMotorAlert =
       new Alert("Arm follower motor isn't connected", AlertType.kError);
+  private final Alert encoderAlert = new Alert("Arm encoder isn't connected", AlertType.kError);
 
   // System identification routine configuration
   private final SysIdRoutine sysId =
@@ -81,6 +82,7 @@ public class Arm extends SubsystemBase {
     // Update motor connection status alerts
     leaderMotorAlert.set(!inputs.leaderConnected);
     followerMotorAlert.set(!inputs.followerConnected);
+    encoderAlert.set(!inputs.encoderConnected);
   }
 
   /**
