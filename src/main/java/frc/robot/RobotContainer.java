@@ -19,6 +19,10 @@ import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
 import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
 import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorIO;
+import frc.robot.subsystems.elevator.ElevatorIOCTRE;
+import frc.robot.subsystems.elevator.ElevatorIOSIM;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOCTRE;
@@ -46,6 +50,7 @@ public class RobotContainer {
           .withRotationalDeadband(Constants.MaxAngularRate.times(0.1)) // Add a 10% deadband
           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   private final Flywheel flywheel;
+  private final Elevator elevator;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -66,7 +71,7 @@ public class RobotContainer {
             new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
 
         flywheel = new Flywheel(new FlywheelIOCTRE());
-
+        elevator = new Elevator(new ElevatorIOCTRE());
         break;
 
       case SIM:
@@ -101,6 +106,7 @@ public class RobotContainer {
                 drivetrain::getVisionParameters));
 
         flywheel = new Flywheel(new FlywheelIOSIM());
+        elevator = new Elevator(new ElevatorIOSIM());
         break;
 
       default:
@@ -115,6 +121,7 @@ public class RobotContainer {
             new VisionIO() {});
 
         flywheel = new Flywheel(new FlywheelIO() {});
+        elevator = new Elevator(new ElevatorIO() {});
         break;
     }
 
@@ -161,9 +168,9 @@ public class RobotContainer {
                                 .getX())))); // Drive counterclockwise with negative X (left)
 
     // joystick.a().onTrue(Commands.runOnce(() -> drivetrain.resetPose(Pose2d.kZero)));
-    joystick.rightBumper().onTrue(flywheel.stopCommand());
-    joystick.a().onTrue(flywheel.L1());
-    joystick.leftBumper().onTrue(flywheel.net());
+    joystick.rightBumper().onTrue(elevator.L1());
+    joystick.a().onTrue(elevator.L2());
+    // joystick.leftBumper().onTrue(flywheel.L2());
     joystick
         .b()
         .whileTrue(
