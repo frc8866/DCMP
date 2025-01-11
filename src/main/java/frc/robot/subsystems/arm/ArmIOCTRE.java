@@ -11,14 +11,11 @@
 
 package frc.robot.subsystems.arm;
 
-import static edu.wpi.first.units.Units.Volts;
-
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -36,8 +33,6 @@ public class ArmIOCTRE implements ArmIO {
   public final TalonFX follower = new TalonFX(21);
 
   public final CANcoder leaderEncoder = new CANcoder(22);
-
-  private final VoltageOut m_voltReq = new VoltageOut(0.0);
 
   private final StatusSignal<Angle> leaderPosition = leader.getPosition();
   private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity();
@@ -112,11 +107,6 @@ public class ArmIOCTRE implements ArmIO {
 
     leader.optimizeBusUtilization(4, 0.1);
     follower.optimizeBusUtilization(4, 0.1);
-  }
-
-  @Override
-  public void setVoltage(Voltage volts) {
-    leader.setControl(m_voltReq.withOutput(volts.in(Volts)));
   }
 
   @Override

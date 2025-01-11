@@ -45,9 +45,6 @@ public interface ArmIO {
   /** Updates the set of loggable inputs. */
   public default void updateInputs(ArmIOInputs inputs) {}
 
-  /** Run open loop at the specified voltage. */
-  public default void setVoltage(Voltage volts) {}
-
   /** Run closed loop at the specified velocity. */
   public default void setPosition(Angle angle) {}
 

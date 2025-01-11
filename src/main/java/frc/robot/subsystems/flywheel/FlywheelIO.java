@@ -39,9 +39,6 @@ public interface FlywheelIO {
   /** Updates the set of loggable inputs. */
   public default void updateInputs(FlywheelIOInputs inputs) {}
 
-  /** Run open loop at the specified voltage. */
-  public default void setVoltage(Voltage volts) {}
-
   /** Run closed loop at the specified velocity. */
   public default void setVelocity(AngularVelocity velocity) {}
 

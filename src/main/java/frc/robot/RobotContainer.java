@@ -162,8 +162,8 @@ public class RobotContainer {
 
     // joystick.a().onTrue(Commands.runOnce(() -> drivetrain.resetPose(Pose2d.kZero)));
     joystick.rightBumper().onTrue(flywheel.stopCommand());
-    joystick.a().onTrue(flywheel.amp());
-    joystick.leftBumper().onTrue(flywheel.speaker());
+    joystick.a().onTrue(flywheel.L1());
+    joystick.leftBumper().onTrue(flywheel.net());
     joystick
         .b()
         .whileTrue(

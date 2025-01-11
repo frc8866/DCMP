@@ -13,7 +13,6 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.units.*;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
@@ -63,7 +62,7 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
     motorSimModel.setInputVoltage(motorVoltage);
     motorSimModel.update(0.020); // assume 20 ms loop time
 
-    // apply the new rotor position and velocity to the TalonFX;
+    // Apply the new rotor position and velocity to the TalonFX;
     // note that this is rotor position/velocity (before gear ratio), but
     // DCMotorSim returns mechanism position/velocity (after gear ratio)
     leaderSim.setRotorVelocity(motorSimModel.getAngularVelocity());
