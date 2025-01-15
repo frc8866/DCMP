@@ -4,21 +4,21 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Pounds;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Volts;
 
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 public class FlywheelIOSIM extends FlywheelIOCTRE {
 
-  private final FlywheelSim motorSimModel;
+  private final DCMotorSim motorSimModel;
   private final TalonFXSimState leaderSim;
   private final TalonFXSimState followerSim;
 
@@ -31,9 +31,9 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
 
     Distance radius = Inches.of(1.5);
     double moi = Pounds.of(8.0).in(Kilograms) * Math.pow(radius.in(Meters), 2);
-    LinearSystem<N1, N1, N1> linearSystem =
-        LinearSystemId.createFlywheelSystem(motor, moi, GEAR_RATIO);
-    motorSimModel = new FlywheelSim(linearSystem, motor);
+    LinearSystem<N2, N1, N2> linearSystem =
+        LinearSystemId.createDCMotorSystem(motor, moi, GEAR_RATIO);
+    motorSimModel = new DCMotorSim(linearSystem, motor);
   }
 
   @Override
@@ -51,7 +51,6 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
     // note that this is rotor position/velocity (before gear ratio), but
     // DCMotorSim returns mechanism position/velocity (after gear ratio)
     leaderSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(GEAR_RATIO));
-    leaderSim.addRotorPosition(
-        motorSimModel.getAngularVelocity().times(GEAR_RATIO).in(RotationsPerSecond) * 0.02);
+    leaderSim.setRawRotorPosition(motorSimModel.getAngularPosition().times(GEAR_RATIO));
   }
 }
