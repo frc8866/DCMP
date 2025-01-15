@@ -55,7 +55,7 @@ public class ElevatorIOSIM extends ElevatorIOCTRE {
 
     // use the motor voltage to calculate new position and velocity
     // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(leaderSim.getMotorVoltage() + followerSim.getMotorVoltage());
+    motorSimModel.setInputVoltage(leaderSim.getMotorVoltage());
     motorSimModel.update(0.020); // assume 20 ms loop time
 
     // Convert linear velocity to rotational velocity for the motor

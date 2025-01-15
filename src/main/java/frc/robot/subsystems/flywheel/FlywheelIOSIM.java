@@ -22,15 +22,15 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
   private final TalonFXSimState leaderSim;
   private final TalonFXSimState followerSim;
 
-  Distance radius = Inches.of(1.5);
-  double moi = Pounds.of(8.0).in(Kilograms) * Math.pow(radius.in(Meters), 2);
-
   public FlywheelIOSIM() {
     super();
 
     leaderSim = leader.getSimState();
     followerSim = follower.getSimState();
     DCMotor motor = DCMotor.getKrakenX60Foc(2);
+
+    Distance radius = Inches.of(1.5);
+    double moi = Pounds.of(8.0).in(Kilograms) * Math.pow(radius.in(Meters), 2);
     LinearSystem<N1, N1, N1> linearSystem =
         LinearSystemId.createFlywheelSystem(motor, moi, GEAR_RATIO);
     motorSimModel = new FlywheelSim(linearSystem, motor);
