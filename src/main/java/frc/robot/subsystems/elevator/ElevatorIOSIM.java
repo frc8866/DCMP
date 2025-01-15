@@ -4,7 +4,10 @@ import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Pounds;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
@@ -18,10 +21,14 @@ public class ElevatorIOSIM extends ElevatorIOCTRE {
 
   private final ElevatorSim motorSimModel;
   private final TalonFXSimState leaderSim;
+  private final TalonFXSimState followerSim;
+  private final CANcoderSimState encoderSim;
 
   public ElevatorIOSIM() {
     super();
     leaderSim = leader.getSimState();
+    followerSim = follower.getSimState();
+    encoderSim = leaderEncoder.getSimState();
     DCMotor motor = DCMotor.getKrakenX60Foc(2);
     LinearSystem<N2, N1, N2> linearSystem =
         LinearSystemId.createElevatorSystem(
@@ -43,19 +50,24 @@ public class ElevatorIOSIM extends ElevatorIOCTRE {
   public void updateInputs(ElevatorIOInputs inputs) {
     super.updateInputs(inputs);
     leaderSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = leaderSim.getMotorVoltage();
+    followerSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+    encoderSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
     // use the motor voltage to calculate new position and velocity
     // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage);
+    motorSimModel.setInputVoltage(leaderSim.getMotorVoltage() + followerSim.getMotorVoltage());
     motorSimModel.update(0.020); // assume 20 ms loop time
 
     // Convert linear velocity to rotational velocity for the motor
-    double circumference = elevatorRadius.times(2 * Math.PI).in(Meters);
-    leaderSim.setRotorVelocity(
-        motorSimModel.getVelocityMetersPerSecond() / circumference * GEAR_RATIO);
-    leaderSim.setRawRotorPosition(motorSimModel.getPositionMeters() / circumference * GEAR_RATIO);
+    var position = Radians.of(motorSimModel.getPositionMeters() / elevatorRadius.in(Meters));
+    // This is OK, since the time base is the same
+    var velocity =
+        RadiansPerSecond.of(motorSimModel.getVelocityMetersPerSecond() / elevatorRadius.in(Meters));
+
+    leaderSim.setRawRotorPosition(position.times(GEAR_RATIO));
+    leaderSim.setRotorVelocity(velocity.times(GEAR_RATIO));
+
+    encoderSim.setRawPosition(position);
+    encoderSim.setVelocity(velocity);
   }
 }

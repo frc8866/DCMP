@@ -179,21 +179,21 @@ public class Flywheel extends SubsystemBase {
   /**
    * @return Command to set the flywheel to AMP position
    */
-  public final Command amp() {
+  public final Command L1() {
     return setPositionCommand(FlywheelPosition.L1);
   }
 
   /**
    * @return Command to set the flywheel to SPEAKER position
    */
-  public final Command speaker() {
+  public final Command L2() {
     return setPositionCommand(FlywheelPosition.L2);
   }
 
   /**
    * @return Command to set the flywheel to FEED position
    */
-  public final Command feed() {
+  public final Command L3() {
     return setPositionCommand(FlywheelPosition.L3);
   }
 

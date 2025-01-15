@@ -5,9 +5,8 @@ import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Pounds;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.system.LinearSystem;
@@ -21,6 +20,7 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
 
   private final FlywheelSim motorSimModel;
   private final TalonFXSimState leaderSim;
+  private final TalonFXSimState followerSim;
 
   Distance radius = Inches.of(1.5);
   double moi = Pounds.of(8.0).in(Kilograms) * Math.pow(radius.in(Meters), 2);
@@ -28,21 +28,8 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
   public FlywheelIOSIM() {
     super();
 
-    var config = new TalonFXConfiguration();
-    config.CurrentLimits.StatorCurrentLimit = 30.0;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.Slot0.kP = 2;
-    config.Slot0.kI = 0;
-    config.Slot0.kD = 0;
-    config.Slot0.kS = 0.01;
-    config.Slot0.kV = 0.082;
-    config.Slot0.kA = 0;
-
-    leader.getConfigurator().apply(config);
-    follower.getConfigurator().apply(config);
-
     leaderSim = leader.getSimState();
+    followerSim = follower.getSimState();
     DCMotor motor = DCMotor.getKrakenX60Foc(2);
     LinearSystem<N1, N1, N1> linearSystem =
         LinearSystemId.createFlywheelSystem(motor, moi, GEAR_RATIO);
@@ -53,19 +40,18 @@ public class FlywheelIOSIM extends FlywheelIOCTRE {
   public void updateInputs(FlywheelIOInputs inputs) {
     super.updateInputs(inputs);
     leaderSim.setSupplyVoltage(RobotController.getBatteryVoltage());
-
-    // get the motor voltage of the TalonFX
-    var motorVoltage = leaderSim.getMotorVoltage();
+    followerSim.setSupplyVoltage(RobotController.getBatteryVoltage());
 
     // use the motor voltage to calculate new position and velocity
     // using WPILib's DCMotorSim class for physics simulation
-    motorSimModel.setInputVoltage(motorVoltage);
+    motorSimModel.setInputVoltage(leaderSim.getMotorVoltageMeasure().in(Volts));
     motorSimModel.update(0.020); // assume 20 ms loop time
 
     // Apply the new rotor position and velocity to the TalonFX;
     // note that this is rotor position/velocity (before gear ratio), but
     // DCMotorSim returns mechanism position/velocity (after gear ratio)
-    leaderSim.setRotorVelocity(motorSimModel.getAngularVelocity());
-    leaderSim.addRotorPosition(motorSimModel.getAngularVelocity().in(RotationsPerSecond) * 0.02);
+    leaderSim.setRotorVelocity(motorSimModel.getAngularVelocity().times(GEAR_RATIO));
+    leaderSim.addRotorPosition(
+        motorSimModel.getAngularVelocity().times(GEAR_RATIO).in(RotationsPerSecond) * 0.02);
   }
 }

@@ -39,9 +39,6 @@ public class FlywheelIOCTRE implements FlywheelIO {
   /** Debounce time for motor connection status in seconds. */
   private static final double CONNECTION_DEBOUNCE_TIME = 0.5;
 
-  /** Maximum stator current limit in amperes. */
-  private static final double STATOR_CURRENT_LIMIT = 30.0;
-
   /** Leader motor controller. */
   public final TalonFX leader;
 
@@ -76,7 +73,7 @@ public class FlywheelIOCTRE implements FlywheelIO {
     follower.getConfigurator().apply(config);
 
     // Set up follower motor
-    follower.setControl(new Follower(leader.getDeviceID(), false));
+    follower.setControl(new Follower(leader.getDeviceID(), true));
 
     // Initialize status signals
     leaderPosition = leader.getPosition();
@@ -102,12 +99,13 @@ public class FlywheelIOCTRE implements FlywheelIO {
    */
   private TalonFXConfiguration createMotorConfiguration() {
     var config = new TalonFXConfiguration();
-    config.CurrentLimits.StatorCurrentLimit = STATOR_CURRENT_LIMIT;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.Slot0.kP = 5;
+    config.Slot0.kP = 0;
     config.Slot0.kI = 0;
     config.Slot0.kD = 0;
+    config.Slot0.kS = 0;
+    config.Slot0.kV = 0;
+    config.Slot0.kA = 0;
     return config;
   }
 
@@ -141,8 +139,8 @@ public class FlywheelIOCTRE implements FlywheelIO {
     inputs.followerConnected = followerDebounce.calculate(followerStatus.isOK());
 
     // Update sensor readings
-    inputs.position = leaderPosition.getValue().div(GEAR_RATIO);
-    inputs.velocity = leaderVelocity.getValue().div(GEAR_RATIO);
+    inputs.position = leaderPosition.getValue();
+    inputs.velocity = leaderVelocity.getValue();
     inputs.appliedVoltage = leaderAppliedVolts.getValue();
 
     // Update current measurements
@@ -152,11 +150,6 @@ public class FlywheelIOCTRE implements FlywheelIO {
     inputs.followerSupplyCurrent = followerSupplyCurrent.getValue();
 
     // Optimize CAN bus utilization
-    optimizeCANUtilization();
-  }
-
-  /** Optimizes CAN bus utilization for both motors. */
-  private void optimizeCANUtilization() {
     leader.optimizeBusUtilization(4, 0.1);
     follower.optimizeBusUtilization(4, 0.1);
   }

@@ -168,9 +168,9 @@ public class RobotContainer {
                                 .getX())))); // Drive counterclockwise with negative X (left)
 
     // joystick.a().onTrue(Commands.runOnce(() -> drivetrain.resetPose(Pose2d.kZero)));
-    joystick.rightBumper().onTrue(elevator.L1());
-    joystick.a().onTrue(elevator.L2());
-    // joystick.leftBumper().onTrue(flywheel.L2());
+    joystick.rightBumper().onTrue(flywheel.L1());
+    joystick.a().onTrue(flywheel.L2());
+    joystick.leftBumper().onTrue(flywheel.stopCommand());
     joystick
         .b()
         .whileTrue(

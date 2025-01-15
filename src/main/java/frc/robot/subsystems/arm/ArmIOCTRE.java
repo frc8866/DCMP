@@ -93,8 +93,8 @@ public class ArmIOCTRE implements ArmIO {
     inputs.followerConnected = followerDebounce.calculate(followerStatus.isOK());
     inputs.encoderConnected = encoderDebounce.calculate(encoderStatus.isOK());
 
-    inputs.leaderPosition = leaderPosition.getValue().div(GEAR_RATIO);
-    inputs.leaderVelocity = leaderVelocity.getValue().div(GEAR_RATIO);
+    inputs.leaderPosition = leaderPosition.getValue();
+    inputs.leaderVelocity = leaderVelocity.getValue();
 
     inputs.encoderPosition = encoderPosition.getValue();
     inputs.encoderVelocity = encoderVelocity.getValue();
