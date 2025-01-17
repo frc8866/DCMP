@@ -3,9 +3,8 @@ package frc.robot.subsystems.elevator;
 import static edu.wpi.first.units.Units.Feet;
 import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Pounds;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
@@ -14,8 +13,11 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import frc.robot.utils.Conversions;
 
 public class ElevatorIOSIM extends ElevatorIOCTRE {
 
@@ -28,7 +30,7 @@ public class ElevatorIOSIM extends ElevatorIOCTRE {
     super();
     leaderSim = leader.getSimState();
     followerSim = follower.getSimState();
-    encoderSim = leaderEncoder.getSimState();
+    encoderSim = encoder.getSimState();
     DCMotor motor = DCMotor.getKrakenX60Foc(2);
     LinearSystem<N2, N1, N2> linearSystem =
         LinearSystemId.createElevatorSystem(
@@ -59,15 +61,20 @@ public class ElevatorIOSIM extends ElevatorIOCTRE {
     motorSimModel.update(0.020); // assume 20 ms loop time
 
     // Convert linear velocity to rotational velocity for the motor
-    var position = Radians.of(motorSimModel.getPositionMeters() / elevatorRadius.in(Meters));
+    Angle position =
+        Conversions.metersToRotations(
+            Meters.of(motorSimModel.getPositionMeters()), GEAR_RATIO, elevatorRadius);
     // This is OK, since the time base is the same
-    var velocity =
-        RadiansPerSecond.of(motorSimModel.getVelocityMetersPerSecond() / elevatorRadius.in(Meters));
+    AngularVelocity velocity =
+        Conversions.metersToRotationsVel(
+            MetersPerSecond.of(motorSimModel.getVelocityMetersPerSecond()),
+            GEAR_RATIO,
+            elevatorRadius);
 
-    leaderSim.setRawRotorPosition(position.times(GEAR_RATIO));
-    leaderSim.setRotorVelocity(velocity.times(GEAR_RATIO));
+    leaderSim.setRawRotorPosition(position);
+    leaderSim.setRotorVelocity(velocity);
 
-    encoderSim.setRawPosition(position);
-    encoderSim.setVelocity(velocity);
+    encoderSim.setRawPosition(position.times(GEAR_RATIO));
+    encoderSim.setVelocity(velocity.times(GEAR_RATIO));
   }
 }

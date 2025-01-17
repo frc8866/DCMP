@@ -100,11 +100,11 @@ public class FlywheelIOCTRE implements FlywheelIO {
   private TalonFXConfiguration createMotorConfiguration() {
     var config = new TalonFXConfiguration();
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.Slot0.kP = 0;
+    config.Slot0.kP = 0.4;
     config.Slot0.kI = 0;
     config.Slot0.kD = 0;
-    config.Slot0.kS = 0;
-    config.Slot0.kV = 0;
+    config.Slot0.kS = 0.01;
+    config.Slot0.kV = 0.123;
     config.Slot0.kA = 0;
     return config;
   }

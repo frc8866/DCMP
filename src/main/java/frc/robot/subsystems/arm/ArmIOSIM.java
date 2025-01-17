@@ -33,7 +33,7 @@ public class ArmIOSIM extends ArmIOCTRE {
     super();
     leaderSim = leader.getSimState();
     followerSim = follower.getSimState();
-    encoderSim = leaderEncoder.getSimState();
+    encoderSim = encoder.getSimState();
     DCMotor motor = DCMotor.getKrakenX60Foc(2);
     Distance armDistance = Inches.of(12);
     Mass armMass = Pounds.of(15);
@@ -64,10 +64,11 @@ public class ArmIOSIM extends ArmIOCTRE {
     motorSimModel.setInputVoltage(leaderSim.getMotorVoltage());
     motorSimModel.update(0.020); // assume 20 ms loop time
 
-    /* Update all of our sensors. */
+    // Convert linear velocity to rotational velocity for the motor
     Angle position = Radians.of(motorSimModel.getAngleRads());
     // This is OK, since the time base is the same
     AngularVelocity velocity = RadiansPerSecond.of(motorSimModel.getVelocityRadPerSec());
+
     leaderSim.setRawRotorPosition(position.times(GEAR_RATIO));
     leaderSim.setRotorVelocity(velocity.times(GEAR_RATIO));
 

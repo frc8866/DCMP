@@ -18,7 +18,6 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Angle;
@@ -32,7 +31,7 @@ public class ArmIOCTRE implements ArmIO {
   public final TalonFX leader = new TalonFX(20);
   public final TalonFX follower = new TalonFX(21);
 
-  public final CANcoder leaderEncoder = new CANcoder(22);
+  public final CANcoder encoder = new CANcoder(22);
 
   private final StatusSignal<Angle> leaderPosition = leader.getPosition();
   private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity();
@@ -41,23 +40,15 @@ public class ArmIOCTRE implements ArmIO {
   private final StatusSignal<Current> followerStatorCurrent = follower.getStatorCurrent();
   private final StatusSignal<Current> leaderSupplyCurrent = leader.getSupplyCurrent();
   private final StatusSignal<Current> followerSupplyCurrent = follower.getSupplyCurrent();
-  private final StatusSignal<Angle> encoderPosition = leaderEncoder.getPosition();
-  private final StatusSignal<AngularVelocity> encoderVelocity = leaderEncoder.getVelocity();
+  private final StatusSignal<Angle> encoderPosition = encoder.getPosition();
+  private final StatusSignal<AngularVelocity> encoderVelocity = encoder.getVelocity();
 
   private final Debouncer leaderDebounce = new Debouncer(0.5);
   private final Debouncer followerDebounce = new Debouncer(0.5);
   private final Debouncer encoderDebounce = new Debouncer(0.5);
 
   public ArmIOCTRE() {
-    var config = new TalonFXConfiguration();
-    config.CurrentLimits.StatorCurrentLimit = 30.0;
-    config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.Feedback.FeedbackRemoteSensorID = leaderEncoder.getDeviceID();
-    config.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
-    config.Slot0.kP = 5;
-    config.Slot0.kI = 0;
-    config.Slot0.kD = 0;
+    TalonFXConfiguration config = createMotorConfiguration();
     leader.getConfigurator().apply(config);
     follower.getConfigurator().apply(config);
     follower.setControl(new Follower(leader.getDeviceID(), false));
@@ -73,6 +64,29 @@ public class ArmIOCTRE implements ArmIO {
         followerSupplyCurrent,
         encoderPosition,
         encoderVelocity);
+
+    leader.optimizeBusUtilization(4, 0.1);
+    follower.optimizeBusUtilization(4, 0.1);
+    encoder.optimizeBusUtilization(4, 0.1);
+  }
+
+  /**
+   * Creates the motor configuration with appropriate settings.
+   *
+   * @return The configured TalonFXConfiguration object
+   */
+  private TalonFXConfiguration createMotorConfiguration() {
+    var config = new TalonFXConfiguration();
+    config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+    config.Slot0.kP = 0;
+    config.Slot0.kI = 0;
+    config.Slot0.kD = 0;
+    config.Slot0.kS = 0;
+    config.Slot0.kV = 0;
+    config.Slot0.kA = 0;
+
+    config.Feedback.withRemoteCANcoder(encoder);
+    return config;
   }
 
   @Override
@@ -104,14 +118,11 @@ public class ArmIOCTRE implements ArmIO {
     inputs.followerStatorCurrent = followerStatorCurrent.getValue();
     inputs.leaderSupplyCurrent = leaderSupplyCurrent.getValue();
     inputs.followerSupplyCurrent = followerSupplyCurrent.getValue();
-
-    leader.optimizeBusUtilization(4, 0.1);
-    follower.optimizeBusUtilization(4, 0.1);
   }
 
   @Override
   public void setPosition(Angle angle) {
-    leader.setControl(new PositionVoltage(angle));
+    leader.setControl(new PositionVoltage(angle.times(GEAR_RATIO)));
   }
 
   @Override
