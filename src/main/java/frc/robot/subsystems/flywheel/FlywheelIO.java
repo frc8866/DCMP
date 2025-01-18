@@ -27,8 +27,13 @@ public interface FlywheelIO {
   public static class FlywheelIOInputs {
     public boolean leaderConnected = false;
     public boolean followerConnected = false;
-    public Angle position = Rotations.of(0);
-    public AngularVelocity velocity = RotationsPerSecond.of(0);
+
+    public Angle leaderPosition = Rotations.of(0);
+    public Angle leaderRotorPosition = Rotations.of(0);
+
+    public AngularVelocity leaderVelocity = RotationsPerSecond.of(0);
+    public AngularVelocity leaderRotorVelocity = RotationsPerSecond.of(0);
+
     public Voltage appliedVoltage = Volts.of(0.0);
     public Current leaderStatorCurrent = Amps.of(0);
     public Current followerStatorCurrent = Amps.of(0);

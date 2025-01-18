@@ -14,6 +14,7 @@ package frc.robot.subsystems.elevator;
 import static edu.wpi.first.units.Units.Inches;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -47,8 +48,10 @@ public class ElevatorIOCTRE implements ElevatorIO {
   public final CANcoder encoder = new CANcoder(32);
 
   // Status signals for monitoring motor and encoder states
-  private final StatusSignal<Angle> leaderPosition = leader.getRotorPosition();
-  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getRotorVelocity();
+  private final StatusSignal<Angle> leaderPosition = leader.getPosition();
+  private final StatusSignal<Angle> leaderRotorPosition = leader.getRotorPosition();
+  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity();
+  private final StatusSignal<AngularVelocity> leaderRotorVelocity = leader.getRotorVelocity();
   private final StatusSignal<Voltage> leaderAppliedVolts = leader.getMotorVoltage();
   private final StatusSignal<Current> leaderStatorCurrent = leader.getStatorCurrent();
   private final StatusSignal<Current> followerStatorCurrent = follower.getStatorCurrent();
@@ -74,19 +77,20 @@ public class ElevatorIOCTRE implements ElevatorIO {
    * utilization for all devices.
    */
   public ElevatorIOCTRE() {
+    // Set up follower to mirror leader
+    follower.setControl(new Follower(leader.getDeviceID(), false));
+
     // Configure both motors with identical settings
     TalonFXConfiguration config = createMotorConfiguration();
     leader.getConfigurator().apply(config);
-    follower.getConfigurator().apply(config);
-
-    // Set up follower to mirror leader
-    follower.setControl(new Follower(leader.getDeviceID(), false));
 
     // Configure update frequencies for all status signals
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0, // 50Hz update rate
         leaderPosition,
+        leaderRotorPosition,
         leaderVelocity,
+        leaderRotorVelocity,
         leaderAppliedVolts,
         leaderStatorCurrent,
         followerStatorCurrent,
@@ -135,17 +139,20 @@ public class ElevatorIOCTRE implements ElevatorIO {
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
     // Refresh all sensor data
-    var leaderStatus =
+    StatusCode leaderStatus =
         BaseStatusSignal.refreshAll(
             leaderPosition,
+            leaderRotorPosition,
             leaderVelocity,
+            leaderRotorVelocity,
             leaderAppliedVolts,
             leaderStatorCurrent,
             leaderSupplyCurrent);
 
-    var followerStatus = BaseStatusSignal.refreshAll(followerStatorCurrent, followerSupplyCurrent);
+    StatusCode followerStatus =
+        BaseStatusSignal.refreshAll(followerStatorCurrent, followerSupplyCurrent);
 
-    var encoderStatus = BaseStatusSignal.refreshAll(encoderPosition, encoderVelocity);
+    StatusCode encoderStatus = BaseStatusSignal.refreshAll(encoderPosition, encoderVelocity);
 
     // Update connection status with debouncing
     inputs.leaderConnected = leaderDebounce.calculate(leaderStatus.isOK());
@@ -154,14 +161,12 @@ public class ElevatorIOCTRE implements ElevatorIO {
 
     // Update position and velocity measurements
     inputs.leaderPosition = leaderPosition.getValue();
+    inputs.leaderRotorPosition = leaderRotorPosition.getValue();
     inputs.leaderVelocity = leaderVelocity.getValue();
+    inputs.leaderRotorVelocity = leaderRotorVelocity.getValue();
+
     inputs.encoderPosition = encoderPosition.getValue();
     inputs.encoderVelocity = encoderVelocity.getValue();
-
-    // Calculate actual elevator distance using encoder position
-    // Note: Using gear ratio of 1 since encoder rotations match elevator movement
-    inputs.elevatorDistance =
-        Conversions.rotationsToMeters(inputs.encoderPosition, 1, elevatorRadius);
 
     // Update voltage and current measurements
     inputs.appliedVoltage = leaderAppliedVolts.getValue();
@@ -169,6 +174,11 @@ public class ElevatorIOCTRE implements ElevatorIO {
     inputs.followerStatorCurrent = followerStatorCurrent.getValue();
     inputs.leaderSupplyCurrent = leaderSupplyCurrent.getValue();
     inputs.followerSupplyCurrent = followerSupplyCurrent.getValue();
+
+    // Calculate actual elevator distance using encoder position
+    // Note: Using gear ratio of 1 since encoder rotations match elevator movement
+    inputs.elevatorDistance =
+        Conversions.rotationsToMeters(inputs.encoderPosition, 1, elevatorRadius);
   }
 
   /**

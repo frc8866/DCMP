@@ -30,11 +30,11 @@ public interface ArmIO {
     public boolean encoderConnected = false;
 
     public Angle leaderPosition = Rotations.of(0);
+    public Angle leaderRotorPosition = Rotations.of(0);
     public Angle encoderPosition = Rotations.of(0);
 
-    public Angle armAngle = Rotations.of(0);
-
     public AngularVelocity leaderVelocity = RotationsPerSecond.of(0);
+    public AngularVelocity leaderRotorVelocity = RotationsPerSecond.of(0);
     public AngularVelocity encoderVelocity = RotationsPerSecond.of(0);
 
     public Voltage appliedVoltage = Volts.of(0.0);
@@ -42,6 +42,8 @@ public interface ArmIO {
     public Current followerStatorCurrent = Amps.of(0);
     public Current leaderSupplyCurrent = Amps.of(0);
     public Current followerSupplyCurrent = Amps.of(0);
+
+    public Angle armAngle = Rotations.of(0);
   }
 
   /** Updates the set of loggable inputs. */

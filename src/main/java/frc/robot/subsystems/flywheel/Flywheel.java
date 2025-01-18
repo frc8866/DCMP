@@ -73,7 +73,7 @@ public class Flywheel extends SubsystemBase {
    */
   @AutoLogOutput
   public AngularVelocity getVelocity() {
-    return inputs.velocity;
+    return inputs.leaderVelocity;
   }
 
   /** Enumeration of available flywheel positions with their corresponding target speeds. */

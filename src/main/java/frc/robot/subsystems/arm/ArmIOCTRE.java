@@ -12,6 +12,7 @@
 package frc.robot.subsystems.arm;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -43,8 +44,10 @@ public class ArmIOCTRE implements ArmIO {
   public final CANcoder encoder = new CANcoder(22);
 
   // Status signals for monitoring motor and encoder states
-  private final StatusSignal<Angle> leaderPosition = leader.getRotorPosition();
-  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getRotorVelocity();
+  private final StatusSignal<Angle> leaderPosition = leader.getPosition();
+  private final StatusSignal<Angle> leaderRotorPosition = leader.getRotorPosition();
+  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity();
+  private final StatusSignal<AngularVelocity> leaderRotorVelocity = leader.getRotorVelocity();
   private final StatusSignal<Voltage> leaderAppliedVolts = leader.getMotorVoltage();
   private final StatusSignal<Current> leaderStatorCurrent = leader.getStatorCurrent();
   private final StatusSignal<Current> followerStatorCurrent = follower.getStatorCurrent();
@@ -64,19 +67,20 @@ public class ArmIOCTRE implements ArmIO {
    * utilization for all devices.
    */
   public ArmIOCTRE() {
+    // Set up follower to mirror leader
+    follower.setControl(new Follower(leader.getDeviceID(), false));
+
     // Configure both motors with identical settings
     TalonFXConfiguration config = createMotorConfiguration();
     leader.getConfigurator().apply(config);
-    follower.getConfigurator().apply(config);
-
-    // Set up follower to mirror leader
-    follower.setControl(new Follower(leader.getDeviceID(), false));
 
     // Configure update frequencies for all status signals
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0, // 50Hz update rate
         leaderPosition,
+        leaderRotorPosition,
         leaderVelocity,
+        leaderRotorVelocity,
         leaderAppliedVolts,
         leaderStatorCurrent,
         followerStatorCurrent,
@@ -125,17 +129,20 @@ public class ArmIOCTRE implements ArmIO {
   @Override
   public void updateInputs(ArmIOInputs inputs) {
     // Refresh all sensor data
-    var leaderStatus =
+    StatusCode leaderStatus =
         BaseStatusSignal.refreshAll(
             leaderPosition,
+            leaderRotorPosition,
             leaderVelocity,
+            leaderRotorVelocity,
             leaderAppliedVolts,
             leaderStatorCurrent,
             leaderSupplyCurrent);
 
-    var followerStatus = BaseStatusSignal.refreshAll(followerStatorCurrent, followerSupplyCurrent);
+    StatusCode followerStatus =
+        BaseStatusSignal.refreshAll(followerStatorCurrent, followerSupplyCurrent);
 
-    var encoderStatus = BaseStatusSignal.refreshAll(encoderPosition, encoderVelocity);
+    StatusCode encoderStatus = BaseStatusSignal.refreshAll(encoderPosition, encoderVelocity);
 
     // Update connection status with debouncing
     inputs.leaderConnected = leaderDebounce.calculate(leaderStatus.isOK());
@@ -144,11 +151,12 @@ public class ArmIOCTRE implements ArmIO {
 
     // Update position and velocity measurements
     inputs.leaderPosition = leaderPosition.getValue();
+    inputs.leaderRotorPosition = leaderRotorPosition.getValue();
     inputs.leaderVelocity = leaderVelocity.getValue();
+    inputs.leaderRotorVelocity = leaderRotorVelocity.getValue();
+
     inputs.encoderPosition = encoderPosition.getValue();
     inputs.encoderVelocity = encoderVelocity.getValue();
-
-    inputs.armAngle = inputs.encoderPosition;
 
     // Update voltage and current measurements
     inputs.appliedVoltage = leaderAppliedVolts.getValue();
@@ -156,6 +164,9 @@ public class ArmIOCTRE implements ArmIO {
     inputs.followerStatorCurrent = followerStatorCurrent.getValue();
     inputs.leaderSupplyCurrent = leaderSupplyCurrent.getValue();
     inputs.followerSupplyCurrent = followerSupplyCurrent.getValue();
+
+    // Calculate arm angle using encoder position
+    inputs.armAngle = inputs.encoderPosition;
   }
 
   /**

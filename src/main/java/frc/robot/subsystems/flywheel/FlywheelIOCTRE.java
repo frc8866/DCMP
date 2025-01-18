@@ -12,6 +12,7 @@
 package frc.robot.subsystems.flywheel;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
@@ -33,63 +34,41 @@ public class FlywheelIOCTRE implements FlywheelIO {
   /** Gear ratio between the motor and the flywheel output. */
   public static final double GEAR_RATIO = 1.5;
 
-  /** Update frequency for motor status signals in Hz. */
-  private static final double STATUS_FRAME_RATE_HZ = 50.0;
-
-  /** Debounce time for motor connection status in seconds. */
-  private static final double CONNECTION_DEBOUNCE_TIME = 0.5;
-
   /** Leader motor controller. */
-  public final TalonFX leader;
+  public final TalonFX leader = new TalonFX(14);
 
   /** Follower motor controller. */
-  public final TalonFX follower;
+  public final TalonFX follower = new TalonFX(15);
 
   // Status signals for motor feedback
-  private final StatusSignal<Angle> leaderPosition;
-  private final StatusSignal<AngularVelocity> leaderVelocity;
-  private final StatusSignal<Voltage> leaderAppliedVolts;
-  private final StatusSignal<Current> leaderStatorCurrent;
-  private final StatusSignal<Current> followerStatorCurrent;
-  private final StatusSignal<Current> leaderSupplyCurrent;
-  private final StatusSignal<Current> followerSupplyCurrent;
+  private final StatusSignal<Angle> leaderPosition = leader.getPosition();
+  private final StatusSignal<Angle> leaderRotorPosition = leader.getRotorPosition();
+  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity();
+  private final StatusSignal<AngularVelocity> leaderRotorVelocity = leader.getRotorVelocity();
+  private final StatusSignal<Voltage> leaderAppliedVolts = leader.getMotorVoltage();
+  private final StatusSignal<Current> leaderStatorCurrent = leader.getStatorCurrent();
+  private final StatusSignal<Current> followerStatorCurrent = follower.getStatorCurrent();
+  private final StatusSignal<Current> leaderSupplyCurrent = leader.getSupplyCurrent();
+  private final StatusSignal<Current> followerSupplyCurrent = follower.getSupplyCurrent();
 
   // Debouncers for motor connection status
-  private final Debouncer leaderDebounce;
-  private final Debouncer followerDebounce;
+  private final Debouncer leaderDebounce = new Debouncer(0.5);
+  private final Debouncer followerDebounce = new Debouncer(0.5);
 
   /**
    * Constructs a new FlywheelIOCTRE instance. Initializes motor controllers with appropriate
    * configuration and sets up status signals.
    */
   public FlywheelIOCTRE() {
-    // Initialize motor controllers
-    leader = new TalonFX(14);
-    follower = new TalonFX(15);
+    // Set up follower motor
+    follower.setControl(new Follower(leader.getDeviceID(), true));
 
     // Configure motors
     TalonFXConfiguration config = createMotorConfiguration();
     leader.getConfigurator().apply(config);
-    follower.getConfigurator().apply(config);
-
-    // Set up follower motor
-    follower.setControl(new Follower(leader.getDeviceID(), true));
-
-    // Initialize status signals
-    leaderPosition = leader.getPosition();
-    leaderVelocity = leader.getVelocity();
-    leaderAppliedVolts = leader.getMotorVoltage();
-    leaderStatorCurrent = leader.getStatorCurrent();
-    followerStatorCurrent = follower.getStatorCurrent();
-    leaderSupplyCurrent = leader.getSupplyCurrent();
-    followerSupplyCurrent = follower.getSupplyCurrent();
 
     // Set up status signal update frequency
     configureStatusSignals();
-
-    // Initialize debouncers
-    leaderDebounce = new Debouncer(CONNECTION_DEBOUNCE_TIME);
-    followerDebounce = new Debouncer(CONNECTION_DEBOUNCE_TIME);
   }
 
   /**
@@ -112,9 +91,11 @@ public class FlywheelIOCTRE implements FlywheelIO {
   /** Configures the update frequency for all status signals. */
   private void configureStatusSignals() {
     BaseStatusSignal.setUpdateFrequencyForAll(
-        STATUS_FRAME_RATE_HZ,
+        50.0,
         leaderPosition,
+        leaderRotorPosition,
         leaderVelocity,
+        leaderRotorVelocity,
         leaderAppliedVolts,
         leaderStatorCurrent,
         followerStatorCurrent,
@@ -125,25 +106,31 @@ public class FlywheelIOCTRE implements FlywheelIO {
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
     // Refresh all status signals
-    var leaderStatus =
+    StatusCode leaderStatus =
         BaseStatusSignal.refreshAll(
             leaderPosition,
+            leaderRotorPosition,
             leaderVelocity,
+            leaderRotorVelocity,
             leaderAppliedVolts,
             leaderStatorCurrent,
             leaderSupplyCurrent);
-    var followerStatus = BaseStatusSignal.refreshAll(followerStatorCurrent, followerSupplyCurrent);
+
+    StatusCode followerStatus =
+        BaseStatusSignal.refreshAll(followerStatorCurrent, followerSupplyCurrent);
 
     // Update connection status with debouncing
     inputs.leaderConnected = leaderDebounce.calculate(leaderStatus.isOK());
     inputs.followerConnected = followerDebounce.calculate(followerStatus.isOK());
 
     // Update sensor readings
-    inputs.position = leaderPosition.getValue();
-    inputs.velocity = leaderVelocity.getValue();
-    inputs.appliedVoltage = leaderAppliedVolts.getValue();
+    inputs.leaderPosition = leaderPosition.getValue();
+    inputs.leaderRotorPosition = leaderRotorPosition.getValue();
+    inputs.leaderVelocity = leaderVelocity.getValue();
+    inputs.leaderRotorVelocity = leaderRotorVelocity.getValue();
 
     // Update current measurements
+    inputs.appliedVoltage = leaderAppliedVolts.getValue();
     inputs.leaderStatorCurrent = leaderStatorCurrent.getValue();
     inputs.followerStatorCurrent = followerStatorCurrent.getValue();
     inputs.leaderSupplyCurrent = leaderSupplyCurrent.getValue();
