@@ -32,6 +32,8 @@ public interface ArmIO {
     public Angle leaderPosition = Rotations.of(0);
     public Angle encoderPosition = Rotations.of(0);
 
+    public Angle armAngle = Rotations.of(0);
+
     public AngularVelocity leaderVelocity = RotationsPerSecond.of(0);
     public AngularVelocity encoderVelocity = RotationsPerSecond.of(0);
 

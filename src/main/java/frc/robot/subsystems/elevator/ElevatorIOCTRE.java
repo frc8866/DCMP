@@ -12,7 +12,6 @@
 package frc.robot.subsystems.elevator;
 
 import static edu.wpi.first.units.Units.Inches;
-import static edu.wpi.first.units.Units.Radians;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -30,16 +29,26 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Voltage;
 import frc.robot.utils.Conversions;
 
+/**
+ * CTRE-based implementation of the ElevatorIO interface for controlling an elevator mechanism. This
+ * implementation uses TalonFX motors and a CANcoder for position feedback. The elevator consists of
+ * a leader motor, a follower motor, and an encoder for precise positioning.
+ */
 public class ElevatorIOCTRE implements ElevatorIO {
-  public static final double GEAR_RATIO = 1.0;
+  /** The gear ratio between the motor and the elevator mechanism */
+  public static final double GEAR_RATIO = 2.0;
 
+  /** The leader TalonFX motor controller (CAN ID: 30) */
   public final TalonFX leader = new TalonFX(30);
+  /** The follower TalonFX motor controller (CAN ID: 31) */
   public final TalonFX follower = new TalonFX(31);
 
+  /** The CANcoder for position feedback (CAN ID: 32) */
   public final CANcoder encoder = new CANcoder(32);
 
-  private final StatusSignal<Angle> leaderPosition = leader.getPosition();
-  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getVelocity();
+  // Status signals for monitoring motor and encoder states
+  private final StatusSignal<Angle> leaderPosition = leader.getRotorPosition();
+  private final StatusSignal<AngularVelocity> leaderVelocity = leader.getRotorVelocity();
   private final StatusSignal<Voltage> leaderAppliedVolts = leader.getMotorVoltage();
   private final StatusSignal<Current> leaderStatorCurrent = leader.getStatorCurrent();
   private final StatusSignal<Current> followerStatorCurrent = follower.getStatorCurrent();
@@ -48,20 +57,34 @@ public class ElevatorIOCTRE implements ElevatorIO {
   private final StatusSignal<Angle> encoderPosition = encoder.getPosition();
   private final StatusSignal<AngularVelocity> encoderVelocity = encoder.getVelocity();
 
+  // Debouncers for connection status (filters out brief disconnections)
   private final Debouncer leaderDebounce = new Debouncer(0.5);
   private final Debouncer followerDebounce = new Debouncer(0.5);
   private final Debouncer encoderDebounce = new Debouncer(0.5);
 
+  /**
+   * The radius of the elevator pulley/drum, used for converting between rotations and linear
+   * distance
+   */
   protected final Distance elevatorRadius = Inches.of(2);
 
+  /**
+   * Constructs a new ElevatorIOCTRE instance and initializes all hardware components. This includes
+   * configuring both motors, setting up the follower relationship, and optimizing CAN bus
+   * utilization for all devices.
+   */
   public ElevatorIOCTRE() {
+    // Configure both motors with identical settings
     TalonFXConfiguration config = createMotorConfiguration();
     leader.getConfigurator().apply(config);
     follower.getConfigurator().apply(config);
+
+    // Set up follower to mirror leader
     follower.setControl(new Follower(leader.getDeviceID(), false));
 
+    // Configure update frequencies for all status signals
     BaseStatusSignal.setUpdateFrequencyForAll(
-        50.0,
+        50.0, // 50Hz update rate
         leaderPosition,
         leaderVelocity,
         leaderAppliedVolts,
@@ -72,32 +95,46 @@ public class ElevatorIOCTRE implements ElevatorIO {
         encoderPosition,
         encoderVelocity);
 
+    // Optimize CAN bus usage for all devices
     leader.optimizeBusUtilization(4, 0.1);
     follower.optimizeBusUtilization(4, 0.1);
     encoder.optimizeBusUtilization(4, 0.1);
   }
 
   /**
-   * Creates the motor configuration with appropriate settings.
+   * Creates the motor configuration with appropriate settings. Sets up neutral mode, PID gains, and
+   * feedback device configuration.
    *
    * @return The configured TalonFXConfiguration object
    */
   private TalonFXConfiguration createMotorConfiguration() {
     var config = new TalonFXConfiguration();
+    // Set motor to coast when stopped
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
-    config.Slot0.kP = 0;
-    config.Slot0.kI = 0;
-    config.Slot0.kD = 0;
-    config.Slot0.kS = 0;
-    config.Slot0.kV = 0;
-    config.Slot0.kA = 0;
 
+    // Configure PID and feedforward gains
+    config.Slot0.kP = 0; // Proportional gain
+    config.Slot0.kI = 0; // Integral gain
+    config.Slot0.kD = 0; // Derivative gain
+    config.Slot0.kS = 0; // Static friction compensation
+    config.Slot0.kV = 0; // Velocity feedforward
+    config.Slot0.kA = 0; // Acceleration feedforward
+
+    // Use the CANcoder as the remote feedback device
     config.Feedback.withRemoteCANcoder(encoder);
     return config;
   }
 
+  /**
+   * Updates the elevator's input values with the latest sensor readings. This includes position,
+   * velocity, voltage, and current measurements from both motors and the encoder, as well as
+   * connection status for all devices.
+   *
+   * @param inputs The ElevatorIOInputs object to update with the latest values
+   */
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
+    // Refresh all sensor data
     var leaderStatus =
         BaseStatusSignal.refreshAll(
             leaderPosition,
@@ -110,18 +147,23 @@ public class ElevatorIOCTRE implements ElevatorIO {
 
     var encoderStatus = BaseStatusSignal.refreshAll(encoderPosition, encoderVelocity);
 
+    // Update connection status with debouncing
     inputs.leaderConnected = leaderDebounce.calculate(leaderStatus.isOK());
     inputs.followerConnected = followerDebounce.calculate(followerStatus.isOK());
     inputs.encoderConnected = encoderDebounce.calculate(encoderStatus.isOK());
 
+    // Update position and velocity measurements
     inputs.leaderPosition = leaderPosition.getValue();
     inputs.leaderVelocity = leaderVelocity.getValue();
-
     inputs.encoderPosition = encoderPosition.getValue();
     inputs.encoderVelocity = encoderVelocity.getValue();
 
-    inputs.encoderDistance = elevatorRadius.times(inputs.encoderPosition.in(Radians));
+    // Calculate actual elevator distance using encoder position
+    // Note: Using gear ratio of 1 since encoder rotations match elevator movement
+    inputs.elevatorDistance =
+        Conversions.rotationsToMeters(inputs.encoderPosition, 1, elevatorRadius);
 
+    // Update voltage and current measurements
     inputs.appliedVoltage = leaderAppliedVolts.getValue();
     inputs.leaderStatorCurrent = leaderStatorCurrent.getValue();
     inputs.followerStatorCurrent = followerStatorCurrent.getValue();
@@ -129,12 +171,23 @@ public class ElevatorIOCTRE implements ElevatorIO {
     inputs.followerSupplyCurrent = followerSupplyCurrent.getValue();
   }
 
+  /**
+   * Sets the desired distance for the elevator to move to. Converts the desired linear distance to
+   * encoder rotations and applies position control.
+   *
+   * @param distance The target distance for the elevator
+   */
   @Override
   public void setDistance(Distance distance) {
+    // Convert desired distance to rotations and set position control
     leader.setControl(
-        new PositionVoltage(Conversions.metersToRotations(distance, GEAR_RATIO, elevatorRadius)));
+        new PositionVoltage(Conversions.metersToRotations(distance, 1, elevatorRadius)));
   }
 
+  /**
+   * Stops all elevator movement by stopping the leader motor. The follower will also stop due to
+   * the follower relationship.
+   */
   @Override
   public void stop() {
     leader.stopMotor();

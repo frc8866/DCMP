@@ -33,7 +33,8 @@ public interface ElevatorIO {
 
     public Angle leaderPosition = Rotations.of(0);
     public Angle encoderPosition = Rotations.of(0);
-    public Distance encoderDistance = Inches.of(0);
+
+    public Distance elevatorDistance = Inches.of(0);
 
     public AngularVelocity leaderVelocity = RotationsPerSecond.of(0);
     public AngularVelocity encoderVelocity = RotationsPerSecond.of(0);

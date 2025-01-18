@@ -14,6 +14,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.arm.Arm;
+import frc.robot.subsystems.arm.ArmIOCTRE;
+import frc.robot.subsystems.arm.ArmIOSIM;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
@@ -51,6 +54,7 @@ public class RobotContainer {
           .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   private final Flywheel flywheel;
   private final Elevator elevator;
+  private final Arm arm;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -72,6 +76,7 @@ public class RobotContainer {
 
         flywheel = new Flywheel(new FlywheelIOCTRE());
         elevator = new Elevator(new ElevatorIOCTRE());
+        arm = new Arm(new ArmIOCTRE());
         break;
 
       case SIM:
@@ -107,6 +112,7 @@ public class RobotContainer {
 
         flywheel = new Flywheel(new FlywheelIOSIM());
         elevator = new Elevator(new ElevatorIOSIM());
+        arm = new Arm(new ArmIOSIM());
         break;
 
       default:
@@ -122,6 +128,7 @@ public class RobotContainer {
 
         flywheel = new Flywheel(new FlywheelIO() {});
         elevator = new Elevator(new ElevatorIO() {});
+        arm = new Arm(new ArmIOCTRE() {});
         break;
     }
 
@@ -168,9 +175,6 @@ public class RobotContainer {
                                 .getX())))); // Drive counterclockwise with negative X (left)
 
     // joystick.a().onTrue(Commands.runOnce(() -> drivetrain.resetPose(Pose2d.kZero)));
-    joystick.rightBumper().onTrue(flywheel.L1());
-    joystick.a().onTrue(flywheel.L2());
-    joystick.leftBumper().onTrue(flywheel.stopCommand());
     joystick
         .b()
         .whileTrue(

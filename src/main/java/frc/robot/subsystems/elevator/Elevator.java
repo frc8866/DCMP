@@ -88,7 +88,7 @@ public class Elevator extends SubsystemBase {
    */
   @AutoLogOutput
   public Distance getPosition() {
-    return inputs.encoderDistance;
+    return inputs.elevatorDistance;
   }
 
   /** Enumeration of available arm distances with their corresponding target angles. */
