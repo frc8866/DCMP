@@ -25,11 +25,9 @@ import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
 import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
-import frc.robot.subsystems.elevator.ElevatorIOCTRE;
 import frc.robot.subsystems.elevator.ElevatorIOSIM;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
-import frc.robot.subsystems.flywheel.FlywheelIOCTRE;
 import frc.robot.subsystems.flywheel.FlywheelIOSIM;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
@@ -75,11 +73,14 @@ public class RobotContainer {
             new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
 
-        // flywheel = new Flywheel(new FlywheelIOCTRE()); // Disabled to prevent robot movement if deployed to a real robot
+        // flywheel = new Flywheel(new FlywheelIOCTRE()); // Disabled to prevent robot movement if
+        // deployed to a real robot
         flywheel = new Flywheel(new FlywheelIO() {});
-        // elevator = new Elevator(new ElevatorIOCTRE()); // Disabled to prevent robot movement if deployed to a real robot
+        // elevator = new Elevator(new ElevatorIOCTRE()); // Disabled to prevent robot movement if
+        // deployed to a real robot
         elevator = new Elevator(new ElevatorIO() {});
-        // arm = new Arm(new ArmIOCTRE()); // Disabled to prevent robot movement if deployed to a real robot
+        // arm = new Arm(new ArmIOCTRE()); // Disabled to prevent robot movement if deployed to a
+        // real robot
         arm = new Arm(new ArmIO() {});
         break;
 
