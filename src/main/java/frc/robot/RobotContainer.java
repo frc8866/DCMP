@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.arm.Arm;
+import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOCTRE;
 import frc.robot.subsystems.arm.ArmIOSIM;
 import frc.robot.subsystems.drive.Drive;
@@ -74,9 +75,12 @@ public class RobotContainer {
             new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
 
-        flywheel = new Flywheel(new FlywheelIOCTRE());
-        elevator = new Elevator(new ElevatorIOCTRE());
-        arm = new Arm(new ArmIOCTRE());
+        // flywheel = new Flywheel(new FlywheelIOCTRE()); // Disabled to prevent robot movement if deployed to a real robot
+        flywheel = new Flywheel(new FlywheelIO() {});
+        // elevator = new Elevator(new ElevatorIOCTRE()); // Disabled to prevent robot movement if deployed to a real robot
+        elevator = new Elevator(new ElevatorIO() {});
+        // arm = new Arm(new ArmIOCTRE()); // Disabled to prevent robot movement if deployed to a real robot
+        arm = new Arm(new ArmIO() {});
         break;
 
       case SIM:
