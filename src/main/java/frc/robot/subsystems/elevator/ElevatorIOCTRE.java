@@ -117,12 +117,13 @@ public class ElevatorIOCTRE implements ElevatorIO {
     config.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     // Configure PID and feedforward gains
-    config.Slot0.kP = 0; // Proportional gain
+    config.Slot0.kP = 24; // Proportional gain
     config.Slot0.kI = 0; // Integral gain
-    config.Slot0.kD = 0; // Derivative gain
-    config.Slot0.kS = 0; // Static friction compensation
+    config.Slot0.kD = 1.6; // Derivative gain
+    config.Slot0.kS = 0.1; // Static friction compensation
     config.Slot0.kV = 0; // Velocity feedforward
     config.Slot0.kA = 0; // Acceleration feedforward
+    config.Slot0.kG = 0.7297; // Gravity feedforward
 
     // Use the CANcoder as the remote feedback device
     config.Feedback.withRemoteCANcoder(encoder);
