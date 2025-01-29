@@ -74,12 +74,12 @@ public class DriveCommands extends Command {
                     () -> {
                       Angle[] positions = drive.getDrivePositions();
                       double wheelDelta = 0.0;
-                      for (int i = 0; i < 4; i++) {
+                      for (int i = 0; i < Constants.PP_CONFIG.numModules; i++) {
                         wheelDelta +=
                             Math.abs(
                                     positions[i].minus(state.positions[i]).baseUnitMagnitude()
                                         / Constants.SWERVE_MODULE_CONSTANTS.DriveMotorGearRatio)
-                                / 4.0;
+                                / Constants.PP_CONFIG.numModules;
                       }
                       double wheelRadius =
                           (state.gyroDelta * Constants.DRIVE_BASE_RADIUS) / wheelDelta;
