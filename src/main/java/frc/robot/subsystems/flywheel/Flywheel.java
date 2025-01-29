@@ -117,9 +117,13 @@ public class Flywheel extends SubsystemBase {
    * @param position The desired FlywheelPosition
    */
   private void setFlywheelPosition(FlywheelPosition position) {
-    currentCommand.cancel();
-    currentMode = position;
-    currentCommand.schedule();
+    if (currentMode != position) {
+      if (currentCommand != null) {
+        currentCommand.cancel();
+      }
+      currentMode = position;
+      currentCommand.schedule();
+    }
   }
 
   // Command that runs the appropriate routine based on the current position

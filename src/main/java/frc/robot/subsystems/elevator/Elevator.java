@@ -123,9 +123,13 @@ public class Elevator extends SubsystemBase {
    * @param distance The desired ElevatorPosition
    */
   private void setElevatorPosition(ElevatorPosition distance) {
-    currentCommand.cancel();
-    currentMode = distance;
-    currentCommand.schedule();
+    if (currentMode != distance) {
+      if (currentCommand != null) {
+        currentCommand.cancel();
+      }
+      currentMode = distance;
+      currentCommand.schedule();
+    }
   }
 
   // Command that runs the appropriate routine based on the current distance

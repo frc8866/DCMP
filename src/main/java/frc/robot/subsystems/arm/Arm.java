@@ -122,9 +122,13 @@ public class Arm extends SubsystemBase {
    * @param position The desired ArmPosition
    */
   private void setArmPosition(ArmPosition position) {
-    currentCommand.cancel();
-    currentMode = position;
-    currentCommand.schedule();
+    if (currentMode != position) {
+      if (currentCommand != null) {
+        currentCommand.cancel();
+      }
+      currentMode = position;
+      currentCommand.schedule();
+    }
   }
 
   // Command that runs the appropriate routine based on the current position
