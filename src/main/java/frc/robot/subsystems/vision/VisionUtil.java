@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class VisionUtil {
   // Configuration constants
-  private static boolean BEFORE_MATCH = true; // Controls MT1-only usage before match
+  private static volatile boolean BEFORE_MATCH = true; // Controls MT1-only usage before match
   public static final double FIELD_MARGIN =
       0.5; // Meters beyond field boundaries to accept measurements
   public static final double Z_MARGIN = 0.5; // Meters above/below field to accept measurements
@@ -27,10 +27,8 @@ public class VisionUtil {
   public static final double MIN_TAG_AREA = 0.05; // Minimum tag area to be accepted
 
   // Vision measurement constants for MA mode
-  // Standard deviation increases quadratically with distance and decreases linearly with tag count
-  private static final double MA_VISION_STD_DEV_XY = 0.333; // Base XY standard deviation in meters
-  private static final double MA_VISION_STD_DEV_THETA =
-      5.0; // Base angular standard deviation in degrees
+  private static final double MA_VISION_STD_DEV_XY = 0.333; // Base XY standard deviation
+  private static final double MA_VISION_STD_DEV_THETA = 5.0; // Base theta standard deviation
   public static final double MA_AMBIGUITY =
       0.4; // Maximum allowed ambiguity for single-tag measurements
 
@@ -55,7 +53,11 @@ public class VisionUtil {
       }
     },
 
-    /** Standard vision mode with distance-based standard deviations and basic validation checks. */
+    /**
+     * Standard vision mode that calculates measurement uncertainties based on distance. Uses a
+     * simple model where standard deviations increase quadratically with distance and decrease
+     * linearly with the number of tags detected.
+     */
     MA {
       @Override
       public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
@@ -65,20 +67,32 @@ public class VisionUtil {
         return new VisionMeasurement(mt, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev));
       }
 
+      /**
+       * Calculates the standard deviation for X and Y measurements.
+       *
+       * @param mt The pose estimate containing tag detection information
+       * @return Standard deviation scaled by distance squared and tag count
+       */
       private double calculateXYStdDev(PoseEstimate mt) {
         return MA_VISION_STD_DEV_XY * Math.pow(mt.avgTagDist(), 2.0) / mt.tagCount();
       }
 
+      /**
+       * Calculates the standard deviation for rotation measurements.
+       *
+       * @param mt The pose estimate containing tag detection information
+       * @return Standard deviation scaled by distance squared and tag count
+       */
       private double calculateThetaStdDev(PoseEstimate mt) {
         return MA_VISION_STD_DEV_THETA * Math.pow(mt.avgTagDist(), 2.0) / mt.tagCount();
       }
     },
 
-    /** POOF vision mode with enhanced validation checks and measurement calculations. */
+    /** Implements generic version POOF (Cheesy Poof 254) algorithm . */
     POOF {
       @Override
       public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
-        // Check if pose is within field bounds
+        // Reject measurements outside the field boundaries
         if (invalidPose(mt.pose())) {
           return new VisionMeasurement(
               mt, VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE));
@@ -86,50 +100,16 @@ public class VisionUtil {
         return calculatePoofMeasurement(mt);
       }
 
+      /**
+       * Calculates vision measurements using the POOF algorithm.
+       *
+       * @param mt The pose estimate to process
+       * @return A VisionMeasurement with calculated standard deviations
+       */
       private VisionMeasurement calculatePoofMeasurement(PoseEstimate mt) {
-        double xyStdDev;
-        double thetaStdDev;
-
-        // Calculate standard deviations based on number of tags and their properties
-        boolean hasMultipleTags = mt.tagCount() >= 2;
-        boolean hasLargeTagArea = mt.avgTagArea() > 0.1;
-
-        if (hasMultipleTags) {
-          // Multiple targets detected - highest confidence
-          if (hasLargeTagArea) {
-            xyStdDev = 0.2;
-            thetaStdDev = Units.degreesToRadians(6.0);
-          } else {
-            xyStdDev = 1.2;
-            thetaStdDev = Units.degreesToRadians(12.0);
-          }
-        } else if (mt.tagCount() == 1) {
-          // Single target - evaluate based on area and position
-          double poseDifference =
-              mt.robotPose()
-                  .getTranslation()
-                  .getDistance(mt.pose().getTranslation().toTranslation2d());
-          boolean isCloseToExpectedPose = poseDifference < 0.5;
-          boolean isVeryCloseToExpectedPose = poseDifference < 0.3;
-
-          if (mt.avgTagArea() > 0.8 && isCloseToExpectedPose) {
-            // Large visible tag and close to expected position
-            xyStdDev = 0.5;
-            thetaStdDev = Units.degreesToRadians(12.0);
-          } else if (hasLargeTagArea && isVeryCloseToExpectedPose) {
-            // Smaller visible tag but very close to expected position
-            xyStdDev = 1.0;
-            thetaStdDev = Units.degreesToRadians(0.0);
-          } else {
-            // Lower confidence case
-            xyStdDev = 2.0;
-            thetaStdDev = Units.degreesToRadians(50.0);
-          }
-        } else {
-          // No valid tags detected
-          xyStdDev = Double.MAX_VALUE;
-          thetaStdDev = Double.MAX_VALUE;
-        }
+        var stdDevs = calculateStandardDeviations(mt);
+        var xyStdDev = stdDevs.xyStdDev();
+        var thetaStdDev = stdDevs.thetaStdDev();
 
         // MT2 measurements don't provide reliable rotation data
         if (mt.isMegaTag2()) {
@@ -139,6 +119,74 @@ public class VisionUtil {
         return new VisionMeasurement(mt, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev));
       }
     };
+
+    /**
+     * Record holding vision standard deviation values for both position and rotation.
+     *
+     * @param xyStdDev Standard deviation for X and Y measurements
+     * @param thetaStdDev Standard deviation for rotation measurements
+     */
+    private record VisionDevs(double xyStdDev, double thetaStdDev) {}
+
+    /**
+     * Calculates standard deviations based on the number of tags detected.
+     *
+     * @param mt The pose estimate containing tag detection information
+     * @return VisionDevs containing calculated standard deviations
+     */
+    private static VisionDevs calculateStandardDeviations(PoseEstimate mt) {
+      if (mt.tagCount() >= 2) {
+        return calculateMultipleTagStdDevs(mt);
+      } else if (mt.tagCount() == 1) {
+        return calculateSingleTagStdDevs(mt);
+      }
+      // No tags detected - return maximum uncertainty
+      return new VisionDevs(Double.MAX_VALUE, Double.MAX_VALUE);
+    }
+
+    /**
+     * Calculates standard deviations when multiple tags are detected. Uses tag area to determine
+     * measurement confidence.
+     *
+     * @param mt The pose estimate containing tag detection information
+     * @return VisionDevs with appropriate standard deviations
+     */
+    private static VisionDevs calculateMultipleTagStdDevs(PoseEstimate mt) {
+      boolean hasLargeTagArea = mt.avgTagArea() > 0.1;
+      // Higher confidence (smaller std devs) when tags appear larger in the image
+      return hasLargeTagArea
+          ? new VisionDevs(0.2, Units.degreesToRadians(6.0))
+          : new VisionDevs(1.2, Units.degreesToRadians(12.0));
+    }
+
+    /**
+     * Calculates standard deviations when only one tag is detected. Uses both tag area and distance
+     * from expected pose to determine confidence.
+     *
+     * @param mt The pose estimate containing tag detection information
+     * @return VisionDevs with appropriate standard deviations
+     */
+    private static VisionDevs calculateSingleTagStdDevs(PoseEstimate mt) {
+      // Calculate how far the measured pose is from the expected pose
+      double poseDifference =
+          mt.robotPose().getTranslation().getDistance(mt.pose().getTranslation().toTranslation2d());
+
+      // Define confidence thresholds based on pose difference and tag area
+      boolean isCloseToExpectedPose = poseDifference < 0.5;
+      boolean isVeryCloseToExpectedPose = poseDifference < 0.3;
+      boolean hasLargeTagArea = mt.avgTagArea() > 0.1;
+
+      // Assign standard deviations based on confidence levels
+      if (mt.avgTagArea() > 0.8 && isCloseToExpectedPose) {
+        // Highest confidence case
+        return new VisionDevs(0.5, Units.degreesToRadians(12.0));
+      } else if (hasLargeTagArea && isVeryCloseToExpectedPose) {
+        // Medium confidence case
+        return new VisionDevs(1.0, Units.degreesToRadians(25.0));
+      }
+      // Low confidence case
+      return new VisionDevs(2.0, Units.degreesToRadians(50.0));
+    }
 
     /**
      * Creates a vision measurement with calculated standard deviations.
