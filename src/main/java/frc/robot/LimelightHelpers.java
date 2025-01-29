@@ -1383,6 +1383,9 @@ public class LimelightHelpers {
    * @param mode IMU mode.
    */
   public static void SetIMUMode(String limelightName, int mode) {
+    if (mode < 0) {
+      throw new IllegalArgumentException("IMU mode must be non-negative");
+    }
     setLimelightNTDouble(limelightName, "imumode_set", mode);
   }
 
