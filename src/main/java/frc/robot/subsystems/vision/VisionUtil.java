@@ -61,9 +61,10 @@ public class VisionUtil {
     MA {
       @Override
       public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
-        double xyStdDev = calculateXYStdDev(mt);
+        double xyStdDev = calculateStdDev(mt, MA_VISION_STD_DEV_XY);
         // MT2 measurements don't provide reliable rotation data
-        double thetaStdDev = mt.isMegaTag2() ? Double.MAX_VALUE : calculateThetaStdDev(mt);
+        double thetaStdDev =
+            mt.isMegaTag2() ? Double.MAX_VALUE : calculateStdDev(mt, MA_VISION_STD_DEV_THETA);
         return new VisionMeasurement(mt, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev));
       }
 
@@ -71,24 +72,19 @@ public class VisionUtil {
        * Calculates the standard deviation for X and Y measurements.
        *
        * @param mt The pose estimate containing tag detection information
+       * @param scaler Amount to scale trust by. Smaller is greater trust
        * @return Standard deviation scaled by distance squared and tag count
        */
-      private double calculateXYStdDev(PoseEstimate mt) {
-        return MA_VISION_STD_DEV_XY * Math.pow(mt.avgTagDist(), 2.0) / mt.tagCount();
-      }
-
-      /**
-       * Calculates the standard deviation for rotation measurements.
-       *
-       * @param mt The pose estimate containing tag detection information
-       * @return Standard deviation scaled by distance squared and tag count
-       */
-      private double calculateThetaStdDev(PoseEstimate mt) {
-        return MA_VISION_STD_DEV_THETA * Math.pow(mt.avgTagDist(), 2.0) / mt.tagCount();
+      private double calculateStdDev(PoseEstimate mt, double scaler) {
+        return scaler * Math.pow(mt.avgTagDist(), 2.0) / mt.tagCount();
       }
     },
 
-    /** Implements generic version POOF (Cheesy Poof 254) algorithm . */
+    /**
+     * Implements generic version POOF (Cheesy Poof 254) algorithm. These values where chosen due to
+     * how the distance should be similar from last game to this game (being feed vs cycling). You
+     * will want to tune.
+     */
     POOF {
       @Override
       public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
