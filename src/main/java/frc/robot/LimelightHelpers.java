@@ -1293,6 +1293,9 @@ public class LimelightHelpers {
   public static IMUData getIMUData(String limelightName) {
     double[] imuData = getLimelightNTDoubleArray(limelightName, "imu");
     if (imuData == null || imuData.length < 10) {
+      System.err.printf(
+          "Invalid IMU data from %s: %s%n",
+          limelightName, imuData == null ? "null" : "insufficient length " + imuData.length);
       return new IMUData(); // Returns object with all zeros
     }
     return new IMUData(imuData);
@@ -1376,25 +1379,41 @@ public class LimelightHelpers {
     setLimelightNTDoubleArray(limelightName, "crop", entries);
   }
 
+  public enum IMUMode {
+    EXTERNAL(0), // Use external IMU yaw only
+    EXTERNAL_FUSED(1), // Use external IMU yaw and configure internal IMU
+    INTERNAL(2); // Use internal IMU only
+
+    private final int value;
+
+    IMUMode(int value) {
+      this.value = value;
+    }
+
+    public int getValue() {
+      return value;
+    }
+  }
+
   /**
    * Configures the IMU mode for MegaTag2 Localization <br>
    * <br>
-   * 0 - Use external IMU yaw submitted via SetRobotOrientation() for MT2 localization. The internal
-   * IMU is ignored entirely. <br>
+   * EXTERNAL - Use external IMU yaw submitted via SetRobotOrientation() for MT2 localization. The
+   * internal IMU is ignored entirely. <br>
    * <br>
-   * 1 - Use external IMU yaw submitted via SetRobotOrientation(), and configure the LL4 internal
-   * IMU’s fused yaw to match the submitted yaw value. <br>
+   * EXTERNAL_FUSED - Use external IMU yaw submitted via SetRobotOrientation(), and configure the
+   * LL4 internal IMU’s fused yaw to match the submitted yaw value. <br>
    * <br>
-   * 2 - Use internal IMU for MT2 localization. External imu data is ignored entirely
+   * INTERNAL - Use internal IMU for MT2 localization. External imu data is ignored entirely
    *
    * @param limelightName Name/identifier of the Limelight
    * @param mode IMU mode.
    */
-  public static void SetIMUMode(String limelightName, int mode) {
-    if (mode < 0) {
-      throw new IllegalArgumentException("IMU mode must be non-negative");
+  public static void SetIMUMode(String limelightName, IMUMode mode) {
+    if (mode == null) {
+      throw new IllegalArgumentException("IMU mode cannot be null");
     }
-    setLimelightNTDouble(limelightName, "imumode_set", mode);
+    setLimelightNTDouble(limelightName, "imumode_set", mode.getValue());
   }
 
   /** Sets 3D offset point for easy 3D targeting. */
