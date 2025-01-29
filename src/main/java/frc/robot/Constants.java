@@ -88,6 +88,10 @@ public final class Constants {
   }
 
   static {
-    PP_CONFIG.hasValidConfig();
+    // Checks to make sure config matches GUI values. Code should not throw as not breaking
+    if (!PP_CONFIG.hasValidConfig()) {
+      String error = "Invalid robot configuration detected in PP_CONFIG";
+      System.err.println(error);
+    }
   }
 }

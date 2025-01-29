@@ -39,12 +39,9 @@ public interface DriveIO {
   @AutoLog
   public static class DriveIOInputs {
     // Module arrays with default states
-    public SwerveModuleState[] moduleStates =
-        ArrayBuilder.buildSwerveModuleState(Constants.PP_CONFIG.numModules);
-    public SwerveModuleState[] moduleTargets =
-        ArrayBuilder.buildSwerveModuleState(Constants.PP_CONFIG.numModules);
-    public SwerveModulePosition[] modulePositions =
-        ArrayBuilder.buildSwerveModulePosition(Constants.PP_CONFIG.numModules);
+    public SwerveModuleState[] moduleStates = ArrayBuilder.buildSwerveModuleState();
+    public SwerveModuleState[] moduleTargets = ArrayBuilder.buildSwerveModuleState();
+    public SwerveModulePosition[] modulePositions = ArrayBuilder.buildSwerveModulePosition();
 
     // Position and motion state
     public Pose2d pose = Pose2d.kZero;

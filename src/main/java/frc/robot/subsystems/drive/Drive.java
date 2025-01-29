@@ -48,22 +48,23 @@ import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
   private final DriveIO io;
   private final DriveIOInputsAutoLogged inputs;
-  private final ModuleIOInputsAutoLogged[] modules =
-      buildModuleAutoLogeed(Constants.PP_CONFIG.numModules);
+  private final ModuleIOInputsAutoLogged[] modules = ArrayBuilder.buildModuleAutoLogeed();
 
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
   private SwerveDrivePoseEstimator poseEstimator = null;
   private Trigger estimatorTrigger =
       new Trigger(() -> poseEstimator != null).and(() -> Constants.currentMode == Mode.REPLAY);
-  private SwerveModulePosition[] currentPositions =
-      ArrayBuilder.buildSwerveModulePosition(Constants.PP_CONFIG.numModules);
+  private SwerveModulePosition[] currentPositions = ArrayBuilder.buildSwerveModulePosition();
 
-  private Alert[] driveDisconnectedAlert = new Alert[Constants.PP_CONFIG.numModules];
-  private Alert[] turnDisconnectedAlert = new Alert[Constants.PP_CONFIG.numModules];
-  private Alert[] turnEncoderDisconnectedAlert = new Alert[Constants.PP_CONFIG.numModules];
+  private Alert[] driveDisconnectedAlert =
+      ArrayBuilder.buildAlert("Disconnected drive motor on module");
+  private Alert[] turnDisconnectedAlert =
+      ArrayBuilder.buildAlert("Disconnected turn motor on module");
+  private Alert[] turnEncoderDisconnectedAlert =
+      ArrayBuilder.buildAlert("Disconnected turn encoder on module");
 
-  private Alert gyroDisconnectedAlert;
+  private Alert gyroDisconnectedAlert = new Alert("Gyro Disconnected", AlertType.kError);
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -144,24 +145,7 @@ public class Drive extends SubsystemBase {
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
 
-    configureAlerts();
     configureAutoBuilder();
-  }
-
-  private void configureAlerts() {
-    gyroDisconnectedAlert = new Alert("Gyro Disconnected", AlertType.kError);
-
-    for (int i = 0; i < modules.length; i++) {
-      driveDisconnectedAlert[i] =
-          new Alert(
-              "Disconnected drive motor on module " + Integer.toString(i) + ".", AlertType.kError);
-      turnDisconnectedAlert[i] =
-          new Alert(
-              "Disconnected turn motor on module " + Integer.toString(i) + ".", AlertType.kError);
-      turnEncoderDisconnectedAlert[i] =
-          new Alert(
-              "Disconnected turn encoder on module " + Integer.toString(i) + ".", AlertType.kError);
-    }
   }
 
   private void configureAutoBuilder() {
@@ -399,22 +383,5 @@ public class Drive extends SubsystemBase {
       currentPositions[moduleIndex].distanceMeters = inputs.drivePositions[moduleIndex][timeIndex];
       currentPositions[moduleIndex].angle = inputs.steerPositions[moduleIndex][timeIndex];
     }
-  }
-
-  /**
-   * Builds an array of `ModuleIOInputsAutoLogged` objects.
-   *
-   * @param size The number of elements in the array.
-   * @return An initialized array of `ModuleIOInputsAutoLogged` objects.
-   */
-  public ModuleIOInputsAutoLogged[] buildModuleAutoLogeed(int size) {
-    if (size <= 0) {
-      throw new IllegalArgumentException("Size must be positive");
-    }
-    ModuleIOInputsAutoLogged[] modulePositions = new ModuleIOInputsAutoLogged[size];
-    for (int i = 0; i < modulePositions.length; i++) {
-      modulePositions[i] = new ModuleIOInputsAutoLogged();
-    }
-    return modulePositions;
   }
 }

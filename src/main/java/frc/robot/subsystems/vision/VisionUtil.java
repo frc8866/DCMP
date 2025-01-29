@@ -50,7 +50,8 @@ public class VisionUtil {
     NONE {
       @Override
       public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
-        return new VisionMeasurement(mt, VecBuilder.fill(0.0, 0.0, 0.0));
+        return new VisionMeasurement(
+            mt, VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE));
       }
 
       @Override
@@ -92,15 +93,6 @@ public class VisionUtil {
      * will want to tune.
      */
     POOF {
-      @Override
-      public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
-        // Reject measurements outside the field boundaries
-        if (invalidPose(mt.pose())) {
-          return new VisionMeasurement(
-              mt, VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE));
-        }
-        return calculatePoofMeasurement(mt);
-      }
 
       /**
        * Calculates vision measurements using the POOF algorithm.
@@ -108,7 +100,8 @@ public class VisionUtil {
        * @param mt The pose estimate to process
        * @return A VisionMeasurement with calculated standard deviations
        */
-      private VisionMeasurement calculatePoofMeasurement(PoseEstimate mt) {
+      @Override
+      public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
         var stdDevs = calculateStandardDeviations(mt);
         var xyStdDev = stdDevs.xyStdDev();
         var thetaStdDev = stdDevs.thetaStdDev();
@@ -206,6 +199,9 @@ public class VisionUtil {
      * @return True if the measurement should be accepted, false otherwise
      */
     public boolean acceptVisionMeasurement(PoseObservation mt) {
+      if (!mt.isValid()) {
+        return false;
+      }
       PoseEstimate poseEst = mt.poseEstimate();
       return !invalidPose(poseEst.pose())
           && !invalidMT2Time(poseEst)
