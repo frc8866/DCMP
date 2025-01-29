@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
+import frc.robot.utils.ArrayBuilder;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -42,7 +43,7 @@ public class Drive extends SubsystemBase {
   private final DriveIO io;
   private final DriveIOInputsAutoLogged inputs;
   private final ModuleIOInputsAutoLogged[] modules =
-      new ModuleIOInputsAutoLogged[Constants.PP_CONFIG.numModules];
+      buildModuleAutoLogeed(Constants.PP_CONFIG.numModules);
 
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
@@ -50,7 +51,7 @@ public class Drive extends SubsystemBase {
   private Trigger estimatorTrigger =
       new Trigger(() -> poseEstimator != null).and(() -> Constants.currentMode == Mode.REPLAY);
   private SwerveModulePosition[] currentPositions =
-      new SwerveModulePosition[Constants.PP_CONFIG.numModules];
+      ArrayBuilder.buildSwerveModulePosition(Constants.PP_CONFIG.numModules);
 
   private Alert[] driveDisconnectedAlert = new Alert[Constants.PP_CONFIG.numModules];
   private Alert[] turnDisconnectedAlert = new Alert[Constants.PP_CONFIG.numModules];
@@ -137,16 +138,8 @@ public class Drive extends SubsystemBase {
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
 
-    configureModules();
     configureAlerts();
     configureAutoBuilder();
-  }
-
-  private void configureModules() {
-    for (int i = 0; i < Constants.PP_CONFIG.numModules; i++) {
-      modules[i] = new ModuleIOInputsAutoLogged();
-      currentPositions[i] = new SwerveModulePosition();
-    }
   }
 
   private void configureAlerts() {
@@ -400,5 +393,19 @@ public class Drive extends SubsystemBase {
       currentPositions[moduleIndex].distanceMeters = inputs.drivePositions[moduleIndex][timeIndex];
       currentPositions[moduleIndex].angle = inputs.steerPositions[moduleIndex][timeIndex];
     }
+  }
+
+  /**
+   * Builds an array of `ModuleIOInputsAutoLogged` objects.
+   *
+   * @param size The number of elements in the array.
+   * @return An initialized array of `ModuleIOInputsAutoLogged` objects.
+   */
+  public ModuleIOInputsAutoLogged[] buildModuleAutoLogeed(int size) {
+    ModuleIOInputsAutoLogged[] modulePositions = new ModuleIOInputsAutoLogged[size];
+    for (int i = 0; i < modulePositions.length; i++) {
+      modulePositions[i] = new ModuleIOInputsAutoLogged();
+    }
+    return modulePositions;
   }
 }
