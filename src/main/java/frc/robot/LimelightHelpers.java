@@ -1377,7 +1377,15 @@ public class LimelightHelpers {
   }
 
   /**
-   * Configures the IMU mode for MegaTag2 Localization
+   * Configures the IMU mode for MegaTag2 Localization <br>
+   * <br>
+   * 0 - Use external IMU yaw submitted via SetRobotOrientation() for MT2 localization. The internal
+   * IMU is ignored entirely. <br>
+   * <br>
+   * 1 - Use external IMU yaw submitted via SetRobotOrientation(), and configure the LL4 internal
+   * IMU’s fused yaw to match the submitted yaw value. <br>
+   * <br>
+   * 2 - Use internal IMU for MT2 localization. External imu data is ignored entirely
    *
    * @param limelightName Name/identifier of the Limelight
    * @param mode IMU mode.
