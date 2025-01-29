@@ -4,6 +4,7 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.LimelightHelpers.PoseObservation;
@@ -23,8 +24,9 @@ public class VisionUtil {
       0.5; // Meters beyond field boundaries to accept measurements
   public static final double Z_MARGIN = 0.5; // Meters above/below field to accept measurements
   public static final double MT2_SPIN_MAX = 40.0; // Maximum rotation speed for MT2 measurements
+  public static final double MIN_TAG_AREA = 0.05; // Minimum tag area to be accepted.
 
-  // Vision measurement constants for MA mode
+  // Vision measurement constants
   private static final double MA_VISION_STD_DEV_XY = 0.333;
   private static final double MA_VISION_STD_DEV_THETA = 5;
   public static final double MA_AMBIGUITY = 0.4;
@@ -62,13 +64,10 @@ public class VisionUtil {
 
       @Override
       public boolean acceptVisionMeasurement(PoseObservation mt) {
-        boolean invalidTime = mt.poseEstimate().isMegaTag2() && beforeMatch();
-        boolean ambiguityThreshold =
-            mt.poseEstimate().tagCount() == 1 && mt.poseEstimate().ambiguity() > MA_AMBIGUITY;
-        boolean fieldCheck = fieldCheck(mt.poseEstimate().pose());
-        boolean inValidSpeed = speedCheck(mt.poseEstimate().yawVelocityRadPerSec());
-        // Reject if any validation checks fail
-        return invalidTime || inValidSpeed || ambiguityThreshold || fieldCheck;
+        return !timeCheck(mt.poseEstimate())
+            && !rotationSpeedCheck(mt.poseEstimate())
+            && !ambiguityCheck(mt.poseEstimate())
+            && !fieldBoundsCheck(mt.poseEstimate().pose());
       }
 
       private double calculateXYStdDev(PoseEstimate mt) {
@@ -80,32 +79,77 @@ public class VisionUtil {
       }
     },
 
-    /**
-     * Experimental vision mode with alternative validation checks and measurement calculations.
-     * Currently disabled.
-     */
+    /** POOF vision mode with enhanced validation checks and measurement calculations. */
     POOF {
       @Override
       public VisionMeasurement getVisionMeasurement(PoseEstimate mt) {
-        double xyStdDev = calculateXYStdDevNew(mt);
-        double thetaStdDev = mt.isMegaTag2() ? Double.MAX_VALUE : calculateThetaStdDevNew(mt);
-        return new VisionMeasurement(mt, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev));
+        // Check if pose is within field bounds
+        if (!fieldBoundsCheck(mt.pose())) {
+          return new VisionMeasurement(
+              mt, VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE));
+        }
+
+        return calculatePoofMeasurement(mt);
       }
 
       @Override
       public boolean acceptVisionMeasurement(PoseObservation mt) {
-        // TODO: Implement validation checks for POOF mode
-        return false;
+        PoseEstimate poseEst = mt.poseEstimate();
+        return !fieldBoundsCheck(poseEst.pose())
+            && !rotationSpeedCheck(poseEst)
+            && !tagAreaCheck(poseEst)
+            && !ambiguityCheck(poseEst);
       }
 
-      private double calculateXYStdDevNew(PoseEstimate mt) {
-        // TODO: Implement POOF logic for XY standard deviation
-        return Math.log(mt.avgTagDist() + 1) / mt.tagCount();
-      }
+      private VisionMeasurement calculatePoofMeasurement(PoseEstimate mt) {
+        double xyStdDev;
+        double thetaStdDev;
 
-      private double calculateThetaStdDevNew(PoseEstimate mt) {
-        // TODO: Implement POOF logic for theta standard deviation
-        return Math.log(mt.avgTagDist() + 1) / mt.tagCount();
+        // Calculate standard deviations based on number of tags and their properties
+        boolean hasMultipleTags = mt.tagCount() >= 2;
+        boolean hasLargeTagArea = mt.avgTagArea() > 0.1;
+
+        if (hasMultipleTags) {
+          // Multiple targets detected - highest confidence
+          if (hasLargeTagArea) {
+            xyStdDev = 0.2;
+            thetaStdDev = Units.degreesToRadians(6.0);
+          } else {
+            xyStdDev = 1.2;
+            thetaStdDev = Units.degreesToRadians(12.0);
+          }
+        } else if (mt.tagCount() == 1) {
+          // Single target - evaluate based on area and position
+          double poseDifference =
+              mt.pose().getTranslation().getDistance(mt.pose().getTranslation());
+          boolean isCloseToExpectedPose = poseDifference < 0.5;
+          boolean isVeryCloseToExpectedPose = poseDifference < 0.3;
+
+          if (mt.avgTagArea() > 0.8 && isCloseToExpectedPose) {
+            // Large visible tag and close to expected position
+            xyStdDev = 0.5;
+            thetaStdDev = Units.degreesToRadians(12.0);
+          } else if (hasLargeTagArea && isVeryCloseToExpectedPose) {
+            // Smaller visible tag but very close to expected position
+            xyStdDev = 1.0;
+            thetaStdDev = Units.degreesToRadians(0.0);
+          } else {
+            // Lower confidence case
+            xyStdDev = 2.0;
+            thetaStdDev = Units.degreesToRadians(50.0);
+          }
+        } else {
+          // No valid tags detected
+          xyStdDev = Double.MAX_VALUE;
+          thetaStdDev = Double.MAX_VALUE;
+        }
+
+        // MT2 measurements don't provide reliable rotation data
+        if (mt.isMegaTag2()) {
+          thetaStdDev = Double.MAX_VALUE;
+        }
+
+        return new VisionMeasurement(mt, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev));
       }
     };
 
@@ -179,16 +223,20 @@ public class VisionUtil {
     }
   }
 
-  /** Checks if the robot is in the pre-match phase where only MT1 should be used. */
-  private static boolean beforeMatch() {
-    if (DriverStation.isEnabled()) {
-      BEFORE_MATCH = false;
-    }
-    return BEFORE_MATCH && !DriverStation.isEnabled();
+  // Validation helper methods
+  private static boolean timeCheck(PoseEstimate mt) {
+    return mt.isMegaTag2() && beforeMatch();
   }
 
-  /** Validates that a pose is within the field boundaries (plus margins). */
-  private static boolean fieldCheck(Pose3d robotPose) {
+  private static boolean rotationSpeedCheck(PoseEstimate mt) {
+    return Math.abs(mt.yawVelocityRadPerSec()) > MT2_SPIN_MAX;
+  }
+
+  private static boolean ambiguityCheck(PoseEstimate mt) {
+    return mt.tagCount() == 1 && mt.ambiguity() > MA_AMBIGUITY;
+  }
+
+  private static boolean fieldBoundsCheck(Pose3d robotPose) {
     return robotPose.getX() < -FIELD_MARGIN
         || robotPose.getX() > FieldConstants.fieldLength + FIELD_MARGIN
         || robotPose.getY() < -FIELD_MARGIN
@@ -197,8 +245,15 @@ public class VisionUtil {
         || robotPose.getZ() > Z_MARGIN;
   }
 
-  /** Validates that the robot's rotation speed is within acceptable limits. */
-  private static boolean speedCheck(double rotationSpeed) {
-    return Math.abs(rotationSpeed) > MT2_SPIN_MAX;
+  private static boolean tagAreaCheck(PoseEstimate mt) {
+    return mt.avgTagArea() < MIN_TAG_AREA;
+  }
+
+  /** Checks if the robot is in the pre-match phase where only MT1 should be used. */
+  public static boolean beforeMatch() {
+    if (DriverStation.isEnabled()) {
+      BEFORE_MATCH = false;
+    }
+    return BEFORE_MATCH;
   }
 }

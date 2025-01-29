@@ -42,12 +42,7 @@ public class Drive extends SubsystemBase {
   private final DriveIO io;
   private final DriveIOInputsAutoLogged inputs;
   private final ModuleIOInputsAutoLogged[] modules =
-      new ModuleIOInputsAutoLogged[] {
-        new ModuleIOInputsAutoLogged(),
-        new ModuleIOInputsAutoLogged(),
-        new ModuleIOInputsAutoLogged(),
-        new ModuleIOInputsAutoLogged()
-      };
+      new ModuleIOInputsAutoLogged[Constants.PP_CONFIG.numModules];
 
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
@@ -55,12 +50,7 @@ public class Drive extends SubsystemBase {
   private Trigger estimatorTrigger =
       new Trigger(() -> poseEstimator != null).and(() -> Constants.currentMode == Mode.REPLAY);
   private SwerveModulePosition[] currentPositions =
-      new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
+      new SwerveModulePosition[Constants.PP_CONFIG.numModules];
 
   private Alert[] driveDisconnectedAlert = new Alert[Constants.PP_CONFIG.numModules];
   private Alert[] turnDisconnectedAlert = new Alert[Constants.PP_CONFIG.numModules];
@@ -147,8 +137,16 @@ public class Drive extends SubsystemBase {
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
 
+    configureModules();
     configureAlerts();
     configureAutoBuilder();
+  }
+
+  private void configureModules() {
+    for (int i = 0; i < Constants.PP_CONFIG.numModules; i++) {
+      modules[i] = new ModuleIOInputsAutoLogged();
+      currentPositions[i] = new SwerveModulePosition();
+    }
   }
 
   private void configureAlerts() {
@@ -296,8 +294,8 @@ public class Drive extends SubsystemBase {
   }
 
   public Angle[] getDrivePositions() {
-    Angle[] values = new Angle[4];
-    for (int i = 0; i < 4; i++) {
+    Angle[] values = new Angle[Constants.PP_CONFIG.numModules];
+    for (int i = 0; i < values.length; i++) {
       values[i] = modules[i].drivePosition;
     }
     return values;

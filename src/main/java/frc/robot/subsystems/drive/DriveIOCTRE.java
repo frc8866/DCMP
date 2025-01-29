@@ -16,6 +16,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
@@ -158,6 +159,8 @@ public class DriveIOCTRE extends TunerSwerveDrivetrain implements DriveIO {
       } finally {
         odometryLock.unlock();
       }
+    } else {
+      DriverStation.reportWarning("Failed to acquire odometry lock in updateInputs", true);
     }
   }
 
@@ -187,6 +190,8 @@ public class DriveIOCTRE extends TunerSwerveDrivetrain implements DriveIO {
       } finally {
         odometryLock.unlock();
       }
+    } else {
+      DriverStation.reportWarning("Failed to acquire odometry lock in updateTelemetry", true);
     }
   }
 

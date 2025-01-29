@@ -105,7 +105,7 @@ public class DriveCommands extends Command {
   }
 
   private static class WheelRadiusCharacterizationState {
-    Angle[] positions = new Angle[4];
+    Angle[] positions = new Angle[Constants.PP_CONFIG.numModules];
     Rotation2d lastAngle = Rotation2d.kZero;
     double gyroDelta = 0.0;
   }
