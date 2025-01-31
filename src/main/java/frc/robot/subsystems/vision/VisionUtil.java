@@ -113,6 +113,12 @@ public class VisionUtil {
 
         return new VisionMeasurement(mt, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev));
       }
+
+      /** Custom implementation that take default behavior and add area filter */
+      @Override
+      public boolean acceptVisionMeasurement(PoseObservation mt) {
+        return super.acceptVisionMeasurement(mt) && !invalidTagArea(mt.poseEstimate());
+      }
     };
 
     /**
@@ -206,7 +212,6 @@ public class VisionUtil {
       return !invalidPose(poseEst.pose())
           && !invalidMT2Time(poseEst)
           && !invalidRotationVelocity(poseEst)
-          && !invalidTagArea(poseEst)
           && !invalidAmbiguity(poseEst);
     }
   }
