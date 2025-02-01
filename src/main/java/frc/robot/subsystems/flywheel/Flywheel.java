@@ -118,9 +118,7 @@ public class Flywheel extends SubsystemBase {
    */
   private void setFlywheelMode(FlywheelMode mode) {
     if (currentMode != mode) {
-      if (currentCommand != null) {
-        currentCommand.cancel();
-      }
+      currentCommand.cancel();
       currentMode = mode;
       currentCommand.schedule();
     }

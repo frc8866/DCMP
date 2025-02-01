@@ -123,9 +123,7 @@ public class Arm extends SubsystemBase {
    */
   private void setArmPosition(ArmMode position) {
     if (currentMode != position) {
-      if (currentCommand != null) {
-        currentCommand.cancel();
-      }
+      currentCommand.cancel();
       currentMode = position;
       currentCommand.schedule();
     }

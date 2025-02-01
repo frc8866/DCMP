@@ -79,14 +79,9 @@ public class FieldConstants {
 
     private static Translation3d calculateTransform(
         Pose2d poseDirection, Distance adjustX, Distance adjustY, Distance adjustZ) {
-      return new Translation3d(
-          poseDirection
-              .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-              .getMeasureX(),
-          poseDirection
-              .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-              .getMeasureY(),
-          adjustZ);
+      Transform2d adjustment = new Transform2d(adjustX, adjustY, new Rotation2d());
+      Pose2d transformed = poseDirection.transformBy(adjustment);
+      return new Translation3d(transformed.getMeasureX(), transformed.getMeasureY(), adjustZ);
     }
 
     static {

@@ -130,9 +130,7 @@ public class Elevator extends SubsystemBase {
    */
   private void setElevatorMode(ElevatorMode mode) {
     if (currentMode != mode) {
-      if (currentCommand != null) {
-        currentCommand.cancel();
-      }
+      currentCommand.cancel();
       currentMode = mode;
       currentCommand.schedule();
     }
