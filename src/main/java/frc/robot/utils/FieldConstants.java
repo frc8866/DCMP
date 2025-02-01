@@ -149,7 +149,7 @@ public class FieldConstants {
 
     ReefHeight(Distance height, Angle pitch) {
       this.height = height;
-      this.pitch = pitch; // in degrees
+      this.pitch = pitch;
     }
 
     public final Distance height;

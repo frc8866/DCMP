@@ -28,7 +28,7 @@ public class Flywheel extends SubsystemBase {
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs;
 
-  // Current flywheel mode mode
+  // Current flywheel mode
   private FlywheelMode currentMode = FlywheelMode.STOP;
 
   // Alerts for motor connection status
@@ -103,9 +103,9 @@ public class Flywheel extends SubsystemBase {
   }
 
   /**
-   * Gets the current flywheel mode mode.
+   * Gets the current flywheel mode.
    *
-   * @return The current Flywheelmode
+   * @return The current Flywheel mode
    */
   public FlywheelMode getMode() {
     return currentMode;
