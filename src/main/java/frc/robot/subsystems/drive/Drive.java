@@ -1,3 +1,9 @@
+// Copyright (c) 2025 FRC 5712
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
+
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
@@ -29,6 +35,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.subsystems.vision.VisionUtil.VisionMeasurement;
+import frc.robot.utils.ArrayBuilder;
 import java.util.List;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -41,32 +48,23 @@ import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
   private final DriveIO io;
   private final DriveIOInputsAutoLogged inputs;
-  private final ModuleIOInputsAutoLogged[] modules =
-      new ModuleIOInputsAutoLogged[] {
-        new ModuleIOInputsAutoLogged(),
-        new ModuleIOInputsAutoLogged(),
-        new ModuleIOInputsAutoLogged(),
-        new ModuleIOInputsAutoLogged()
-      };
+  private final ModuleIOInputsAutoLogged[] modules = ArrayBuilder.buildModuleAutoLogeed();
 
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);
   private SwerveDrivePoseEstimator poseEstimator = null;
   private Trigger estimatorTrigger =
       new Trigger(() -> poseEstimator != null).and(() -> Constants.currentMode == Mode.REPLAY);
-  private SwerveModulePosition[] currentPositions =
-      new SwerveModulePosition[] {
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition(),
-        new SwerveModulePosition()
-      };
+  private SwerveModulePosition[] currentPositions = ArrayBuilder.buildSwerveModulePosition();
 
-  private Alert[] driveDisconnectedAlert = new Alert[4];
-  private Alert[] turnDisconnectedAlert = new Alert[4];
-  private Alert[] turnEncoderDisconnectedAlert = new Alert[4];
+  private Alert[] driveDisconnectedAlert =
+      ArrayBuilder.buildAlert("Disconnected drive motor on module");
+  private Alert[] turnDisconnectedAlert =
+      ArrayBuilder.buildAlert("Disconnected turn motor on module");
+  private Alert[] turnEncoderDisconnectedAlert =
+      ArrayBuilder.buildAlert("Disconnected turn encoder on module");
 
-  private Alert gyroDisconnectedAlert;
+  private Alert gyroDisconnectedAlert = new Alert("Gyro Disconnected", AlertType.kError);
 
   /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
   private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -147,24 +145,7 @@ public class Drive extends SubsystemBase {
     this.io = io;
     inputs = new DriveIOInputsAutoLogged();
 
-    configureAlerts();
     configureAutoBuilder();
-  }
-
-  private void configureAlerts() {
-    gyroDisconnectedAlert = new Alert("Gyro Disconnected", AlertType.kError);
-
-    for (int i = 0; i < modules.length; i++) {
-      driveDisconnectedAlert[i] =
-          new Alert(
-              "Disconnected drive motor on module " + Integer.toString(i) + ".", AlertType.kError);
-      turnDisconnectedAlert[i] =
-          new Alert(
-              "Disconnected turn motor on module " + Integer.toString(i) + ".", AlertType.kError);
-      turnEncoderDisconnectedAlert[i] =
-          new Alert(
-              "Disconnected turn encoder on module " + Integer.toString(i) + ".", AlertType.kError);
-    }
   }
 
   private void configureAutoBuilder() {
@@ -296,8 +277,8 @@ public class Drive extends SubsystemBase {
   }
 
   public Angle[] getDrivePositions() {
-    Angle[] values = new Angle[4];
-    for (int i = 0; i < 4; i++) {
+    Angle[] values = new Angle[Constants.PP_CONFIG.numModules];
+    for (int i = 0; i < values.length; i++) {
       values[i] = modules[i].drivePosition;
     }
     return values;

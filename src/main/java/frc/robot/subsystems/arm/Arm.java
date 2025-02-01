@@ -1,13 +1,8 @@
-// Copyright FRC 5712
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
+// Copyright (c) 2025 FRC 5712
 //
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
 
 package frc.robot.subsystems.arm;
 
@@ -127,9 +122,13 @@ public class Arm extends SubsystemBase {
    * @param position The desired ArmPosition
    */
   private void setArmPosition(ArmPosition position) {
-    currentCommand.cancel();
-    currentMode = position;
-    currentCommand.schedule();
+    if (currentMode != position) {
+      if (currentCommand != null) {
+        currentCommand.cancel();
+      }
+      currentMode = position;
+      currentCommand.schedule();
+    }
   }
 
   // Command that runs the appropriate routine based on the current position

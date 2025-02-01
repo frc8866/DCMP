@@ -27,6 +27,11 @@ public class FieldConstants {
   public static final double fieldWidth = Units.inchesToMeters(317);
   public static final double startingLineX =
       Units.inchesToMeters(299.438); // Measured from the inside of starting line
+  /**
+   * Diameter of the algae game element in meters. Used for game piece manipulation and scoring
+   * calculations.
+   */
+  public static final double algaeDiameter = Units.inchesToMeters(16);
 
   public static class Processor {
     public static final Pose2d centerFace =
@@ -143,8 +148,8 @@ public class FieldConstants {
                       Units.degreesToRadians(level.pitch),
                       poseDirection.getRotation().getRadians())));
         }
-        branchPositions.add((face * 2) + 1, fillRight);
-        branchPositions.add((face * 2) + 2, fillLeft);
+        branchPositions.add(fillRight);
+        branchPositions.add(fillLeft);
       }
     }
   }

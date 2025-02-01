@@ -1,3 +1,9 @@
+// Copyright (c) 2025 FRC 5712
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
+
 package frc.robot.subsystems.flywheel;
 
 import static edu.wpi.first.units.Units.*;
@@ -111,9 +117,13 @@ public class Flywheel extends SubsystemBase {
    * @param position The desired FlywheelPosition
    */
   private void setFlywheelPosition(FlywheelPosition position) {
-    currentCommand.cancel();
-    currentMode = position;
-    currentCommand.schedule();
+    if (currentMode != position) {
+      if (currentCommand != null) {
+        currentCommand.cancel();
+      }
+      currentMode = position;
+      currentCommand.schedule();
+    }
   }
 
   // Command that runs the appropriate routine based on the current position
