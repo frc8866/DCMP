@@ -30,7 +30,7 @@ public class Elevator extends SubsystemBase {
   private final ElevatorIOInputsAutoLogged inputs;
 
   // Current arm distance mode
-  private ElevatorPosition currentMode = ElevatorPosition.INTAKE;
+  private ElevatorMode currentMode = ElevatorMode.INTAKE;
 
   // Alerts for motor connection status
   private final Alert leaderMotorAlert =
@@ -87,7 +87,7 @@ public class Elevator extends SubsystemBase {
   }
 
   /** Enumeration of available arm distances with their corresponding target angles. */
-  private enum ElevatorPosition {
+  private enum ElevatorMode {
     STOP(Inches.of(0)), // Stop the arm
     INTAKE(Inches.of(0)), // Elevator tucked in
     L1(Inches.of(12)), // Position for scoring in L1
@@ -96,14 +96,14 @@ public class Elevator extends SubsystemBase {
     L4(Inches.of(48)); // Position for scoring in L4
 
     private final Distance targetDistance;
-    private final Distance angleTolerance;
+    private final Distance distanceTolerance;
 
-    ElevatorPosition(Distance targetDistance, Distance angleTolerance) {
+    ElevatorMode(Distance targetDistance, Distance distanceTolerance) {
       this.targetDistance = targetDistance;
-      this.angleTolerance = angleTolerance;
+      this.distanceTolerance = distanceTolerance;
     }
 
-    ElevatorPosition(Distance targetDistance) {
+    ElevatorMode(Distance targetDistance) {
       this(targetDistance, Inches.of(2)); // 2 degree default tolerance
     }
   }
@@ -113,21 +113,21 @@ public class Elevator extends SubsystemBase {
    *
    * @return The current ElevatorPosition
    */
-  public ElevatorPosition getMode() {
+  public ElevatorMode getMode() {
     return currentMode;
   }
 
   /**
    * Sets a new arm distance and schedules the corresponding command.
    *
-   * @param distance The desired ElevatorPosition
+   * @param mode The desired ElevatorPosition
    */
-  private void setElevatorPosition(ElevatorPosition distance) {
-    if (currentMode != distance) {
+  private void setElevatorMode(ElevatorMode mode) {
+    if (currentMode != mode) {
       if (currentCommand != null) {
         currentCommand.cancel();
       }
-      currentMode = distance;
+      currentMode = mode;
       currentCommand.schedule();
     }
   }
@@ -136,30 +136,30 @@ public class Elevator extends SubsystemBase {
   private final Command currentCommand =
       new SelectCommand<>(
           Map.of(
-              ElevatorPosition.STOP,
+              ElevatorMode.STOP,
               Commands.runOnce(this::stop).withName("Stop Elevator"),
-              ElevatorPosition.INTAKE,
-              createPositionCommand(ElevatorPosition.INTAKE),
-              ElevatorPosition.L1,
-              createPositionCommand(ElevatorPosition.L1),
-              ElevatorPosition.L2,
-              createPositionCommand(ElevatorPosition.L2),
-              ElevatorPosition.L3,
-              createPositionCommand(ElevatorPosition.L3),
-              ElevatorPosition.L4,
-              createPositionCommand(ElevatorPosition.L4)),
+              ElevatorMode.INTAKE,
+              createPositionCommand(ElevatorMode.INTAKE),
+              ElevatorMode.L1,
+              createPositionCommand(ElevatorMode.L1),
+              ElevatorMode.L2,
+              createPositionCommand(ElevatorMode.L2),
+              ElevatorMode.L3,
+              createPositionCommand(ElevatorMode.L3),
+              ElevatorMode.L4,
+              createPositionCommand(ElevatorMode.L4)),
           this::getMode);
 
   /**
    * Creates a command for a specific arm distance that moves the arm and checks the target
    * distance.
    *
-   * @param distance The arm distance to create a command for
+   * @param mode The arm distance to create a command for
    * @return A command that implements the arm movement
    */
-  private Command createPositionCommand(ElevatorPosition distance) {
-    return Commands.runOnce(() -> setDistance(distance.targetDistance))
-        .withName("Move to " + distance.toString());
+  private Command createPositionCommand(ElevatorMode mode) {
+    return Commands.runOnce(() -> setDistance(mode.targetDistance))
+        .withName("Move to " + mode.toString());
   }
 
   /**
@@ -169,8 +169,8 @@ public class Elevator extends SubsystemBase {
    */
   @AutoLogOutput
   public boolean isAtTarget() {
-    if (currentMode == ElevatorPosition.STOP) return true;
-    return getPosition().isNear(currentMode.targetDistance, currentMode.angleTolerance);
+    if (currentMode == ElevatorMode.STOP) return true;
+    return getPosition().isNear(currentMode.targetDistance, currentMode.distanceTolerance);
   }
 
   /**
@@ -186,12 +186,12 @@ public class Elevator extends SubsystemBase {
   /**
    * Creates a command to set the arm to a specific distance.
    *
-   * @param distance The desired arm distance
+   * @param mode The desired arm distance
    * @return Command to set the distance
    */
-  private Command setPositionCommand(ElevatorPosition distance) {
-    return Commands.runOnce(() -> setElevatorPosition(distance))
-        .withName("SetElevatorPosition(" + distance.toString() + ")");
+  private Command setPositionCommand(ElevatorMode mode) {
+    return Commands.runOnce(() -> setElevatorMode(mode))
+        .withName("SetElevatorMode(" + mode.toString() + ")");
   }
 
   /** Factory methods for common distance commands */
@@ -200,41 +200,41 @@ public class Elevator extends SubsystemBase {
    * @return Command to move the arm to L1 scoring distance
    */
   public final Command L1() {
-    return setPositionCommand(ElevatorPosition.L1);
+    return setPositionCommand(ElevatorMode.L1);
   }
 
   /**
    * @return Command to move the arm to L2 scoring distance
    */
   public final Command L2() {
-    return setPositionCommand(ElevatorPosition.L2);
+    return setPositionCommand(ElevatorMode.L2);
   }
 
   /**
    * @return Command to move the arm to L3 distance
    */
   public final Command L3() {
-    return setPositionCommand(ElevatorPosition.L3);
+    return setPositionCommand(ElevatorMode.L3);
   }
 
   /**
    * @return Command to move the arm to L4 distance
    */
   public final Command L4() {
-    return setPositionCommand(ElevatorPosition.L4);
+    return setPositionCommand(ElevatorMode.L4);
   }
 
   /**
    * @return Command to intake the arm
    */
   public final Command intake() {
-    return setPositionCommand(ElevatorPosition.INTAKE);
+    return setPositionCommand(ElevatorMode.INTAKE);
   }
 
   /**
    * @return Command to stop the arm
    */
   public final Command stopCommand() {
-    return setPositionCommand(ElevatorPosition.STOP);
+    return setPositionCommand(ElevatorMode.STOP);
   }
 }

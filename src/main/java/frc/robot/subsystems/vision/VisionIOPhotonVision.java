@@ -6,8 +6,6 @@
 
 package frc.robot.subsystems.vision;
 
-import static edu.wpi.first.units.Units.DegreesPerSecond;
-
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.Constants;
@@ -100,7 +98,7 @@ public class VisionIOPhotonVision implements VisionIO {
             avgDistance,
             avgArea,
             ambiguity,
-            visionParams.get().gyroRate().in(DegreesPerSecond),
+            visionParams.get().gyroRate(),
             visionParams.get().robotPose(),
             false),
         rawFiducialsList.toArray(new RawFiducial[0]));
