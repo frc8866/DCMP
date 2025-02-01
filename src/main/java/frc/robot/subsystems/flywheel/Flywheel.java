@@ -85,9 +85,9 @@ public class Flywheel extends SubsystemBase {
   /** Enumeration of available flywheel modes with their corresponding target speeds. */
   private enum FlywheelMode {
     STOP(RotationsPerSecond.of(0)), // Stop the flywheel
-    L1(RotationsPerSecond.of(5)), // For scoring in the amp
-    L2(RotationsPerSecond.of(10)), // For scoring in the speaker
-    L3(RotationsPerSecond.of(20)); // For intaking/feeding game pieces
+    L1(RotationsPerSecond.of(5)), // For scoring at L1
+    L2(RotationsPerSecond.of(10)), // For scoring at L2
+    L3(RotationsPerSecond.of(20)); // For scoring at L3
 
     private final AngularVelocity targetSpeed;
     private final AngularVelocity speedTolerance;
@@ -111,19 +111,6 @@ public class Flywheel extends SubsystemBase {
     return currentMode;
   }
 
-  /**
-   * Sets a new flywheel mode and schedules the corresponding command.
-   *
-   * @param mode The desired FlywheelMode
-   */
-  private void setFlywheelMode(FlywheelMode mode) {
-    if (currentMode != mode) {
-      currentCommand.cancel();
-      currentMode = mode;
-      currentCommand.schedule();
-    }
-  }
-
   // Command that runs the appropriate routine based on the current mode
   private final Command currentCommand =
       new SelectCommand<>(
@@ -138,6 +125,19 @@ public class Flywheel extends SubsystemBase {
               createVelocityCommand(FlywheelMode.L3)),
           this::getMode);
 
+  /**
+   * Sets a new flywheel mode and schedules the corresponding command.
+   *
+   * @param mode The desired FlywheelMode
+   */
+  private void setFlywheelMode(FlywheelMode mode) {
+    if (currentMode != mode) {
+      currentCommand.cancel();
+      currentMode = mode;
+      currentCommand.schedule();
+    }
+  }
+  
   /**
    * Creates a command for a specific flywheel mode that runs the flywheel and checks the target
    * speed.
