@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Contains various field dimensions and useful reference points. All units are in meters and poses
- * have a blue alliance origin.
+ * Contains various field dimensions and useful reference points. All units use explicit unit types
+ * and poses have a blue alliance origin.
  */
 public class FieldConstants {
   public static final Distance fieldLength = Inches.of(690.876);
@@ -65,12 +65,29 @@ public class FieldConstants {
     public static final Translation2d center =
         new Translation2d(Inches.of(176.746), Inches.of(158.501));
     public static final Distance faceToZoneLine =
-        Inches.of(12); // Side of the reef to the inside of the reef zone line
+        Inches.of(12); // Side of the reef to the inside of the reef zone
+    // line
 
     public static final Pose2d[] centerFaces =
-        new Pose2d[6]; // Starting facing the driver station in clockwise order
+        new Pose2d[6]; // Starting facing the driver station in clockwise
+    // order
     public static final List<Map<ReefHeight, Pose3d>> branchPositions =
-        new ArrayList<>(); // Starting at the right branch facing the driver station in clockwise
+        new ArrayList<>(); // Starting at the right
+    // branch facing the
+    // driver station in
+    // clockwise
+
+    private static Translation3d calculateTransform(
+        Pose2d poseDirection, Distance adjustX, Distance adjustY, Distance adjustZ) {
+      return new Translation3d(
+          poseDirection
+              .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
+              .getMeasureX(),
+          poseDirection
+              .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
+              .getMeasureY(),
+          adjustZ);
+    }
 
     static {
       // Initialize faces
@@ -99,29 +116,13 @@ public class FieldConstants {
           fillRight.put(
               level,
               new Pose3d(
-                  new Translation3d(
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-                          .getMeasureX(),
-                      poseDirection
-                          .transformBy(new Transform2d(adjustX, adjustY, new Rotation2d()))
-                          .getMeasureY(),
-                      level.height),
+                  calculateTransform(poseDirection, adjustX, adjustY, level.height),
                   new Rotation3d(
                       Degrees.of(0), level.pitch, poseDirection.getRotation().getMeasure())));
           fillLeft.put(
               level,
               new Pose3d(
-                  new Translation3d(
-                      poseDirection
-                          .transformBy(
-                              new Transform2d(adjustX, adjustY.unaryMinus(), new Rotation2d()))
-                          .getMeasureX(),
-                      poseDirection
-                          .transformBy(
-                              new Transform2d(adjustX, adjustY.unaryMinus(), new Rotation2d()))
-                          .getMeasureY(),
-                      level.height),
+                  calculateTransform(poseDirection, adjustX, adjustY, level.height),
                   new Rotation3d(
                       Degrees.of(0), level.pitch, poseDirection.getRotation().getMeasure())));
         }

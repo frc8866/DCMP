@@ -98,6 +98,12 @@ public class Elevator extends SubsystemBase {
     private final Distance targetDistance;
     private final Distance distanceTolerance;
 
+    /**
+     * Creates a new elevator mode with a custom distance tolerance.
+     *
+     * @param targetDistance The target distance for this mode
+     * @param distanceTolerance The allowed tolerance from the target distance
+     */
     ElevatorMode(Distance targetDistance, Distance distanceTolerance) {
       this.targetDistance = targetDistance;
       this.distanceTolerance = distanceTolerance;
@@ -151,8 +157,8 @@ public class Elevator extends SubsystemBase {
           this::getMode);
 
   /**
-   * Creates a command for a specific elevator distance that moves the elevator and checks the target
-   * distance.
+   * Creates a command for a specific elevator distance that moves the elevator and checks the
+   * target distance.
    *
    * @param mode The elevator distance to create a command for
    * @return A command that implements the elevator movement
@@ -194,7 +200,14 @@ public class Elevator extends SubsystemBase {
         .withName("SetElevatorMode(" + mode.toString() + ")");
   }
 
-  /** Factory methods for common distance commands */
+  /**
+   * Factory methods for elevator positions
+   *
+   * <p>Scoring positions: - L1: Low scoring - L2: Mid scoring - L3: High scoring - L4: Extended
+   * high scoring
+   *
+   * <p>Other positions: - intake: Intake position - stop: Emergency stop
+   */
 
   /**
    * @return Command to move the elevator to L1 scoring distance
