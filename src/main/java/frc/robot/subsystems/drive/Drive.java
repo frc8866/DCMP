@@ -48,7 +48,7 @@ import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
   private final DriveIO io;
   private final DriveIOInputsAutoLogged inputs;
-  private final ModuleIOInputsAutoLogged[] modules = ArrayBuilder.buildModuleAutoLogeed();
+  private final ModuleIOInputsAutoLogged[] modules = ArrayBuilder.buildModuleAutoLogged();
 
   private final SwerveDriveKinematics kinematics =
       new SwerveDriveKinematics(Constants.SWERVE_MODULE_OFFSETS);

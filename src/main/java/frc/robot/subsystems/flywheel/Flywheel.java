@@ -28,8 +28,8 @@ public class Flywheel extends SubsystemBase {
   private final FlywheelIO io;
   private final FlywheelIOInputsAutoLogged inputs;
 
-  // Current flywheel position mode
-  private FlywheelPosition currentMode = FlywheelPosition.STOP;
+  // Current flywheel mode
+  private FlywheelMode currentMode = FlywheelMode.STOP;
 
   // Alerts for motor connection status
   private final Alert leaderMotorAlert =
@@ -82,74 +82,71 @@ public class Flywheel extends SubsystemBase {
     return inputs.leaderVelocity;
   }
 
-  /** Enumeration of available flywheel positions with their corresponding target speeds. */
-  private enum FlywheelPosition {
+  /** Enumeration of available flywheel modes with their corresponding target speeds. */
+  private enum FlywheelMode {
     STOP(RotationsPerSecond.of(0)), // Stop the flywheel
-    L1(RotationsPerSecond.of(5)), // For scoring in the amp
-    L2(RotationsPerSecond.of(10)), // For scoring in the speaker
-    L3(RotationsPerSecond.of(20)); // For intaking/feeding game pieces
+    L1(RotationsPerSecond.of(5)), // For scoring at L1
+    L2(RotationsPerSecond.of(10)), // For scoring at L2
+    L3(RotationsPerSecond.of(20)); // For scoring at L3
 
     private final AngularVelocity targetSpeed;
     private final AngularVelocity speedTolerance;
 
-    FlywheelPosition(AngularVelocity targetSpeed, AngularVelocity speedTolerance) {
+    FlywheelMode(AngularVelocity targetSpeed, AngularVelocity speedTolerance) {
       this.targetSpeed = targetSpeed;
       this.speedTolerance = speedTolerance;
     }
 
-    FlywheelPosition(AngularVelocity targetSpeed) {
+    FlywheelMode(AngularVelocity targetSpeed) {
       this(targetSpeed, RotationsPerSecond.of(1)); // 1 RPS default tolerance
     }
   }
 
   /**
-   * Gets the current flywheel position mode.
+   * Gets the current flywheel mode.
    *
-   * @return The current FlywheelPosition
+   * @return The current Flywheel mode
    */
-  public FlywheelPosition getMode() {
+  public FlywheelMode getMode() {
     return currentMode;
   }
 
-  /**
-   * Sets a new flywheel position and schedules the corresponding command.
-   *
-   * @param position The desired FlywheelPosition
-   */
-  private void setFlywheelPosition(FlywheelPosition position) {
-    if (currentMode != position) {
-      if (currentCommand != null) {
-        currentCommand.cancel();
-      }
-      currentMode = position;
-      currentCommand.schedule();
-    }
-  }
-
-  // Command that runs the appropriate routine based on the current position
+  // Command that runs the appropriate routine based on the current mode
   private final Command currentCommand =
       new SelectCommand<>(
           Map.of(
-              FlywheelPosition.STOP,
+              FlywheelMode.STOP,
               Commands.runOnce(this::stop).withName("Stop Flywheel"),
-              FlywheelPosition.L1,
-              createPositionCommand(FlywheelPosition.L1),
-              FlywheelPosition.L2,
-              createPositionCommand(FlywheelPosition.L2),
-              FlywheelPosition.L3,
-              createPositionCommand(FlywheelPosition.L3)),
+              FlywheelMode.L1,
+              createVelocityCommand(FlywheelMode.L1),
+              FlywheelMode.L2,
+              createVelocityCommand(FlywheelMode.L2),
+              FlywheelMode.L3,
+              createVelocityCommand(FlywheelMode.L3)),
           this::getMode);
 
   /**
-   * Creates a command for a specific flywheel position that runs the flywheel and checks the target
+   * Sets a new flywheel mode and schedules the corresponding command.
+   *
+   * @param mode The desired FlywheelMode
+   */
+  private void setFlywheelMode(FlywheelMode mode) {
+    if (currentMode != mode) {
+      currentCommand.cancel();
+      currentMode = mode;
+      currentCommand.schedule();
+    }
+  }
+  
+  /**
+   * Creates a command for a specific flywheel mode that runs the flywheel and checks the target
    * speed.
    *
-   * @param position The flywheel position to create a command for
+   * @param mode The flywheel mode to create a command for
    * @return A command that implements the flywheel movement
    */
-  private Command createPositionCommand(FlywheelPosition position) {
-    return Commands.runOnce(() -> setVelocity(position.targetSpeed))
-        .withName("Run " + position.toString());
+  private Command createVelocityCommand(FlywheelMode mode) {
+    return Commands.runOnce(() -> setVelocity(mode.targetSpeed)).withName("Run " + mode.toString());
   }
 
   /**
@@ -159,7 +156,7 @@ public class Flywheel extends SubsystemBase {
    */
   @AutoLogOutput
   public boolean isAtTarget() {
-    if (currentMode == FlywheelPosition.STOP) return true;
+    if (currentMode == FlywheelMode.STOP) return true;
     return getVelocity().isNear(currentMode.targetSpeed, currentMode.speedTolerance);
   }
 
@@ -174,43 +171,43 @@ public class Flywheel extends SubsystemBase {
   }
 
   /**
-   * Creates a command to set the flywheel to a specific position.
+   * Creates a command to set the flywheel to a specific mode.
    *
-   * @param position The desired flywheel position
-   * @return Command to set the position
+   * @param mode The desired flywheel mode
+   * @return Command to set the mode
    */
-  private Command setPositionCommand(FlywheelPosition position) {
-    return Commands.runOnce(() -> setFlywheelPosition(position))
-        .withName("SetFlywheelPosition(" + position.toString() + ")");
+  private Command setVelocityCommand(FlywheelMode mode) {
+    return Commands.runOnce(() -> setFlywheelMode(mode))
+        .withName("SetFlywheelVelocity(" + mode.toString() + ")");
   }
 
-  /** Factory methods for common position commands */
+  /** Factory methods for common mode commands */
 
   /**
-   * @return Command to set the flywheel to AMP position
+   * @return Command to set the flywheel to L1 mode
    */
   public final Command L1() {
-    return setPositionCommand(FlywheelPosition.L1);
+    return setVelocityCommand(FlywheelMode.L1);
   }
 
   /**
-   * @return Command to set the flywheel to SPEAKER position
+   * @return Command to set the flywheel to L2 mode
    */
   public final Command L2() {
-    return setPositionCommand(FlywheelPosition.L2);
+    return setVelocityCommand(FlywheelMode.L2);
   }
 
   /**
-   * @return Command to set the flywheel to FEED position
+   * @return Command to set the flywheel to L3 mode
    */
   public final Command L3() {
-    return setPositionCommand(FlywheelPosition.L3);
+    return setVelocityCommand(FlywheelMode.L3);
   }
 
   /**
    * @return Command to stop the flywheel
    */
   public final Command stopCommand() {
-    return setPositionCommand(FlywheelPosition.STOP);
+    return setVelocityCommand(FlywheelMode.STOP);
   }
 }

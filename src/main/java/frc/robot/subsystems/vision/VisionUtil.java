@@ -6,11 +6,17 @@
 
 package frc.robot.subsystems.vision;
 
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+import static edu.wpi.first.units.Units.Meters;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.LimelightHelpers.PoseEstimate;
 import frc.robot.LimelightHelpers.PoseObservation;
@@ -26,10 +32,12 @@ import java.util.List;
 public class VisionUtil {
   // Configuration constants
   private static volatile boolean BEFORE_MATCH = true; // Controls MT1-only usage before match
-  public static final double FIELD_MARGIN =
-      0.5; // Meters beyond field boundaries to accept measurements
-  public static final double Z_MARGIN = 0.5; // Meters above/below field to accept measurements
-  public static final double MT2_SPIN_MAX = 40.0; // Maximum rotation speed for MT2 measurements
+  public static final Distance FIELD_MARGIN =
+      Meters.of(0.5); // Meters beyond field boundaries to accept measurements
+  public static final Distance Z_MARGIN =
+      Meters.of(0.5); // Meters above/below field to accept measurements
+  public static final AngularVelocity MT2_SPIN_MAX =
+      DegreesPerSecond.of(40.0); // Maximum rotation speed for MT2 measurements
   public static final double MIN_TAG_AREA = 0.05; // Minimum tag area to be accepted
 
   // Vision measurement constants for MA mode
@@ -286,7 +294,7 @@ public class VisionUtil {
    * @return True if the rotation velocity exceeds the maximum allowed speed
    */
   private static boolean invalidRotationVelocity(PoseEstimate mt) {
-    return Math.abs(mt.yawVelocityRadPerSec()) > MT2_SPIN_MAX;
+    return mt.yawVelocity().abs(RadiansPerSecond) > MT2_SPIN_MAX.in(RadiansPerSecond);
   }
 
   /**
@@ -306,12 +314,12 @@ public class VisionUtil {
    * @return True if the pose is outside the valid field boundaries
    */
   private static boolean invalidPose(Pose3d robotPose) {
-    return robotPose.getX() < -FIELD_MARGIN
-        || robotPose.getX() > FieldConstants.fieldLength + FIELD_MARGIN
-        || robotPose.getY() < -FIELD_MARGIN
-        || robotPose.getY() > FieldConstants.fieldWidth + FIELD_MARGIN
-        || robotPose.getZ() < -Z_MARGIN
-        || robotPose.getZ() > Z_MARGIN;
+    return robotPose.getMeasureX().lt(FIELD_MARGIN.unaryMinus())
+        || robotPose.getMeasureX().gt(FieldConstants.fieldLength.plus(FIELD_MARGIN))
+        || robotPose.getMeasureY().lt(FIELD_MARGIN.unaryMinus())
+        || robotPose.getMeasureY().gt(FieldConstants.fieldWidth.plus(FIELD_MARGIN))
+        || robotPose.getMeasureZ().lt(Z_MARGIN.unaryMinus())
+        || robotPose.getMeasureZ().gt(Z_MARGIN);
   }
 
   /**

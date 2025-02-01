@@ -44,7 +44,7 @@ public class ArrayBuilder {
    *
    * @return An initialized array of `ModuleIOInputsAutoLogged` objects.
    */
-  public static ModuleIOInputsAutoLogged[] buildModuleAutoLogeed() {
+  public static ModuleIOInputsAutoLogged[] buildModuleAutoLogged() {
     if (Constants.PP_CONFIG.numModules <= 0) {
       throw new IllegalArgumentException("Size must be positive");
     }
