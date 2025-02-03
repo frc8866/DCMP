@@ -8,7 +8,6 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
@@ -102,7 +101,7 @@ public class Drive extends SubsystemBase {
               Volts.of(10), // Use dynamic step of 10 A
               Seconds.of(5), // Use timeout of 5 seconds
               // Log state with SignalLogger class
-              state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+              state -> Logger.recordOutput("SysIdTranslation_State", state.toString())),
           new SysIdRoutine.Mechanism(
               output ->
                   setControl(
