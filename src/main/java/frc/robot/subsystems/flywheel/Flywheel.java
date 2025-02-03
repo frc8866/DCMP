@@ -178,7 +178,7 @@ public class Flywheel extends SubsystemBase {
    */
   private Command setVelocityCommand(FlywheelMode mode) {
     return Commands.runOnce(() -> setFlywheelMode(mode))
-        .withName("SetFlywheelVelocity(" + mode.toString() + ")");
+        .withName("SetFlywheelMode(" + mode.toString() + ")");
   }
 
   /** Factory methods for common mode commands */

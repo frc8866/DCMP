@@ -110,21 +110,21 @@ public class Arm extends SubsystemBase {
   /**
    * Gets the current arm position mode.
    *
-   * @return The current ArmPosition
+   * @return The current ArmMode
    */
   public ArmMode getMode() {
     return currentMode;
   }
 
   /**
-   * Sets a new arm position and schedules the corresponding command.
+   * Sets a new arm mode and schedules the corresponding command.
    *
-   * @param position The desired ArmPosition
+   * @param mode The desired ArmMode
    */
-  private void setArmPosition(ArmMode position) {
-    if (currentMode != position) {
+  private void setArmMode(ArmMode mode) {
+    if (currentMode != mode) {
       currentCommand.cancel();
-      currentMode = position;
+      currentMode = mode;
       currentCommand.schedule();
     }
   }
@@ -181,14 +181,14 @@ public class Arm extends SubsystemBase {
   }
 
   /**
-   * Creates a command to set the arm to a specific position.
+   * Creates a command to set the arm to a specific mode.
    *
-   * @param mode The desired arm position
-   * @return Command to set the position
+   * @param mode The desired arm mode
+   * @return Command to set the mode
    */
   private Command setPositionCommand(ArmMode mode) {
-    return Commands.runOnce(() -> setArmPosition(mode))
-        .withName("SetArmPosition(" + mode.toString() + ")");
+    return Commands.runOnce(() -> setArmMode(mode))
+        .withName("SetArmMode(" + mode.toString() + ")");
   }
 
   /** Factory methods for common position commands */
