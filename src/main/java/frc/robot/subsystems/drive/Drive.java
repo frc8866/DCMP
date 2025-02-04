@@ -274,6 +274,11 @@ public class Drive extends SubsystemBase {
     io.resetPose(pose);
   }
 
+  public void resetgyro() {
+    Pose2d pose1 = new Pose2d(getPose().getX(), getPose().getY(), new Rotation2d(0));
+    io.resetPose(pose1);
+  }
+
   /** Returns the current odometry pose. */
   @AutoLogOutput(key = "Odometry/Robot")
   public Pose2d getPose() {
