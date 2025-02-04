@@ -10,7 +10,6 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -193,7 +192,11 @@ public class RobotContainer {
                                 .getX())))); // Drive counterclockwise with negative X (left)
 
     // joystick2.a().whileTrue(algea.cmd(8.21875, -0.3)).whileFalse(algea.cmd(-0.3, -0.));
-    joystick2.a().whileTrue(new ParallelCommandGroup(algea.position(8.21875),new Ballintake(algea, -0.3, 50))).whileFalse(algea.cmd(0, 0));
+    joystick2
+        .a()
+        .whileTrue(
+            new ParallelCommandGroup(algea.position(8.21875), new Ballintake(algea, -0.3, 50)))
+        .whileFalse(algea.cmd(0, 0));
 
     joystick2.x().whileTrue(algea.cmd(11.06396484375, -0.3)).whileFalse(algea.cmd(-0.3, -0.));
     joystick2.leftBumper().onTrue(algea.runOnce(() -> algea.reset()));

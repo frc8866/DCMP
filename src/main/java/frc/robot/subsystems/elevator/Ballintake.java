@@ -12,11 +12,13 @@ public class Ballintake extends Command {
   /**
    * Constructs the BallIntakeCommand.
    *
-   * @param algeeSubsystem   The algee subsystem instance.
-   * @param intakeSpeed      The motor speed used for intaking (e.g., -0.3 for a negative percent output).
-   * @param velocityThreshold The shooter velocity (absolute value) below which we assume a ball is loaded.
+   * @param algeeSubsystem The algee subsystem instance.
+   * @param intakeSpeed The motor speed used for intaking (e.g., -0.3 for a negative percent
+   *     output).
+   * @param velocityThreshold The shooter velocity (absolute value) below which we assume a ball is
+   *     loaded.
    */
-  public  Ballintake(algee algeeSubsystem, double intakeSpeed, double velocityThreshold) {
+  public Ballintake(algee algeeSubsystem, double intakeSpeed, double velocityThreshold) {
     m_algee = algeeSubsystem;
     m_intakeSpeed = intakeSpeed;
     m_velocityThreshold = velocityThreshold;

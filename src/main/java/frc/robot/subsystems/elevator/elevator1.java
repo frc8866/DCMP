@@ -91,9 +91,9 @@ public class elevator1 extends SubsystemBase {
       @Override
       public void initialize() {
         // Initialization code, such as resetting encoders or PID controllers
-        int kErrThreshold = 10; // how many sensor units until its close-enough
-        int kLoopsToSettle = 2; // how many loops sensor must be close-enough
-        int _withinThresholdLoops = 0;
+        // int kErrThreshold = 10; // how many sensor units until its close-enough
+        // int kLoopsToSettle = 2; // how many loops sensor must be close-enough
+        // int _withinThresholdLoops = 0;
       }
 
       @Override

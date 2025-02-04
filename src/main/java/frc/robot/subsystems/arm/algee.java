@@ -50,6 +50,7 @@ public class algee extends SubsystemBase {
   public void reset() {
     algaepiv.setPosition(0);
   }
+
   public double velocity() {
     return algaeshooter.getVelocity().getValueAsDouble();
   }
@@ -103,16 +104,13 @@ public class algee extends SubsystemBase {
 
       @Override
       public void execute() {
-       
 
         double speed1 = pid.calculate(algaepiv.getPosition().getValueAsDouble());
         algaepiv.set(speed1);
       }
 
       @Override
-      public void end(boolean interrupted) {
-
-      }
+      public void end(boolean interrupted) {}
 
       @Override
       public boolean isFinished() {
