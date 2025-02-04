@@ -1,13 +1,8 @@
-// Copyright FRC 5712
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
+// Copyright (c) 2025 FRC 5712
 //
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file at
+// the root directory of this project.
 
 package frc.robot.subsystems.arm;
 
@@ -35,7 +30,7 @@ public class Arm extends SubsystemBase {
   private final ArmIOInputsAutoLogged inputs;
 
   // Current arm position mode
-  private ArmPosition currentMode = ArmPosition.INTAKE;
+  private ArmMode currentMode = ArmMode.INTAKE;
 
   // Alerts for motor connection status
   private final Alert leaderMotorAlert =
@@ -91,7 +86,7 @@ public class Arm extends SubsystemBase {
   }
 
   /** Enumeration of available arm positions with their corresponding target angles. */
-  private enum ArmPosition {
+  private enum ArmMode {
     STOP(Degrees.of(0)), // Stop the arm
     INTAKE(Degrees.of(0)), // Arm tucked in
     L1(Degrees.of(90)), // Position for scoring in L1
@@ -102,12 +97,12 @@ public class Arm extends SubsystemBase {
     private final Angle targetAngle;
     private final Angle angleTolerance;
 
-    ArmPosition(Angle targetAngle, Angle angleTolerance) {
+    ArmMode(Angle targetAngle, Angle angleTolerance) {
       this.targetAngle = targetAngle;
       this.angleTolerance = angleTolerance;
     }
 
-    ArmPosition(Angle targetAngle) {
+    ArmMode(Angle targetAngle) {
       this(targetAngle, Degrees.of(2)); // 2 degree default tolerance
     }
   }
@@ -115,51 +110,53 @@ public class Arm extends SubsystemBase {
   /**
    * Gets the current arm position mode.
    *
-   * @return The current ArmPosition
+   * @return The current ArmMode
    */
-  public ArmPosition getMode() {
+  public ArmMode getMode() {
     return currentMode;
   }
 
   /**
-   * Sets a new arm position and schedules the corresponding command.
+   * Sets a new arm mode and schedules the corresponding command.
    *
-   * @param position The desired ArmPosition
+   * @param mode The desired ArmMode
    */
-  private void setArmPosition(ArmPosition position) {
-    currentCommand.cancel();
-    currentMode = position;
-    currentCommand.schedule();
+  private void setArmMode(ArmMode mode) {
+    if (currentMode != mode) {
+      currentCommand.cancel();
+      currentMode = mode;
+      currentCommand.schedule();
+    }
   }
 
   // Command that runs the appropriate routine based on the current position
   private final Command currentCommand =
       new SelectCommand<>(
           Map.of(
-              ArmPosition.STOP,
+              ArmMode.STOP,
               Commands.runOnce(this::stop).withName("Stop Arm"),
-              ArmPosition.INTAKE,
-              createPositionCommand(ArmPosition.INTAKE),
-              ArmPosition.L1,
-              createPositionCommand(ArmPosition.L1),
-              ArmPosition.L2,
-              createPositionCommand(ArmPosition.L2),
-              ArmPosition.L3,
-              createPositionCommand(ArmPosition.L3),
-              ArmPosition.L4,
-              createPositionCommand(ArmPosition.L4)),
+              ArmMode.INTAKE,
+              createPositionCommand(ArmMode.INTAKE),
+              ArmMode.L1,
+              createPositionCommand(ArmMode.L1),
+              ArmMode.L2,
+              createPositionCommand(ArmMode.L2),
+              ArmMode.L3,
+              createPositionCommand(ArmMode.L3),
+              ArmMode.L4,
+              createPositionCommand(ArmMode.L4)),
           this::getMode);
 
   /**
    * Creates a command for a specific arm position that moves the arm and checks the target
    * position.
    *
-   * @param position The arm position to create a command for
+   * @param mode The arm position to create a command for
    * @return A command that implements the arm movement
    */
-  private Command createPositionCommand(ArmPosition position) {
-    return Commands.runOnce(() -> setPosition(position.targetAngle))
-        .withName("Move to " + position.toString());
+  private Command createPositionCommand(ArmMode mode) {
+    return Commands.runOnce(() -> setPosition(mode.targetAngle))
+        .withName("Move to " + mode.toString());
   }
 
   /**
@@ -169,7 +166,7 @@ public class Arm extends SubsystemBase {
    */
   @AutoLogOutput
   public boolean isAtTarget() {
-    if (currentMode == ArmPosition.STOP) return true;
+    if (currentMode == ArmMode.STOP) return true;
     return getPosition().isNear(currentMode.targetAngle, currentMode.angleTolerance);
   }
 
@@ -184,14 +181,14 @@ public class Arm extends SubsystemBase {
   }
 
   /**
-   * Creates a command to set the arm to a specific position.
+   * Creates a command to set the arm to a specific mode.
    *
-   * @param position The desired arm position
-   * @return Command to set the position
+   * @param mode The desired arm mode
+   * @return Command to set the mode
    */
-  private Command setPositionCommand(ArmPosition position) {
-    return Commands.runOnce(() -> setArmPosition(position))
-        .withName("SetArmPosition(" + position.toString() + ")");
+  private Command setPositionCommand(ArmMode mode) {
+    return Commands.runOnce(() -> setArmMode(mode))
+        .withName("SetArmMode(" + mode.toString() + ")");
   }
 
   /** Factory methods for common position commands */
@@ -200,41 +197,41 @@ public class Arm extends SubsystemBase {
    * @return Command to move the arm to L1 scoring position
    */
   public final Command L1() {
-    return setPositionCommand(ArmPosition.L1);
+    return setPositionCommand(ArmMode.L1);
   }
 
   /**
    * @return Command to move the arm to L2 scoring position
    */
   public final Command L2() {
-    return setPositionCommand(ArmPosition.L2);
+    return setPositionCommand(ArmMode.L2);
   }
 
   /**
    * @return Command to move the arm to L3 position
    */
   public final Command L3() {
-    return setPositionCommand(ArmPosition.L3);
+    return setPositionCommand(ArmMode.L3);
   }
 
   /**
    * @return Command to move the arm to L4 position
    */
   public final Command L4() {
-    return setPositionCommand(ArmPosition.L4);
+    return setPositionCommand(ArmMode.L4);
   }
 
   /**
    * @return Command to intake the arm
    */
   public final Command intake() {
-    return setPositionCommand(ArmPosition.INTAKE);
+    return setPositionCommand(ArmMode.INTAKE);
   }
 
   /**
    * @return Command to stop the arm
    */
   public final Command stopCommand() {
-    return setPositionCommand(ArmPosition.STOP);
+    return setPositionCommand(ArmMode.STOP);
   }
 }
