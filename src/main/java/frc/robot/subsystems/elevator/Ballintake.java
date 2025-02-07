@@ -29,7 +29,7 @@ public class Ballintake extends Command {
   public void initialize() {
     ballDetected = false;
     // Start the shooter motor at the intake speed.
-    m_algee.setShooter(m_intakeSpeed);
+
   }
 
   @Override
@@ -37,6 +37,14 @@ public class Ballintake extends Command {
     // Read the current shooter velocity.
     double currentVelocity = Math.abs(m_algee.velocity());
     // If the velocity drops below the threshold, assume the ball is fully intaken.
+
+    if (ballDetected == false) {
+      m_algee.setShooter(-0.3);
+
+    } else {
+      m_algee.setShooter(0);
+    }
+
     if (currentVelocity < m_velocityThreshold) {
       ballDetected = true;
       m_algee.setShooter(0);
@@ -46,7 +54,7 @@ public class Ballintake extends Command {
   @Override
   public boolean isFinished() {
     // Finish the command once the ball is detected.
-    return ballDetected;
+    return false;
   }
 
   @Override

@@ -50,6 +50,9 @@ public class RobotContainer {
   private final TunableController joystick2 =
       new TunableController(1).withControllerType(TunableControllerType.QUADRATIC);
 
+  private final TunableController joystick3 =
+      new TunableController(2).withControllerType(TunableControllerType.QUADRATIC);
+
   private final LoggedDashboardChooser<Command> autoChooser;
 
   public final Drive drivetrain;
@@ -194,21 +197,24 @@ public class RobotContainer {
     // joystick2.a().whileTrue(algea.cmd(8.21875, -0.3)).whileFalse(algea.cmd(-0.3, -0.));
     joystick2
         .a()
-        .whileTrue(
-            new ParallelCommandGroup(algea.position(8.21875), new Ballintake(algea, -0.3, 50)))
+        .whileTrue(new ParallelCommandGroup(algea.position(8.7), new Ballintake(algea, -0.3, -25)))
         .whileFalse(algea.cmd(0, 0));
 
-    joystick2.x().whileTrue(algea.cmd(11.06396484375, -0.3)).whileFalse(algea.cmd(-0.3, -0.));
+    joystick2
+        .a()
+        .and(joystick2.y())
+        .whileTrue(algea.cmd(8.21875, 0.3))
+        .whileFalse(algea.cmd(-0.3, 0));
+    joystick2.x().whileTrue(algea.cmd(11.88037109375, -0.3)).whileFalse(algea.cmd(-0.3, -0.));
     joystick2.leftBumper().onTrue(algea.runOnce(() -> algea.reset()));
     // joystick2.a().whileTrue(algea.cmd(1.3, -1)).whileFalse(algea.cmd(0, 0));
 
     joystick2
         .b()
-        .whileTrue(elevator1.cmd2(29.34091796875))
+        .whileTrue(elevator1.cmd2(27))
         .whileFalse(new ParallelCommandGroup(elevator1.cmd1(0)));
     joystick2.leftTrigger(0.2).whileTrue(algea.ion(-0.1)).whileFalse(algea.ion(0));
 
-    joystick2.y().whileTrue(algea.cmd(8.21875, 0.3)).whileFalse(algea.cmd(-0.3, 0));
     joystick2.rightBumper().whileTrue(elevator1.cmd2(2.3)).whileFalse(elevator1.cmd1(0));
     // joystick.a().onTrue(Commands.runOnce(() -> drivetrxain.resetPose(Pose2d.kZero)));
     // joystick
@@ -271,10 +277,7 @@ public class RobotContainer {
     //                                         .getLeftY())) // Drive forward with negative Y
     // (forward)
     //                             .withVelocityY(MaxSpeed.times(-joystick.getLeftX()))
-    //                             .withTargetDirection(
-    //                                 new Rotation2d(
-    //                                     -joystick.getRightY(), -joystick.getRightX())))));
-
+    //                             .withTargetDirection(new Rotation2d(1, 2)))));
     // Run SysId routines when holding back/start and X/Y.
     // Note that each routine should be run exactly once in a single log.
     joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
@@ -310,13 +313,15 @@ public class RobotContainer {
         .whileTrue(elevator1.cmd2(5))
         .whileFalse(new ParallelCommandGroup(elevator1.runCurrentZeroing()));
 
-    joystick.rightBumper().whileTrue(shoot.cmd(13.5)).whileFalse(shoot.cmd(0));
-    joystick.leftBumper().whileTrue(shoot.cmd(5)).whileFalse(shoot.cmd(0));
+    joystick.rightBumper().whileTrue(shoot.cmd(10)).whileFalse(shoot.cmd(0));
+    joystick.leftBumper().whileTrue(shoot.both(0.5,0.2)).whileFalse(shoot.both(0,0));
     joystick.a().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
 
     joystick.rightTrigger(0.2).whileTrue(shoot.cmd3(5, 22));
     // joystick.y().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
     joystick.start().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
+
+    // joystick.a().whileTrue(shoot.hopper(20)).whileFalse(shoot.hopper(0));
   }
 
   public Command getAutonomousCommand() {

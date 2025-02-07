@@ -18,8 +18,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.*;
+import java.util.List;
 
 public class elevator1 extends SubsystemBase {
+  private List<Double> setpoints1 = List.of(1.0, 5.0, 10.0, 15.0, 4.0, 5.0);
+  private List<Double> setpoints2 = List.of(20.0, 25.0, 30.0, 35.0, 4.5, 5.5);
+  private List<Double> activeSetpoints = setpoints1; // Default to setpoints
   private TalonFX le = new TalonFX(13, "Drivetrain");
   private TalonFX re = new TalonFX(14, "Drivetrain");
   TalonFXConfiguration cfg = new TalonFXConfiguration();
@@ -147,6 +151,34 @@ public class elevator1 extends SubsystemBase {
       public void end(boolean interrupted) {
         le.setControl(new VoltageOut(0));
         re.setControl(new VoltageOut(0));
+      }
+    };
+  }
+
+  public Command Elevotorcmd(int index) {
+
+    return new Command() {
+      @Override
+      public void initialize() {
+        // Initialization code, such as resetting encoders or PID controllers
+
+      }
+
+      @Override
+      public void execute() {
+        le.setControl(m_request.withPosition(activeSetpoints.get(index)));
+
+        // Ele2.set(-speed); // Reverse motor direction if needed
+      }
+
+      @Override
+      public void end(boolean interrupted) {
+        le.set(0);
+      }
+
+      @Override
+      public boolean isFinished() {
+        return false;
       }
     };
   }
@@ -281,7 +313,7 @@ public class elevator1 extends SubsystemBase {
               // Before starting, perform any one-time actions. For example, set a locking servo:
               // io.setLockServoRotation(0.2);
               // (Replace with your actual method if you have a servo to engage.)
-              System.out.println("Starting current zeroing routine");
+              System.out.println("Starting currxent zeroing routine");
             });
   }
 
@@ -293,5 +325,9 @@ public class elevator1 extends SubsystemBase {
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     return new ParallelCommandGroup(
         m_sysIdRoutine.quasistatic(direction), m_sysIdRoutine2.quasistatic(direction));
+  }
+
+  public void togglesetpoint() {
+    activeSetpoints = (activeSetpoints == setpoints1) ? setpoints2 : setpoints1;
   }
 }

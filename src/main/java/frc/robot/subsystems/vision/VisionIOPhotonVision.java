@@ -72,6 +72,42 @@ public class VisionIOPhotonVision implements VisionIO {
     return new PoseObservation();
   }
 
+  private PhotonPipelineResult cam1() {
+    if (camera.getName() == "Cam1") {
+      return camera.getLatestResult();
+
+    } else {
+      return new PhotonPipelineResult();
+    }
+  }
+
+  private PhotonPipelineResult cam2() {
+    if (camera.getName() == "Cam2") {
+      return camera.getLatestResult();
+
+    } else {
+      return new PhotonPipelineResult();
+    }
+  }
+
+  private PhotonPipelineResult cam3() {
+    if (camera.getName() == "Cam3") {
+      return camera.getLatestResult();
+
+    } else {
+      return new PhotonPipelineResult();
+    }
+  }
+
+  private PhotonPipelineResult cam4() {
+    if (camera.getName() == "Cam4") {
+      return camera.getLatestResult();
+
+    } else {
+      return new PhotonPipelineResult();
+    }
+  }
+
   private PoseObservation buildPoseObservation(PhotonPipelineResult result, Pose3d robotPose) {
     List<RawFiducial> rawFiducialsList = new ArrayList<>();
     double totalDistance = 0.0;

@@ -49,7 +49,8 @@ public class SysIdSwerveTranslation_Torque implements SwerveRequest {
    *
    * @param current Torque current to apply
    * @return this request
-   */ZrveTranslation_Torque withTorqueCurrent(Current current) {
+   */
+  public SysIdSwerveTranslation_Torque withTorqueCurrent(Current current) {
     TorqueCurrentToApply = current.in(Amps);
     return this;
   }
