@@ -218,104 +218,7 @@ public class elevator1 extends SubsystemBase {
     };
   }
 
-  public Command zeroElevator() {
-    return new Command() {
-      // Tune these constants as needed for your elevator.
-      private final double STALL_CURRENT_THRESHOLD = 40.0; // Amps (adjust based on your system)
-      private final double DOWNWARD_VOLTAGE = -1.0; // Volts (a gentle speed; adjust as needed)
-      private final int REQUIRED_LOOPS = 3; // Number of consecutive loops above threshold
-      private int loopsAboveThreshold = 0;
-
-      @Override
-      public void initialize() {
-        loopsAboveThreshold = 0;
-        // Optionally log that the zeroing routine has started.
-        System.out.println("Zeroing elevator: driving downward.");
-      }
-
-      @Override
-      public void execute() {
-        // Command the leader motor to drive downward slowly.
-        // (Assuming a VoltageOut control works for this purpose.)
-        le.setControl(new VoltageOut(DOWNWARD_VOLTAGE));
-
-        // If your follower (re) is meant to follow le automatically, you only need to configure
-        // that once
-        // (for example, in the constructor). If not, you could command it similarly.
-      }
-
-      @Override
-      public boolean isFinished() {
-        // Retrieve the current from the motor. (Make sure to use the appropriate method per Phoenix
-        // 6 docs.)
-        double current = le.getStatorCurrent().getValueAsDouble();
-        // Uncomment and use the below line if your API uses a different current method.
-        // double current = le.getSupplyCurrent().getValueAsDouble();
-
-        // If the measured current exceeds the threshold, increment our counter.
-        if (current >= STALL_CURRENT_THRESHOLD) {
-          loopsAboveThreshold++;
-        } else {
-          // Reset the counter if the current drops below the threshold.
-          loopsAboveThreshold = 0;
-        }
-        // When we've seen the threshold exceeded for the required number of loops, finish the
-        // command.
-        return loopsAboveThreshold >= REQUIRED_LOOPS;
-      }
-
-      @Override
-      public void end(boolean interrupted) {
-        // Stop the motors.
-        le.setControl(new VoltageOut(0));
-        re.setControl(new VoltageOut(0));
-
-        // Reset encoder positions. This assumes that reaching the stall means you are at the
-        // bottom.
-        le.setPosition(0);
-        re.setPosition(0);
-
-        System.out.println("Elevator zeroed.");
-      }
-    };
-  }
-
-  public Command runCurrentZeroing() {
-    return this.run(
-            () -> {
-              // Run: Command the leader to drive downward at -1.0 V.
-              le.setControl(m_request.withPosition(0));
-            })
-        .until(
-            () -> {
-              // Continue running until the current exceeds 40 A.
-              // Adjust the method call based on your Phoenix 6 API (e.g., getStatorCurrent() or
-              // getSupplyCurrent()).
-              return le.getStatorCurrent().getValueAsDouble() > 40.0;
-            })
-        .andThen(
-            new InstantCommand(
-                () -> {
-                  le.setControl(new VoltageOut(0));
-                  re.setControl(new VoltageOut(0));
-                }))
-        // Wait for 0.5 seconds.
-        .andThen(new WaitCommand(0.5))
-        // After waiting, reset the encoders.
-        .andThen(
-            new InstantCommand(
-                () -> {
-                  le.setPosition(0.0);
-                  re.setPosition(0.0);
-                }))
-        .beforeStarting(
-            () -> {
-              // Before starting, perform any one-time actions. For example, set a locking servo:
-              // io.setLockServoRotation(0.2);
-              // (Replace with your actual method if you have a servo to engage.)
-              System.out.println("Starting currxent zeroing routine");
-            });
-  }
+  
 
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return new ParallelCommandGroup(
@@ -329,5 +232,5 @@ public class elevator1 extends SubsystemBase {
 
   public void togglesetpoint() {
     activeSetpoints = (activeSetpoints == setpoints1) ? setpoints2 : setpoints1;
-  }
-}
+  }}
+
