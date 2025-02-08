@@ -4,8 +4,7 @@ import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
 // import frc.robot.subsystems.lookuptable.setpoint;
 import com.ctre.phoenix6.hardware.TalonFX;
-
-import edu.wpi.first.units.measure.Distance;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -15,9 +14,12 @@ public class shooter extends SubsystemBase {
   private TalonFX rshoot = new TalonFX(18);
   private LaserCan lc = new LaserCan(0);
   private TalonFX hopper = new TalonFX(30);
-  private int  distance;
+  private int distance;
 
   public shooter() {
+
+    lshoot.setNeutralMode(NeutralModeValue.Brake);
+    rshoot.setNeutralMode(NeutralModeValue.Brake);
 
     try {
       lc.setRangingMode(LaserCan.RangingMode.SHORT);
@@ -33,14 +35,20 @@ public class shooter extends SubsystemBase {
     LaserCan.Measurement measurement = lc.getMeasurement();
     if (measurement != null && measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
       SmartDashboard.putNumber("distance", measurement.distance_mm);
+      SmartDashboard.putBoolean("Beamborken", check());
       distance = measurement.distance_mm;
-      
+
     } else {
       System.out.println(
           "Oh no! The target is out of range, or we can't get a reliable measurement!");
+
       // You can still use distance_mm in here, if you're ok tolerating a clamped value or an
       // unreliable measurement.
     }
+  }
+
+  private boolean check() {
+    return distance > 75;
   }
 
   public Command cmd(double speed) {
@@ -80,18 +88,16 @@ public class shooter extends SubsystemBase {
       @Override
       public void execute() {
 
-        if (distance > 39) {
-            lshoot.set(sspeed);
+        if (distance > 75) {
+          lshoot.set(sspeed);
           rshoot.set(-sspeed);
           hopper.set(hspeed);
-          
-        }
-        else{
+
+        } else {
           lshoot.set(0);
           rshoot.set(0);
           hopper.set(0);
         }
-
       }
 
       @Override
@@ -103,7 +109,7 @@ public class shooter extends SubsystemBase {
 
       @Override
       public boolean isFinished() {
-        return distance > 39; // 39 is a setpoint number i need to find the acc number
+        return distance < 75; // 39 is a setpoint number i need to find the acc number
       }
     };
   }

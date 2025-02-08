@@ -298,13 +298,14 @@ public class RobotContainer {
     //     .x()
     //     .whileTrue(new SequentialCommandGroup(elevator1.cmd1(5), shoot.cmd(0.1)))
     //     .whileFalse(new ParallelCommandGroup(elevator1.cmd1(0), shoot.cmd(0)));
+
     joystick
-        .y()
+        .b()
         .whileTrue(elevator1.cmd2(19.75566))
         .whileFalse(new ParallelCommandGroup(elevator1.cmd1(0)));
 
     joystick
-        .b()
+        .y()
         .whileTrue(elevator1.cmd2(32.54091796875))
         .whileFalse(new ParallelCommandGroup(elevator1.cmd1(0)));
 
@@ -314,7 +315,7 @@ public class RobotContainer {
         .whileFalse(new ParallelCommandGroup(elevator1.runCurrentZeroing()));
 
     joystick.rightBumper().whileTrue(shoot.cmd(10)).whileFalse(shoot.cmd(0));
-    joystick.leftBumper().whileTrue(shoot.both(0.5,0.2)).whileFalse(shoot.both(0,0));
+    joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
     joystick.a().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
 
     joystick.rightTrigger(0.2).whileTrue(shoot.cmd3(5, 22));
