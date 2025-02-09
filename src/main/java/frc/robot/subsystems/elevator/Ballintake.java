@@ -39,10 +39,7 @@ public class Ballintake extends Command {
     // If the velocity drops below the threshold, assume the ball is fully intaken.
 
     if (ballDetected == false) {
-      m_algee.setShooter(-0.3);
-
-    } else {
-      m_algee.setShooter(0);
+      m_algee.setShooter(-0.8);
     }
 
     if (currentVelocity < m_velocityThreshold) {

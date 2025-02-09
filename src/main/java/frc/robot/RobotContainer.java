@@ -29,7 +29,7 @@ import frc.robot.subsystems.elevator.Ballintake;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSIM;
-import frc.robot.subsystems.elevator.elevator1;
+import frc.robot.subsystems.elevator.elevatorpid;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSIM;
@@ -70,7 +70,7 @@ public class RobotContainer {
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
   private shooter shoot = new shooter();
-  private elevator1 elevator1 = new elevator1();
+  private elevatorpid elevator1 = new elevatorpid();
   private algee algea = new algee();
 
   public RobotContainer() {
@@ -209,13 +209,13 @@ public class RobotContainer {
     joystick2.leftBumper().onTrue(algea.runOnce(() -> algea.reset()));
     // joystick2.a().whileTrue(algea.cmd(1.3, -1)).whileFalse(algea.cmd(0, 0));
 
-    joystick2
-        .b()
-        .whileTrue(elevator1.cmd2(27))
-        .whileFalse(new ParallelCommandGroup(elevator1.cmd1(0)));
+    // joystick2
+    //     .b()
+    //     .whileTrue(elevator1.cmd2(27))
+    //     .whileFalse(new ParallelCommandGroup(elevator1.cmd1(0)));
     joystick2.leftTrigger(0.2).whileTrue(algea.ion(-0.1)).whileFalse(algea.ion(0));
 
-    joystick2.rightBumper().whileTrue(elevator1.cmd2(2.3)).whileFalse(elevator1.cmd1(0));
+    // joystick2.rightBumper().whileTrue(elevator1.cmd2(2.3)).whileFalse(elevator1.cmd2(0));
     // joystick.a().onTrue(Commands.runOnce(() -> drivetrxain.resetPose(Pose2d.kZero)));
     // joystick
     //     .b()
@@ -288,9 +288,9 @@ public class RobotContainer {
     // reset the field-centric heading on left bumper press
     // joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
     joystick
-        .x()
-        .whileTrue(elevator1.cmd2(10.81214))
-        .whileFalse(new SequentialCommandGroup(elevator1.cmd2(0)));
+        .a()
+        .whileTrue(elevator1.pidup(10.81214))
+        .whileFalse(new SequentialCommandGroup(elevator1.piddown(0)));
 
     // joystick
     //     .x()
@@ -299,22 +299,20 @@ public class RobotContainer {
 
     joystick
         .b()
-        .whileTrue(elevator1.cmd2(19.75566))
-        .whileFalse(new ParallelCommandGroup(elevator1.cmd2(0)));
+        .whileTrue(elevator1.pidup(19.75566))
+        .whileFalse(new ParallelCommandGroup(elevator1.piddown(0)));
+    ;
 
-    joystick
-        .y()
-        .whileTrue(elevator1.cmd2(32.54091796875))
-        .whileFalse(elevator1.cmd2(0));
+    joystick.y().whileTrue(elevator1.pidup(32.091796875)).whileFalse(elevator1.piddown(0));
 
     joystick
         .back()
-        .whileTrue(elevator1.cmd2(5))
-        .whileFalse(new ParallelCommandGroup(elevator1.cmd2(0)));
+        .whileTrue(elevator1.pidup(5))
+        .whileFalse(new ParallelCommandGroup(elevator1.piddown(0)));
 
     joystick.rightBumper().whileTrue(shoot.cmd(10)).whileFalse(shoot.cmd(0));
     joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
-    joystick.a().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
+    joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
 
     joystick.rightTrigger(0.2).whileTrue(shoot.cmd3(5, 22));
     // joystick.y().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
