@@ -87,6 +87,44 @@ public final class Constants {
     REPLAY
   }
 
+  public static enum RobotState {
+    IDLE, // Robot is not doing anything2
+    MOVING, // Robot is driving
+    INTAKING, // Robot is picking up a game piece
+    SHOOTING, // Robot is shooting a game piece
+    CLIMBING,
+    ALGEA; // Robot is climbing
+  }
+
+  public enum Elevatorposition {
+    Troph, // using Motion Magic to drive to a setpoint
+    Anythingelse // using a WPILib PID controller to hold the position
+  }
+
+  private static Elevatorposition curentElevatorposition = Elevatorposition.Anythingelse;
+
+  private static RobotState currentRobotState = RobotState.IDLE;
+
+  public static Elevatorposition getElevatorState() {
+    return curentElevatorposition;
+  }
+
+  public static void setElevatorState(Elevatorposition newState) {
+    curentElevatorposition = newState;
+    System.out.println("Robot state updated to: " + newState);
+  }
+
+  /** Returns the current robot state. */
+  public static RobotState getRobotState() {
+    return currentRobotState;
+  }
+
+  /** Sets the current robot state. */
+  public static void setRobotState(RobotState newState) {
+    currentRobotState = newState;
+    System.out.println("Robot state updated to: " + newState);
+  }
+
   static {
     // Checks to make sure config matches GUI values. Code should not throw as not breaking
     if (!PP_CONFIG.hasValidConfig()) {

@@ -1,11 +1,10 @@
 package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.allsub;
 import frc.robot.subsystems.arm.algee;
 
 public class Ballintake extends Command {
-  private final allsub m_algee;
+  private final algee m_algee;
   private final double m_intakeSpeed;
   private final double m_velocityThreshold;
   private boolean ballDetected = false;
@@ -19,7 +18,7 @@ public class Ballintake extends Command {
    * @param velocityThreshold The shooter velocity (absolute value) below which we assume a ball is
    *     loaded.
    */
-  public Ballintake(allsub algeeSubsystem, double intakeSpeed, double velocityThreshold) {
+  public Ballintake(algee algeeSubsystem, double intakeSpeed, double velocityThreshold) {
     m_algee = algeeSubsystem;
     m_intakeSpeed = intakeSpeed;
     m_velocityThreshold = velocityThreshold;

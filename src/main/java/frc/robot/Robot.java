@@ -10,6 +10,7 @@ import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.utils.LocalADStarAK;
@@ -78,6 +79,9 @@ public class Robot extends LoggedRobot {
     Threads.setCurrentThreadPriority(true, 99);
     CommandScheduler.getInstance().run();
     Threads.setCurrentThreadPriority(false, 10);
+
+    SmartDashboard.putString("State", Constants.getRobotState().name());
+    SmartDashboard.putString("Elevator Position", Constants.getElevatorState().name());
   }
 
   @Override

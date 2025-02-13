@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.*;
+import frc.robot.Constants;
 import java.util.List;
 
 public class elevatorpid extends SubsystemBase {
@@ -411,6 +412,17 @@ public class elevatorpid extends SubsystemBase {
   }
 
   public void togglesetpoint() {
-    activeSetpoints = (activeSetpoints == setpoints1) ? setpoints2 : setpoints1;
+    if (activeSetpoints == setpoints1) {
+      activeSetpoints = setpoints2;
+
+      Constants.setRobotState(Constants.RobotState.ALGEA);
+    } else {
+      activeSetpoints = setpoints1;
+      Constants.setRobotState(Constants.RobotState.IDLE);
+    }
+  }
+
+  public Boolean checkifsetpoint1() {
+    return activeSetpoints == setpoints1;
   }
 }
