@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Elevatorcmd;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.allsub;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOCTRE;
@@ -66,14 +67,13 @@ public class RobotContainer {
   private final Elevator elevator;
   private final Arm arm;
 
-  
-
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
   private shooter shoot = new shooter();
   private elevatorpid elevator1 = new elevatorpid();
   private algee algea = new algee();
+  private allsub robot = new allsub();
 
   public RobotContainer() {
     DriveIOCTRE currentDriveTrain = TunerConstants.createDrivetrain();
@@ -207,23 +207,23 @@ public class RobotContainer {
         .whileTrue(
             new SequentialCommandGroup(
                 new ParallelDeadlineGroup(
-                    algea.position(7.302734375), new Ballintake(algea, -0.8, -25)),
-                algea.position(6.7)))
-        .whileFalse(algea.cmd(0, 0));
+                    robot.position(7.302734375), new Ballintake(robot, -0.8, -25)),
+                robot.position(6.7)))
+        .whileFalse(robot.algeacmd(0, 0));
 
     joystick2
         .a()
         .and(joystick2.y())
-        .whileTrue(algea.cmd(7.302734375, 0.6))
-        .whileFalse(algea.cmd(-0.3, 0));
-    joystick2.x().whileTrue(algea.cmd(12.095703125, 0.8)).whileFalse(algea.cmd(-0.3, -0.));
-    joystick2.leftBumper().onTrue(algea.runOnce(() -> algea.reset()));
+        .whileTrue(robot.algeacmd(7.302734375, 0.6))
+        .whileFalse(robot.algeacmd(-0.3, 0));
+    joystick2.x().whileTrue(robot.algeacmd(12.095703125, 0.8)).whileFalse(robot.algeacmd(-0.3, -0.));
+    joystick2.leftBumper().onTrue(robot.runOnce(() -> robot.resetalgea()));
 
     // joystick2
     //     .b()
     //     .whileTrue(elevator1.cmd2(27))
     //     .whileFalse(new ParallelCommandGroup(elevator1.cmd1(0)));
-    joystick2.leftTrigger(0.2).whileTrue(algea.ion(-0.1)).whileFalse(algea.ion(0));
+    joystick2.leftTrigger(0.2).whileTrue(robot.ion(-0.1)).whileFalse(robot.ion(0));
 
     // joystick2.rightBumper().whileTrue(elevator1.cmd2(2.3)).whileFalse(elevator1.cmd2(0));
     // joystick.a().onTrue(Commands.runOnce(() -> drivetrxain.resetPose(Pose2d.kZero)));
@@ -331,29 +331,32 @@ public class RobotContainer {
 
     joystick
         .y()
-        .whileTrue(new Elevatorcmd(elevator1, 4)) // 32.0 or 30.0 depending on setpoints list
-        .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
+        .whileTrue(new Elevatorcmd(robot, 4)) // 32.0 or 30.0 depending on setpoints list
+        .whileFalse(new Elevatorcmd(robot, 0)); // 0.0
 
     joystick
         .back()
-        .whileTrue(new Elevatorcmd(elevator1, 1)) // 5.0 or 17.0
-        .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
+        .whileTrue(new Elevatorcmd(robot, 1)) // 5.0 or 17.0
+        .whileFalse(new Elevatorcmd(robot, 0)); // 0.0
 
     joystick
         .b()
-        .whileTrue(new Elevatorcmd(elevator1, 3)) // 19.7 or 35.0
-        .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
+        .whileTrue(new Elevatorcmd(robot, 3)) // 19.7 or 35.0
+        .whileFalse(new Elevatorcmd(robot, 0)); // 0.0
 
     joystick
         .a()
-        .whileTrue(new Elevatorcmd(elevator1, 2)) // 10.8 or 30.0
-        .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
+        .whileTrue(new Elevatorcmd(robot, 2)) // 10.8 or 30.0
+        .whileFalse(new Elevatorcmd(robot, 0)); // 0.0
 
-    joystick.rightBumper().whileTrue(shoot.cmd(10)).whileFalse(shoot.cmd(0));
-    joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
+    joystick.rightBumper().whileTrue(robot.cmd(10)).whileFalse(robot.cmd(0));
+    joystick
+        .leftBumper()
+        .whileTrue(new SequentialCommandGroup(robot.both(0.07, 0.25), robot.time1(0.3, 0.25, 0.07)))
+        .whileFalse(robot.both(0, 0));
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
 
-    joystick.rightTrigger(0.2).whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));
+    joystick.rightTrigger(0.2).whileTrue(robot.runOnce(() -> robot.togglesetpoint()));
     // joystick.y().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
     // joystick.start().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
 

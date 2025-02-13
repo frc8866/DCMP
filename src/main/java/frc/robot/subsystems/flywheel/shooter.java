@@ -5,6 +5,7 @@ import au.grapplerobotics.LaserCan;
 // import frc.robot.subsystems.lookuptable.setpoint;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -15,6 +16,7 @@ public class shooter extends SubsystemBase {
   private LaserCan lc = new LaserCan(0);
   private TalonFX hopper = new TalonFX(30);
   private int distance;
+  private Timer time3 = new Timer();
 
   public shooter() {
 
@@ -135,6 +137,43 @@ public class shooter extends SubsystemBase {
       @Override
       public boolean isFinished() {
         return false; // Check if the setpoint is reached
+      }
+    };
+  }
+
+  public Command time1(double time, double speed, double speed2) {
+    return new Command() {
+      @Override
+      public void initialize() {
+        // Initialization code, such as resetting encoders or PID controllers
+        time3.start();
+      }
+
+      @Override
+      public void execute() {
+
+        if (time3.get() < 0.3) {
+          hopper.set(speed);
+          lshoot.set(speed2);
+          rshoot.set(-speed2);
+        } else {
+          lshoot.set(0);
+          rshoot.set(0);
+        }
+      }
+
+      @Override
+      public void end(boolean interrupted) {
+        hopper.set(0);
+        time3.stop();
+        time3.reset();
+        lshoot.set(0);
+        rshoot.set(0);
+      }
+
+      @Override
+      public boolean isFinished() {
+        return time3.get() > time; // Check if the setpoint is reached
       }
     };
   }

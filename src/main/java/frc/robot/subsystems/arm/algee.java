@@ -47,7 +47,7 @@ public class algee extends SubsystemBase {
     SmartDashboard.putNumber("voltage", algaepiv.getMotorVoltage().getValueAsDouble());
   }
 
-  public void reset() {
+  public void resetalgea() {
     algaepiv.setPosition(0);
   }
 
@@ -66,7 +66,7 @@ public class algee extends SubsystemBase {
     algaepiv.set(speed);
   }
 
-  public Command cmd(double position, double speed) {
+  public Command algeacmd(double position, double speed) {
     return new Command() {
       @Override
       public void initialize() {
