@@ -57,6 +57,7 @@ public class shooter extends SubsystemBase {
     return new Command() {
       @Override
       public void initialize() {
+        time3.start();
         // Initialization code, such as resetting encoders or PID controllers
       }
 
@@ -65,12 +66,15 @@ public class shooter extends SubsystemBase {
 
         lshoot.set(speed / 100);
         rshoot.set(-speed / 100);
+        ;
       }
 
       @Override
       public void end(boolean interrupted) {
         lshoot.set(0);
         rshoot.set(0);
+        time3.stop();
+        time3.reset();
       }
 
       @Override
@@ -196,6 +200,40 @@ public class shooter extends SubsystemBase {
       public void end(boolean interrupted) {
         lshoot.set(0);
         rshoot.set(0);
+      }
+
+      @Override
+      public boolean isFinished() {
+        return false; // Check if the setpoint is reached
+      }
+    };
+  }
+
+  public Command wait(double speed, double time) {
+    return new Command() {
+      @Override
+      public void initialize() {
+        time3.start();
+      }
+
+      @Override
+      public void execute() {
+        if (time3.get() < time) {
+          lshoot.set(speed);
+          rshoot.set(-speed);
+
+        } else if (time3.get() > time) {
+          lshoot.set(0);
+          rshoot.set(0);
+        }
+      }
+
+      @Override
+      public void end(boolean interrupted) {
+        lshoot.set(0);
+        rshoot.set(0);
+        time3.stop();
+        time3.reset();
       }
 
       @Override

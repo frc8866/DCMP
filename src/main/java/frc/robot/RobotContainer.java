@@ -10,6 +10,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -38,6 +39,7 @@ import frc.robot.subsystems.flywheel.shooter;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
 import frc.robot.utils.TunableController;
 import frc.robot.utils.TunableController.TunableControllerType;
@@ -81,13 +83,17 @@ public class RobotContainer {
         // Real robot, instantiate hardware IO implementations
         drivetrain = new Drive(currentDriveTrain);
 
-        new Vision(
+         new Vision(
             drivetrain::addVisionData,
-            new VisionIOLimelight("limelight-fl", drivetrain::getVisionParameters),
-            new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
+            new VisionIOPhotonVision("Cam1", 
+                new Transform3d(new Translation3d(0.3,0.3,0),
+                new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))), drivetrain::getVisionParameters),
+                new VisionIOPhotonVision("Cam2", 
+                new Transform3d(new Translation3d(0.3,0.3,0),
+                new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))), drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
-
+                
         // flywheel = new Flywheel(new FlywheelIOCTRE()); // Disabled to prevent robot movement if
         // deployed to a real robot
         flywheel = new Flywheel(new FlywheelIO() {});
@@ -173,6 +179,16 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
+
+    Command algeacmd = new SequentialCommandGroup(
+        new ParallelDeadlineGroup(
+            algea.position(7.302734375), new Ballintake(algea, -0.8, -25)),
+        algea.position(6.7));
+
+        Command weirdshootingthing =(new ConditionalCommand(
+            shoot.cmd(10),
+            shoot.cmd3(5, 22),
+            () -> Constants.getElevatorState() != Constants.Elevatorposition.Troph));
 
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
@@ -351,6 +367,8 @@ public class RobotContainer {
         .whileTrue(new Elevatorcmd(elevator1, 2)) // 10.8 or 30.0
         .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
 
+        
+
     // joystick.rightTrigger(0.2).whileTrue(shoot.cmd3(5, 22));
 
     joystick
@@ -363,8 +381,11 @@ public class RobotContainer {
         .whileFalse(shoot.cmd(0));
     // joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
-    joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
-
+    // joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
+    joystick
+        .leftBumper()
+        .whileTrue(new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.wait(0.2, 0.1)))
+        .whileFalse(shoot.both(0, 0));
     joystick.rightTrigger(0.2).whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));
     joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
 
@@ -372,6 +393,34 @@ public class RobotContainer {
     // joystick.start().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
 
     // joystick.a().whileTrue(shoot.hopper(20)).whileFalse(shoot.hopper(0));
+
+
+
+
+
+
+
+
+
+
+
+
+
+    joystick.leftTrigger(0.2).whileTrue(new ConditionalCommand(new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.wait(0.2, 0.1)),algeacmd, ()-> Constants.getElevatorState() != Constants.Elevatorposition.Troph)).whileFalse(new ParallelCommandGroup( shoot.both(0, 0)));
+
+   
+
+    joystick
+        .rightTrigger(0.2)
+        .whileTrue(
+            new ConditionalCommand(
+                weirdshootingthing,algea.algeacmd(7.302734375, 0.6), ()-> Constants.getRobotState() == Constants.RobotState.ALGEA)).whileFalse(new ParallelCommandGroup(algea.algeacmd(0, 0),shoot.cmd(0) ));
+
+    joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
+
+    joystick.a().whileTrue(new Elevatorcmd(elevator1, 1)).whileFalse(new Elevatorcmd(elevator1, 0));
+            
+        
   }
 
   public Command getAutonomousCommand() {
