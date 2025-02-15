@@ -96,6 +96,43 @@ public class shooter extends SubsystemBase {
     };
   }
 
+
+  public Command AutonShoot(double sspeed, double hspeed) {
+    return new Command() {
+      @Override
+      public void initialize() {
+        // Initialization code, such as resetting encoders or PID controllers
+      }
+
+      @Override
+      public void execute() {
+
+        if (distance < 75) {
+          lshoot.set(sspeed);
+          rshoot.set(-sspeed);
+          hopper.set(hspeed);
+
+        } else {
+          lshoot.set(0);
+          rshoot.set(0);
+          hopper.set(0);
+        }
+      }
+
+      @Override
+      public void end(boolean interrupted) {
+        hopper.set(0);
+        lshoot.set(0);
+        rshoot.set(0);
+      }
+
+      @Override
+      public boolean isFinished() {
+        return distance < 75; // 39 is a setpoint number i need to find the acc number
+      }
+    };
+  }
+
   public Command both(double sspeed, double hspeed) {
     return new Command() {
       @Override

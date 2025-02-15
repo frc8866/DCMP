@@ -3,8 +3,13 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -17,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Elevatorcmd;
 import frc.robot.commands.HopperTriggeredShooterAndRumbleCommand;
+import frc.robot.commands.PIDSwerve;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -158,6 +164,11 @@ public class RobotContainer {
         arm = new Arm(new ArmIOCTRE() {});
         break;
     }
+
+    NamedCommands.registerCommand("elevatoru",new Elevatorcmd(elevator1, 4));
+    NamedCommands.registerCommand("elevatord",new Elevatorcmd(elevator1, 0));
+    NamedCommands.registerCommand("shoot",shoot.AutonShoot(.07, 0));
+    NamedCommands.registerCommand("intake",new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.wait(0.2, 0.1)));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -352,52 +363,52 @@ public class RobotContainer {
 
     // joystick.start().whileTrue(elevator1.resetenc());
 
-    joystick
-        .y()
-        .whileTrue(new Elevatorcmd(elevator1, 4)) // 32.0 or 30.0 depending on setpoints list
-        .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
+    // joystick
+    //     .y()
+    //     .whileTrue(new Elevatorcmd(elevator1, 4)) // 32.0 or 30.0 depending on setpoints list
+    //     .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
 
-    joystick
-        .back()
-        .whileTrue(new Elevatorcmd(elevator1, 1)) // 5.0 or 17.0
-        .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
+    // joystick
+    //     .back()
+    //     .whileTrue(new Elevatorcmd(elevator1, 1)) // 5.0 or 17.0
+    //     .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
 
-    joystick
-        .b()
-        .whileTrue(new Elevatorcmd(elevator1, 3)) // 19.7 or 35.0
-        .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
+    // joystick
+    //     .b()
+    //     .whileTrue(new Elevatorcmd(elevator1, 3)) // 19.7 or 35.0
+    //     .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
 
-    joystick
-        .a()
-        .whileTrue(new Elevatorcmd(elevator1, 2)) // 10.8 or 30.0
-        .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
+    // joystick
+    //     .a()
+    //     .whileTrue(new Elevatorcmd(elevator1, 2)) // 10.8 or 30.0
+    //     .whileFalse(new Elevatorcmd(elevator1, 0)); // 0.0
 
         
 
-    // joystick.rightTrigger(0.2).whileTrue(shoot.cmd3(5, 22));
+    // // joystick.rightTrigger(0.2).whileTrue(shoot.cmd3(5, 22));
 
-    joystick
-        .rightBumper()
-        .whileTrue(
-            new ConditionalCommand(
-                shoot.cmd(10),
-                shoot.cmd3(5, 22),
-                () -> Constants.getElevatorState() == Constants.Elevatorposition.Troph))
-        .whileFalse(shoot.cmd(0));
+    // joystick
+    //     .rightBumper()
+    //     .whileTrue(
+    //         new ConditionalCommand(
+    //             shoot.cmd(10),
+    //             shoot.cmd3(5, 22),
+    //             () -> Constants.getElevatorState() == Constants.Elevatorposition.Troph))
+    //     .whileFalse(shoot.cmd(0));
+    // // joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
+    // joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
+    // // joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
+    // joystick
+    //     .leftBumper()
+    //     .whileTrue(new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.wait(0.2, 0.1)))
+    //     .whileFalse(shoot.both(0, 0));
+    // joystick.rightTrigger(0.2).whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));
     // joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
-    joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
-    // joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
-    joystick
-        .leftBumper()
-        .whileTrue(new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.wait(0.2, 0.1)))
-        .whileFalse(shoot.both(0, 0));
-    joystick.rightTrigger(0.2).whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));
-    joystick.leftBumper().whileTrue(shoot.both(0.07, 0.25)).whileFalse(shoot.both(0, 0));
 
-    // joystick.y().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
-    // joystick.start().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
+    // // joystick.y().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
+    // // joystick.start().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
 
-    // joystick.a().whileTrue(shoot.hopper(20)).whileFalse(shoot.hopper(0));
+    // // joystick.a().whileTrue(shoot.hopper(20)).whileFalse(shoot.hopper(0));
 
 
 
@@ -434,6 +445,10 @@ public class RobotContainer {
     joystick.rightStick().whileTrue(new ConditionalCommand(new Elevatorcmd(elevator1, 2), lowalgae, ()-> Constants.getRobotState() != Constants.RobotState.ALGEA)).whileFalse(new ParallelCommandGroup(new Elevatorcmd(elevator1, 0),algea.algeacmd(-0.3, 0)));
 
     joystick.start().whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));  
+
+    Pose2d target = new Pose2d(new Translation2d(1,2),new Rotation2d(3));
+
+    joystick.a().whileTrue(new PIDSwerve(drivetrain, target));
 }
 
   public Command getAutonomousCommand() {
