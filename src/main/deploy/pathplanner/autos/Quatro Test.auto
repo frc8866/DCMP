@@ -1,0 +1,55 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Quatro start to E Coral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Quatro Coral E to source"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Quatro Source to Coral D"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Quatro Coral D to Source "
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Quatro Source to Coral C"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Quatro Coral C to Source "
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Quatro Source to Coral B"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Test",
+  "choreoAuto": false
+}

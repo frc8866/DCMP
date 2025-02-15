@@ -1,0 +1,55 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MirrorQ start to coral J"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MirrorQ Coral J to Source"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MirrorQ Source to coral K"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MirrorQ coral K to source"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MirrorQ Source to coral L"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MirrorQ coral L to source"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "MirrorQ Source to coral A"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Test",
+  "choreoAuto": false
+}
