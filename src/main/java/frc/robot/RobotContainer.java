@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Elevatorcmd;
+import frc.robot.commands.HopperTriggeredShooterAndRumbleCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -185,10 +186,14 @@ public class RobotContainer {
             algea.position(7.302734375), new Ballintake(algea, -0.8, -25)),
         algea.position(6.7));
 
-        Command weirdshootingthing =(new ConditionalCommand(
+    Command weirdshootingthing =(new ConditionalCommand(
             shoot.cmd(10),
             shoot.cmd3(5, 22),
             () -> Constants.getElevatorState() != Constants.Elevatorposition.Troph));
+
+    Command highalgae  = new ParallelCommandGroup(new Elevatorcmd(elevator1,2),algea.algeacmd(12.09, 0.8));
+    Command lowalgae  = new ParallelCommandGroup(new Elevatorcmd(elevator1,3),algea.algeacmd(12.09, 0.8)); //idk what to put for the setpoint as of now we havent tested it yet
+
 
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
@@ -406,7 +411,7 @@ public class RobotContainer {
 
 
 
-    joystick.leftTrigger(0.2).whileTrue(new ConditionalCommand(new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.wait(0.2, 0.1)),algeacmd, ()-> Constants.getElevatorState() != Constants.Elevatorposition.Troph)).whileFalse(new ParallelCommandGroup( shoot.both(0, 0)));
+    joystick.leftTrigger(0.2).whileTrue(new ConditionalCommand(new HopperTriggeredShooterAndRumbleCommand(shoot, joystick),algeacmd, ()-> Constants.getElevatorState() != Constants.Elevatorposition.Troph)).whileFalse(new ParallelCommandGroup( shoot.both(0, 0)));
 
    
 
@@ -414,14 +419,22 @@ public class RobotContainer {
         .rightTrigger(0.2)
         .whileTrue(
             new ConditionalCommand(
-                weirdshootingthing,algea.algeacmd(7.302734375, 0.6), ()-> Constants.getRobotState() == Constants.RobotState.ALGEA)).whileFalse(new ParallelCommandGroup(algea.algeacmd(0, 0),shoot.cmd(0) ));
+                weirdshootingthing,algea.algeacmd(7.302734375, 0.6), ()-> Constants.getRobotState() != Constants.RobotState.ALGEA)).whileFalse(new ParallelCommandGroup(algea.algeacmd(0, 0),shoot.cmd(0) ));
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
 
     joystick.a().whileTrue(new Elevatorcmd(elevator1, 1)).whileFalse(new Elevatorcmd(elevator1, 0));
-            
-        
-  }
+    
+    joystick.back().whileTrue(new Elevatorcmd(elevator1, 4)).whileFalse(new Elevatorcmd(elevator1, 0));    
+
+    
+    
+    joystick.leftStick().whileTrue(new ConditionalCommand(new Elevatorcmd(elevator1, 3), highalgae, ()-> Constants.getRobotState() != Constants.RobotState.ALGEA)).whileFalse(new ParallelCommandGroup(new Elevatorcmd(elevator1, 0),algea.algeacmd(-0.3, 0)));
+
+    joystick.rightStick().whileTrue(new ConditionalCommand(new Elevatorcmd(elevator1, 2), lowalgae, ()-> Constants.getRobotState() != Constants.RobotState.ALGEA)).whileFalse(new ParallelCommandGroup(new Elevatorcmd(elevator1, 0),algea.algeacmd(-0.3, 0)));
+
+    joystick.start().whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));  
+}
 
   public Command getAutonomousCommand() {
     return autoChooser.get();

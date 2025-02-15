@@ -49,9 +49,21 @@ public class shooter extends SubsystemBase {
     }
   }
 
-  private boolean check() {
+  public boolean check() {
     return distance > 75;
   }
+
+  public double getDistance() {
+    return distance;
+  }
+
+
+  public void setShooter(double speed,double hspeed) {
+    lshoot.set(speed);
+    rshoot.set(-speed);
+    hopper.set(hspeed);
+  }
+
 
   public Command cmd(double speed) {
     return new Command() {
