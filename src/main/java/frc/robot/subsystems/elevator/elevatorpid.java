@@ -209,6 +209,15 @@ public class elevatorpid extends SubsystemBase {
     };
   }
 
+  public double targeposition(int index) {
+    return activeSetpoints.get(index);
+  }
+
+  public boolean autoncheck(int index) {
+    double sensor = le.getPosition().getValueAsDouble();
+    return targeposition(index) - 0.3 < sensor;
+  }
+
   public Command Motionmagictoggle(int value) {
     return new Command() {
       // Define a tolerance (adjust as needed based on your sensor units)

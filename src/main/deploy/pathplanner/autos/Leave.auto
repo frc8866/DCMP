@@ -9,6 +9,24 @@
           "data": {
             "pathName": "Leave Path"
           }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevatoru"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevatord"
+          }
         }
       ]
     }

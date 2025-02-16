@@ -1,8 +1,9 @@
 package frc.robot.commands;
-import edu.wpi.first.wpilibj2.command.Command;
+
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.flywheel.shooter;
 import frc.robot.utils.TunableController;
 
@@ -27,10 +28,12 @@ public class HopperTriggeredShooterAndRumbleCommand extends Command {
   /**
    * Constructs a new HopperTriggeredShooterAndRumbleCommand.
    *
-   * @param shooterSubsystem The shooter subsystem (must provide getDistance(), setShooter(), and setHopper()).
-   * @param controller       The XboxController used for rumble feedback.
+   * @param shooterSubsystem The shooter subsystem (must provide getDistance(), setShooter(), and
+   *     setHopper()).
+   * @param controller The XboxController used for rumble feedback.
    */
-  public HopperTriggeredShooterAndRumbleCommand(shooter shooterSubsystem, TunableController controller) {
+  public HopperTriggeredShooterAndRumbleCommand(
+      shooter shooterSubsystem, TunableController controller) {
     this.shooterSubsystem = shooterSubsystem;
     this.controller = controller;
     addRequirements(shooterSubsystem);
@@ -39,20 +42,17 @@ public class HopperTriggeredShooterAndRumbleCommand extends Command {
   @Override
   public void initialize() {
     // Start by running the shooter at 7% and the hopper at 25%.
-    
+
     triggered = false;
   }
 
   @Override
   public void execute() {
     // If not yet triggered and the LaserCan reports the ball is at or below the threshold:
-    if(shooterSubsystem.check()){
+    if (shooterSubsystem.check()) {
       shooterSubsystem.setShooter(0.07, 0.2);
 
-
-    }
-
-    else if(shooterSubsystem.getDistance() < 75) {
+    } else if (shooterSubsystem.getDistance() < 75) {
       // Trigger the event.
       triggered = true;
       // Start the timer.
@@ -60,39 +60,29 @@ public class HopperTriggeredShooterAndRumbleCommand extends Command {
       // Run the shooter at 20% and the hopper at 100%.
       if (waittTimer.get() < 0.1) {
         shooterSubsystem.setShooter(0.2, 0);
-        
-      
-      }
-      else if(waittTimer.get()>0.1){
+
+      } else if (waittTimer.get() > 0.1) {
         timer.start();
         shooterSubsystem.setShooter(0, 0);
-        if (timer.get()<2) {
+        if (timer.get() < 2) {
           controller.setRumble(RumbleType.kBothRumble, 1);
-          
         }
-        
       }
       // Start the rumble.
-      
-    } 
 
-    
-      
-    
-      
-    
+    }
   }
 
   @Override
   public boolean isFinished() {
     // The command finishes once the rumble period (2 seconds) has elapsed after triggering.
-    return timer.get()>2;
+    return timer.get() > 2;
   }
 
   @Override
   public void end(boolean interrupted) {
     // Ensure all motors are stopped.
-   shooterSubsystem.setShooter(0, 0);
+    shooterSubsystem.setShooter(0, 0);
     // Stop the rumble.
     controller.setRumble(XboxController.RumbleType.kBothRumble, 0.0);
     timer.stop();

@@ -15,7 +15,6 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -117,34 +116,36 @@ public final class Constants {
   }
 
   public static final class Pose {
-        public static final int pigeonID = 1;
+    public static final int pigeonID = 1;
 
-        public static final PIDController rotationPID = new PIDController(0.003, 0.0, 0.0); // kI was 0.050 for NCCMP 2024
-        public static final double rotationKS = 0.02;
-        public static final double rotationIZone = 2.0; // degrees
+    public static final PIDController rotationPID =
+        new PIDController(0.003, 0.0, 0.0); // kI was 0.050 for NCCMP 2024
+    public static final double rotationKS = 0.02;
+    public static final double rotationIZone = 2.0; // degrees
 
-        public static final double tiltWarning = 5.0;
-        public static final double tiltError = 10.0;
+    public static final double tiltWarning = 5.0;
+    public static final double tiltError = 10.0;
 
-        public static final double fieldWidth = Units.inchesToMeters(26*12 + 5);
-        public static final double fieldLength = Units.inchesToMeters(57*12 + 6.875);
+    public static final double fieldWidth = Units.inchesToMeters(26 * 12 + 5);
+    public static final double fieldLength = Units.inchesToMeters(57 * 12 + 6.875);
 
-        public static enum ReefFace {
-            AB,
-            CD,
-            EF,
-            GH,
-            IJ,
-            KL
-        }
-
-        public static final double reefElevatorZoneRadius = Units.inchesToMeters(65.0);
-        public static final double autoUpDistance = Units.inchesToMeters(24.0);
-        public static final double wingLength = Units.inchesToMeters(280);
-
-        // Locations from the Blue Alliance perspective
-        public static final Translation2d reefCenter = new Translation2d(Units.inchesToMeters(176.75), fieldWidth / 2.0);
+    public static enum ReefFace {
+      AB,
+      CD,
+      EF,
+      GH,
+      IJ,
+      KL
     }
+
+    public static final double reefElevatorZoneRadius = Units.inchesToMeters(65.0);
+    public static final double autoUpDistance = Units.inchesToMeters(24.0);
+    public static final double wingLength = Units.inchesToMeters(280);
+
+    // Locations from the Blue Alliance perspective
+    public static final Translation2d reefCenter =
+        new Translation2d(Units.inchesToMeters(176.75), fieldWidth / 2.0);
+  }
 
   /** Returns the current robot state. */
   public static RobotState getRobotState() {
