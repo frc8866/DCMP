@@ -2,13 +2,14 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.flywheel.shooter;
+import frc.robot.utils.TunableController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
 public class IntakeWithRumble extends Command {
   private final shooter shooterSubsystem;
-  private final XboxController controller;
+  private final TunableController controller;
   private final Timer rumbleTimer = new Timer();
   private final double intakeSpeed; // store the intake speed parameter
   private boolean rumbleStarted = false;
@@ -19,7 +20,7 @@ public class IntakeWithRumble extends Command {
   private static final double CURRENT_SPIKE_THRESHOLD = 40.0;  // amps (used in shooter.hasCurrentSpike())
   private static final double RUMBLE_DURATION = 0.5;  // seconds
 
-  public IntakeWithRumble(shooter shooterSubsystem, XboxController controller, double intakeSpeed) {
+  public IntakeWithRumble(shooter shooterSubsystem, TunableController controller, double intakeSpeed) {
     this.shooterSubsystem = shooterSubsystem;
     this.controller = controller;
     this.intakeSpeed = intakeSpeed;  // store the parameter for later use
@@ -68,7 +69,7 @@ public class IntakeWithRumble extends Command {
     rumbleTimer.stop();
     rumbleTimer.reset();
     // Ensure that we stop both the motor and the rumble when the command ends.
-    shooterSubsystem.speed(0);
+    shooterSubsystem.speed(-0.1);
     // If a current spike was detected, trigger the rumble.
     controller.setRumble(RumbleType.kBothRumble,0);
     

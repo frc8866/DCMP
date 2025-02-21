@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class algee extends SubsystemBase {
-  private TalonFX algaepiv = new TalonFX(15);
   private TalonFX algaeshooter = new TalonFX(16);
   TalonFXConfiguration cfg = new TalonFXConfiguration();
   private Slot0Configs slot0 = cfg.Slot0;
@@ -35,20 +34,13 @@ public class algee extends SubsystemBase {
         200; // Target acceleration of 160 rps/s (0.5 seconds)
     motionMagicConfigs.MotionMagicJerk = 400; // Target jerk of 1600 rps/s/s (0.1 seconds)\
 
-    algaepiv.getConfigurator().apply(cfg);
-    algaepiv.setNeutralMode(NeutralModeValue.Brake);
+    
+    algaeshooter.setNeutralMode(NeutralModeValue.Brake);
   }
 
   @Override
   public void periodic() {
-    SmartDashboard.putNumber("algaepiv", algaepiv.getPosition().getValueAsDouble());
-    SmartDashboard.putNumber("Algee", algaepiv.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber("Velocity", algaeshooter.getVelocity().getValueAsDouble());
-    SmartDashboard.putNumber("voltage", algaepiv.getMotorVoltage().getValueAsDouble());
-  }
-
-  public void resetalgea() {
-    algaepiv.setPosition(0);
   }
 
   public double velocity() {
@@ -59,12 +51,12 @@ public class algee extends SubsystemBase {
     algaeshooter.set(speed);
   }
 
-  public void speed(double position) {
-    pid.setSetpoint(position);
+  // public void speed(double position) {
+  //   pid.setSetpoint(position);
 
-    double speed = pid.calculate(algaepiv.getPosition().getValueAsDouble());
-    algaepiv.set(speed);
-  }
+  //   double speed = pid.calculate(algaepiv.getPosition().getValueAsDouble());
+  //   algaepiv.set(speed);
+  // }
 
   public Command algeacmd(double position, double speed) {
     return new Command() {
@@ -76,10 +68,7 @@ public class algee extends SubsystemBase {
 
       @Override
       public void execute() {
-        algaeshooter.set(speed);
-
-        double speed1 = pid.calculate(algaepiv.getPosition().getValueAsDouble());
-        algaepiv.set(speed1);
+        
       }
 
       @Override
@@ -94,52 +83,52 @@ public class algee extends SubsystemBase {
     };
   }
 
-  public Command position(double position) {
-    return new Command() {
-      @Override
-      public void initialize() {
-        pid.setSetpoint(position);
-        // Initialization code, such as resetting encoders or PID controllers
-      }
+  // public Command position(double position) {
+  //   return new Command() {
+  //     @Override
+  //     public void initialize() {
+  //       pid.setSetpoint(position);
+  //       // Initialization code, such as resetting encoders or PID controllers
+  //     }
 
-      @Override
-      public void execute() {
+  //     @Override
+  //     public void execute() {
 
-        double speed1 = pid.calculate(algaepiv.getPosition().getValueAsDouble());
-        algaepiv.set(speed1);
-      }
+  //       double speed1 = pid.calculate(algaepiv.getPosition().getValueAsDouble());
+  //       algaepiv.set(speed1);
+  //     }
 
-      @Override
-      public void end(boolean interrupted) {}
+  //     @Override
+  //     public void end(boolean interrupted) {}
 
-      @Override
-      public boolean isFinished() {
-        return false; // Check if the setpoint is reached; // Check if the setpoint is reached
-      }
-    };
-  }
+  //     @Override
+  //     public boolean isFinished() {
+  //       return false; // Check if the setpoint is reached; // Check if the setpoint is reached
+  //     }
+  //   };
+  // }
 
-  public Command ion(double speed) {
-    return new Command() {
-      @Override
-      public void initialize() {
-        // Initialization code, such as resetting encoders or PID controllers
-      }
+  // public Command ion(double speed) {
+  //   return new Command() {
+  //     @Override
+  //     public void initialize() {
+  //       // Initialization code, such as resetting encoders or PID controllers
+  //     }
 
-      @Override
-      public void execute() {
-        algaepiv.set(speed);
-      }
+  //     @Override
+  //     public void execute() {
+  //       algaepiv.set(speed);
+  //     }
 
-      @Override
-      public void end(boolean interrupted) {
-        algaeshooter.set(0);
-      }
+  //     @Override
+  //     public void end(boolean interrupted) {
+  //       algaeshooter.set(0);
+  //     }
 
-      @Override
-      public boolean isFinished() {
-        return false; // Check if the setpoint is reached; // Check if the setpoint is reached
-      }
-    };
-  }
+  //     @Override
+  //     public boolean isFinished() {
+  //       return false; // Check if the setpoint is reached; // Check if the setpoint is reached
+  //     }
+  //   };
+  // }
 }

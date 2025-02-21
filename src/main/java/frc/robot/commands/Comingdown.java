@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.elevator.elevatorpid;
 
-public class Elevatorcmd extends Command {
+public class Comingdown extends Command {
   private final elevatorpid elevator;
   private final int targetPosition;
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
@@ -14,7 +14,6 @@ public class Elevatorcmd extends Command {
   private double l3 = 1;
   private double l4 = 1;
   private boolean first;
-  private boolean up;
 
   private double flipsetpoint;
 
@@ -31,8 +30,7 @@ public class Elevatorcmd extends Command {
    * @param elevator The elevator subsystem.
    * @param targetPosition The target position (in sensor units) to move to.
    */
-  public Elevatorcmd(elevatorpid elevator, int targetPosition, boolean hi) {
-    this.up = hi;
+  public Comingdown(elevatorpid elevator, int targetPosition) {
     this.elevator = elevator;
     this.targetPosition = targetPosition;
     addRequirements(elevator);
@@ -40,8 +38,6 @@ public class Elevatorcmd extends Command {
 
   @Override
   public void initialize() {
-
-    
 
     if (targetPosition == 1) {
       Constants.setElevatorState(Constants.Elevatorposition.L1);
@@ -65,8 +61,6 @@ public class Elevatorcmd extends Command {
 
   @Override
 public void execute() {
-
-  if(up){
   // Set flipsetpoint based on the desired elevator state.
   if (Constants.getElevatorState() == Constants.Elevatorposition.L1) {
     flipsetpoint = l1;
@@ -93,7 +87,6 @@ public void execute() {
   elevator.setMotionMagic1(targetPosition);
   elevator.setMotionMagicflip(flipsetpoint);
 
-
   // When close enough to the target, switch to PID holding mode.
   // if (Math.abs(currentPos - targetPosition) < tolerance) {
   //   currentState = State.HOLDING;
@@ -101,14 +94,6 @@ public void execute() {
   // } else if (currentState == State.HOLDING) {
   //   // Use PID to hold the position.
   //   elevator.Motionmagictoggle(targetPosition);
-}
-else if(up == false){
-  elevator.Motionmagictoggle(0);
-  if(elevator.check(0)){
-    elevator.setMotionMagicflip(0);
-    //idk
-  }
-}
   }
   
 

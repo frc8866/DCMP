@@ -54,4 +54,31 @@ public class shooter extends SubsystemBase {
     return current > CURRENT_SPIKE_THRESHOLD;
   }
 
+  public Command cmd(double speed) {
+    return new Command() {
+      @Override
+      public void initialize() {
+        // Initialization code, such as resetting encoders or PID controllers
+        // int kErrThreshold = 10; // how many sensor units until its close-enough
+        // int kLoopsToSettle = 2; // how many loops sensor must be close-enough
+        // int _withinThresholdLoops = 0;
+      }
+
+      @Override
+      public void execute() {
+        // check(position);
+        intake.set(speed);
+      }
+
+      @Override
+      public void end(boolean interrupted) {}
+
+      @Override
+      public boolean isFinished() {
+        return false; // Check if the setpoint is reached
+      }
+    };
+  }
+
+
 }

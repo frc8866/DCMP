@@ -195,6 +195,43 @@ public class elevatorpid extends SubsystemBase {
     };
   }
 
+  public Command Flipydo(double targetPosition){
+    return new Command() {
+      // Define a tolerance (adjust as needed based on your sensor units)
+      private final double kTolerance = 0.1;
+
+      @Override
+      public void initialize() {
+        // Optionally reset any state or encoders if needed
+
+      }
+
+      @Override
+      public void execute() {
+        // Command the leader motor using Motion Magic with feedforward.
+        // (Since re is meant to follow le, remove direct control of re here.)
+
+        flippydoo.setControl(m_request.withPosition(targetPosition).withEnableFOC(true));
+      }
+
+      @Override
+      public boolean isFinished() {
+        // End the command once the error is within tolerance.
+        double error = Math.abs(le.getPosition().getValueAsDouble() - targetPosition);
+        return false;
+      }
+
+      @Override
+      public void end(boolean interrupted) {
+        // Once finished (or interrupted), stop the motors.
+        le.setControl(new VoltageOut(0));
+        // If you’re using a follower, you can let it follow automatically.
+        // Alternatively, if you’re controlling 're' elsewhere, ensure it’s set to zero.
+        re.setControl(new VoltageOut(0));
+      }
+    };
+  }
+
   public Command CTREpid(double targetPosition) {
     return new Command() {
       // Define a tolerance (adjust as needed based on your sensor units)
@@ -456,5 +493,15 @@ public class elevatorpid extends SubsystemBase {
 
   public Boolean checkifsetpoint1() {
     return activeSetpoints == setpoints1;
+  }
+
+  public Boolean check(double position) {
+    double curentpos = le.getPosition().getValueAsDouble();
+    if (curentpos - 0.2 < position && curentpos + 0.2 > position) {
+      return true;
+
+    } else {
+      return false;
+    }
   }
 }

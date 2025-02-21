@@ -17,6 +17,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.AutonElevatorcmd;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Elevatorcmd;
+import frc.robot.commands.Flippy;
+import frc.robot.commands.IntakeWithRumble;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -85,17 +87,12 @@ public class RobotContainer {
         new Vision(
             drivetrain::addVisionData,
             new VisionIOPhotonVision(
-                "Frontright",
+                "FrontRight",
                 new Transform3d(
-                    new Translation3d(-4.018, -22.19, 2.724),
-                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
+                    new Translation3d(0.2, 0.0, 0.8),
+                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(5))),
                 drivetrain::getVisionParameters),
-            new VisionIOPhotonVision(
-                "Cam2",
-                new Transform3d(
-                    new Translation3d(4.018, 22.19, 2.724),
-                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
-                drivetrain::getVisionParameters),
+            new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
 
@@ -191,25 +188,27 @@ public class RobotContainer {
 
   private void configureBindings() {
 
-    Command algeacmd =
+    //check for FLIPPY DO POSITION
+
+    Command Positionl2 =
         new SequentialCommandGroup(
             new ParallelDeadlineGroup(
-                algea.position(7.102734375), new Ballintake(algea, -0.8, -25)),
-            algea.position(6.7));
+                new Flippy(elevator1, 0, 0), new Ballintake(algea, -0.8, -25))
+        );
+        Command Positionl3 =
+        new SequentialCommandGroup(
+            new ParallelDeadlineGroup(
+                new Flippy(elevator1, 0, 0), new Ballintake(algea, -0.8, -25))
+        );
 
     Command weirdshootingthing =
-        (new ConditionalCommand(
-            shoot.cmd(10),
-            shoot.cmd3(5, 22),
-            () -> Constants.getElevatorState() != Constants.Elevatorposition.L1));
-
+        shoot.cmd(-0.5);
     Command highalgae =
-        new ParallelCommandGroup(new Elevatorcmd(elevator1, 2), algea.algeacmd(12.09, 0.8));
+        new ParallelCommandGroup(new Flippy(elevator1, 0, 0));
     Command lowalgae =
         new ParallelCommandGroup(
-            new Elevatorcmd(elevator1, 3),
-            algea.algeacmd(
-                12.09, 0.8)); // idk what to put for the setpoint as of now we havent tested it yet
+            new Flippy(elevator1, 0, 0));
+             // idk what to put for the setpoint as of now we havent tested it yet
 
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
@@ -239,12 +238,8 @@ public class RobotContainer {
     joystick
         .leftTrigger(0.2)
         .whileTrue(
-            new ConditionalCommand(
-                new SequentialCommandGroup(shoot.both(0.07, 0.2), shoot.wait(0.1, 0.1)),
-                algeacmd,
-                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
-        .whileFalse(new ParallelCommandGroup(shoot.both(0, 0), algea.algeacmd(0, 0)));
-
+            new IntakeWithRumble(shoot, joystick, 0.4));
+        
     joystick
         .rightTrigger(0.2)
         .whileTrue(
@@ -256,32 +251,32 @@ public class RobotContainer {
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
 
-    joystick.a().whileTrue(new Elevatorcmd(elevator1, 1)).whileFalse(new Elevatorcmd(elevator1, 0));
+    joystick.a().whileTrue(new Elevatorcmd(elevator1, 1,true)).whileFalse(new Elevatorcmd(elevator1, 0,false));
 
     joystick
         .back()
-        .whileTrue(new Elevatorcmd(elevator1, 4))
-        .whileFalse(new Elevatorcmd(elevator1, 0));
+        .whileTrue(new Elevatorcmd(elevator1, 4,true))
+        .whileFalse(new Elevatorcmd(elevator1, 0,true));
 
     joystick
         .leftStick()
-        .whileTrue(
+        .whileTrue( 
             new ConditionalCommand(
-                new Elevatorcmd(elevator1, 3),
-                highalgae,
+                new Elevatorcmd(elevator1, 3,true),
+                Positionl2,
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
-            new ParallelCommandGroup(new Elevatorcmd(elevator1, 0), algea.algeacmd(-0.3, 0)));
+            new ParallelCommandGroup(new Elevatorcmd(elevator1, 0,false)));
 
     joystick
         .rightStick()
         .whileTrue(
             new ConditionalCommand(
-                new Elevatorcmd(elevator1, 2),
-                lowalgae,
+                new Elevatorcmd(elevator1, 2,true),
+                Positionl3,
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
-            new ParallelCommandGroup(new Elevatorcmd(elevator1, 0), algea.algeacmd(-0.3, 0)));
+            new ParallelCommandGroup(new Elevatorcmd(elevator1, 0,false)));
 
     joystick.start().whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));
 
