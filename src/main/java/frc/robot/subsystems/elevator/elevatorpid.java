@@ -9,6 +9,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -27,6 +28,7 @@ public class elevatorpid extends SubsystemBase {
   private List<Double> activeSetpoints = setpoints1; // Default to setpoints
   private TalonFX le = new TalonFX(13, "Drivetrain");
   private TalonFX re = new TalonFX(14, "Drivetrain");
+  private TalonFX flippydoo = new TalonFX(12);
   private PIDController pidup = new PIDController(0.05, 0, 0);
   private PIDController piddown = new PIDController(0.02, 0, 0);
   TalonFXConfiguration cfg = new TalonFXConfiguration();
@@ -35,6 +37,7 @@ public class elevatorpid extends SubsystemBase {
   MotionMagicConfigs motionMagicConfigs = cfg.MotionMagic;
   final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
   final MotionMagicVoltage m_request1 = new MotionMagicVoltage(0);
+  private CANcoder hi = new CANcoder(1);
 
   private enum ElevatorState {
     MOVING, // using Motion Magic to drive to a setpoint
@@ -79,6 +82,9 @@ public class elevatorpid extends SubsystemBase {
     slot0.kP = 1.5; // A position error of 2.5 rotations results in 12 V output
     slot0.kI = 0.1; // no output for integrated error
     slot0.kD = 0; // A velocity error of 1 rps results in 0.1 V output
+
+    // cfg.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+    // cfg.Feedback.FeedbackRemoteSensorID = hi.getDeviceID();
 
     motionMagicConfigs.MotionMagicCruiseVelocity = 100; // Target cruise velocity of 80 rps
     motionMagicConfigs.MotionMagicAcceleration =
@@ -126,6 +132,23 @@ public class elevatorpid extends SubsystemBase {
             .withFeedForward(0.15)
             .withEnableFOC(true));
     // If you want the follower to track, you can do the same for 're' if needed.
+  }
+
+  public void setMotionMagicflip(double position) {
+    // Use Motion Magic with feedforward and FOC enabled.
+    flippydoo.setControl(
+        m_request.withPosition(position).withEnableFOC(true).withFeedForward(0.15));
+    // If you want the follower to track, you can do the same for 're' if needed.
+  }
+
+  public boolean flipcheck(double position) {
+    double curentpos = flippydoo.getPosition().getValueAsDouble();
+    if (curentpos - 0.2 < position && curentpos + 0.2 > position) {
+      return true;
+
+    } else {
+      return false;
+    }
   }
 
   public void initializePid(double position) {

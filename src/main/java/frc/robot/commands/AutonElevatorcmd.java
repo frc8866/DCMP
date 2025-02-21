@@ -37,9 +37,9 @@ public class AutonElevatorcmd extends Command {
     }
 
     if (elevator.checkifsetpoint1() || targetPosition == 1) {
-      Constants.setElevatorState(Constants.Elevatorposition.Troph);
+      Constants.setElevatorState(Constants.Elevatorposition.L1);
     } else {
-      Constants.setElevatorState(Constants.Elevatorposition.Anythingelse);
+      Constants.setElevatorState(Constants.Elevatorposition.L0);
     }
   }
 

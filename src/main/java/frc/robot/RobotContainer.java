@@ -7,7 +7,6 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
@@ -27,8 +26,6 @@ import frc.robot.subsystems.arm.algee;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
-import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
-import frc.robot.subsystems.drive.requests.SwerveSetpointGen;
 import frc.robot.subsystems.elevator.Ballintake;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
@@ -88,7 +85,7 @@ public class RobotContainer {
         new Vision(
             drivetrain::addVisionData,
             new VisionIOPhotonVision(
-                "Cam1",
+                "Frontright",
                 new Transform3d(
                     new Translation3d(-4.018, -22.19, 2.724),
                     new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
@@ -168,9 +165,9 @@ public class RobotContainer {
 
     NamedCommands.registerCommand("elevatoru", new AutonElevatorcmd(elevator1, 3));
     NamedCommands.registerCommand("elevatord", new AutonElevatorcmd(elevator1, 0));
-    NamedCommands.registerCommand("shoot", shoot.AutonShoot(.07, 0));
-    NamedCommands.registerCommand(
-        "intake", new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.autonwait(0.2, 0.1)));
+    // NamedCommands.registerCommand("shoot", shoot.AutonShoot(.07, 0));
+    // NamedCommands.registerCommand(
+    //     "intake", new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.autonwait(0.2, 0.1)));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -204,7 +201,7 @@ public class RobotContainer {
         (new ConditionalCommand(
             shoot.cmd(10),
             shoot.cmd3(5, 22),
-            () -> Constants.getElevatorState() != Constants.Elevatorposition.Troph));
+            () -> Constants.getElevatorState() != Constants.Elevatorposition.L1));
 
     Command highalgae =
         new ParallelCommandGroup(new Elevatorcmd(elevator1, 2), algea.algeacmd(12.09, 0.8));
@@ -236,6 +233,8 @@ public class RobotContainer {
                                 .getX())))); // Drive counterclockwise with negative X (left)
 
     // joystick  nidwj f
+
+    joystick2.a().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
 
     joystick
         .leftTrigger(0.2)

@@ -98,11 +98,14 @@ public final class Constants {
   }
 
   public enum Elevatorposition {
-    Troph, // using Motion Magic to drive to a setpoint
-    Anythingelse // using a WPILib PID controller to hold the position
+    L4,
+    L3,
+    L2,
+    L1, // using Motion Magic to drive to a setpoint
+    L0 // using a WPILib PID controller to hold the position
   }
 
-  private static Elevatorposition curentElevatorposition = Elevatorposition.Anythingelse;
+  private static Elevatorposition curentElevatorposition = Elevatorposition.L0;
 
   private static RobotState currentRobotState = RobotState.IDLE;
 
