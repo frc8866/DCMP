@@ -15,11 +15,17 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
+import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -31,6 +37,44 @@ import frc.robot.generated.TunerConstants;
  * (log replay from a file).
  */
 public final class Constants {
+  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(4.5);
+  public static final AngularVelocity TURN_SPEED = Units.DegreesPerSecond.of(360);
+
+  public static class TELEOP_AUTO_ALIGN {
+    // TODO: Test if this actually works LOL
+    public static final LinearVelocity DESIRED_AUTO_ALIGN_SPEED =
+        Units.MetersPerSecond.of(OBSERVED_DRIVE_SPEED.in(MetersPerSecond) / 4);
+
+    public static final Distance MAX_AUTO_DRIVE_CORAL_STATION_DISTANCE = Units.Meters.of(10);
+    public static final Distance MAX_AUTO_DRIVE_REEF_DISTANCE = Units.Meters.of(1);
+    public static final Distance MAX_AUTO_DRIVE_PROCESSOR_DISTANCE = Units.Meters.of(5);
+    public static final LinearVelocity MIN_DRIVER_OVERRIDE = OBSERVED_DRIVE_SPEED.div(10);
+
+    public static final PIDController TRANS_CONTROLLER = new PIDController(4, 0, 0);
+    public static final Distance AT_POINT_TOLERANCE = Units.Inches.of(0.5);
+
+    public static final ProfiledPIDController ROTATION_CONTROLLER =
+        new ProfiledPIDController(
+            3,
+            0,
+            0,
+            new TrapezoidProfile.Constraints(
+                TURN_SPEED.in(Units.DegreesPerSecond),
+                Math.pow(TURN_SPEED.in(Units.DegreesPerSecond), 2)));
+    public static final Angle AT_ROTATION_TOLERANCE = Units.Degrees.of(1);
+
+    public static final Distance AUTO_ALIGNMENT_TOLERANCE = Units.Inches.of(5);
+
+    static {
+      TRANS_CONTROLLER.setTolerance(AT_POINT_TOLERANCE.in(Units.Meters));
+
+      ROTATION_CONTROLLER.enableContinuousInput(0, 360);
+      ROTATION_CONTROLLER.setTolerance(AT_ROTATION_TOLERANCE.in(Units.Degrees));
+    }
+
+    public static HolonomicDriveController TELEOP_AUTO_ALIGN_CONTROLLER =
+        new HolonomicDriveController(TRANS_CONTROLLER, TRANS_CONTROLLER, ROTATION_CONTROLLER);
+  }
 
   public static final Mode simMode = Mode.SIM;
 
@@ -73,7 +117,8 @@ public final class Constants {
           SWERVE_MODULE_OFFSETS);
 
   public static final SwerveSetpointGenerator setpointGenerator =
-      new SwerveSetpointGenerator(Constants.PP_CONFIG, Units.rotationsToRadians(10.0));
+      new SwerveSetpointGenerator(
+          Constants.PP_CONFIG, edu.wpi.first.math.util.Units.rotationsToRadians(10.0));
 
   public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
@@ -129,8 +174,10 @@ public final class Constants {
     public static final double tiltWarning = 5.0;
     public static final double tiltError = 10.0;
 
-    public static final double fieldWidth = Units.inchesToMeters(26 * 12 + 5);
-    public static final double fieldLength = Units.inchesToMeters(57 * 12 + 6.875);
+    public static final double fieldWidth =
+        edu.wpi.first.math.util.Units.inchesToMeters(26 * 12 + 5);
+    public static final double fieldLength =
+        edu.wpi.first.math.util.Units.inchesToMeters(57 * 12 + 6.875);
 
     public static enum ReefFace {
       AB,
@@ -141,13 +188,14 @@ public final class Constants {
       KL
     }
 
-    public static final double reefElevatorZoneRadius = Units.inchesToMeters(65.0);
-    public static final double autoUpDistance = Units.inchesToMeters(24.0);
-    public static final double wingLength = Units.inchesToMeters(280);
+    public static final double reefElevatorZoneRadius =
+        edu.wpi.first.math.util.Units.inchesToMeters(65.0);
+    public static final double autoUpDistance = edu.wpi.first.math.util.Units.inchesToMeters(24.0);
+    public static final double wingLength = edu.wpi.first.math.util.Units.inchesToMeters(280);
 
     // Locations from the Blue Alliance perspective
     public static final Translation2d reefCenter =
-        new Translation2d(Units.inchesToMeters(176.75), fieldWidth / 2.0);
+        new Translation2d(edu.wpi.first.math.util.Units.inchesToMeters(176.75), fieldWidth / 2.0);
   }
 
   /** Returns the current robot state. */

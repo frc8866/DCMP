@@ -11,7 +11,6 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
-import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.AutonElevatorcmd;
@@ -28,11 +27,12 @@ import frc.robot.subsystems.arm.algee;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOCTRE;
-import frc.robot.subsystems.elevator.Ballintake;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSIM;
 import frc.robot.subsystems.elevator.elevatorpid;
+import frc.robot.subsystems.elevator.l2algae;
+import frc.robot.subsystems.elevator.l3algae;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSIM;
@@ -53,9 +53,6 @@ public class RobotContainer {
 
   private final TunableController joystick2 =
       new TunableController(1).withControllerType(TunableControllerType.QUADRATIC);
-
-  private final TunableController joystick3 =
-      new TunableController(2).withControllerType(TunableControllerType.QUADRATIC);
 
   private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -188,27 +185,20 @@ public class RobotContainer {
 
   private void configureBindings() {
 
-    //check for FLIPPY DO POSITION
+    // check for FLIPPY DO POSITION
 
     Command Positionl2 =
         new SequentialCommandGroup(
-            new ParallelDeadlineGroup(
-                new Flippy(elevator1, 0, 0), new Ballintake(algea, -0.8, -25))
-        );
-        Command Positionl3 =
-        new SequentialCommandGroup(
-            new ParallelDeadlineGroup(
-                new Flippy(elevator1, 0, 0), new Ballintake(algea, -0.8, -25))
-        );
+            new ParallelCommandGroup(
 
-    Command weirdshootingthing =
-        shoot.cmd(-0.5);
-    Command highalgae =
-        new ParallelCommandGroup(new Flippy(elevator1, 0, 0));
-    Command lowalgae =
-        new ParallelCommandGroup(
-            new Flippy(elevator1, 0, 0));
-             // idk what to put for the setpoint as of now we havent tested it yet
+                // setpoint
+                new l2algae(algea, 0.8, 5, elevator1, -11.679)));
+    Command Positionl3 = new SequentialCommandGroup(new l3algae(algea, 0.8, 5, elevator1, -11.679));
+
+    Command weirdshootingthing = shoot.cmd(-0.5);
+    Command highalgae = new ParallelCommandGroup(new Flippy(elevator1, 0, 0));
+    Command lowalgae = new ParallelCommandGroup(new Elevatorcmd(elevator1, 1, true));
+    // idk what to put for the setpoint as of now we havent tested it yet
 
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
@@ -237,46 +227,60 @@ public class RobotContainer {
 
     joystick
         .leftTrigger(0.2)
-        .whileTrue(
-            new IntakeWithRumble(shoot, joystick, 0.4));
-        
-    joystick
-        .rightTrigger(0.2)
-        .whileTrue(
-            new ConditionalCommand(
-                weirdshootingthing,
-                algea.algeacmd(7.302734375, 0.6),
-                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
-        .whileFalse(new ParallelCommandGroup(algea.algeacmd(0, 0), shoot.cmd(0)));
+        .whileTrue(new IntakeWithRumble(shoot, joystick, 0.3))
+        .whileFalse(shoot.cmd(0));
+
+    joystick.rightTrigger(0.2).whileTrue(shoot.cmd(-0.3)).whileFalse(shoot.cmd(0));
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
 
-    joystick.a().whileTrue(new Elevatorcmd(elevator1, 1,true)).whileFalse(new Elevatorcmd(elevator1, 0,false));
-
     joystick
-        .back()
-        .whileTrue(new Elevatorcmd(elevator1, 4,true))
-        .whileFalse(new Elevatorcmd(elevator1, 0,true));
-
-    joystick
-        .leftStick()
-        .whileTrue( 
-            new ConditionalCommand(
-                new Elevatorcmd(elevator1, 3,true),
-                Positionl2,
-                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
+        .a()
+        .whileTrue(new Elevatorcmd(elevator1, 1, true))
         .whileFalse(
-            new ParallelCommandGroup(new Elevatorcmd(elevator1, 0,false)));
+            new SequentialCommandGroup(
+                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
 
     joystick
         .rightStick()
         .whileTrue(
             new ConditionalCommand(
-                new Elevatorcmd(elevator1, 2,true),
+                new Elevatorcmd(elevator1, 2, true),
+                Positionl2,
+                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
+        .whileFalse(
+            new SequentialCommandGroup(
+                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    joystick
+        .leftStick()
+        .whileTrue(
+            new ConditionalCommand(
+                new Elevatorcmd(elevator1, 3, true),
                 Positionl3,
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
-            new ParallelCommandGroup(new Elevatorcmd(elevator1, 0,false)));
+            new SequentialCommandGroup(
+                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    joystick
+        .back()
+        .whileTrue(new Elevatorcmd(elevator1, 4, true))
+        .whileFalse(
+            new SequentialCommandGroup(
+                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    // joystick
+    //     .rightStick()
+    //     .whileTrue(
+    //         new SequentialCommandGroup(
+    //             elevator1.Motionmagic2(-17),
+    //             new ParallelCommandGroup(
+    //                 new Elevatorcmd2(elevator1, 2,true),
+    //                 new Ballintake2(algea, 0, 0, elevator1, -11.679))))
+    //     .whileFalse(
+    //         new SequentialCommandGroup(
+    //             elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
 
     joystick.start().whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));
 

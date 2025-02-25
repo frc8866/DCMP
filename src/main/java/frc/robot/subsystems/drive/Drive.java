@@ -13,6 +13,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -290,6 +291,42 @@ public class Drive extends SubsystemBase {
       poseEstimator.resetPose(pose);
     }
     io.resetPose(pose);
+  }
+
+  // public ChassisSpeeds getAlignmentSpeeds(Pose2d desiredpose){
+  //   desiredposealighmentpose = desiredpose;
+  // }
+
+  public ChassisSpeeds getAlignmentSpeeds(Pose2d desiredPose) {
+    // Use the teleop auto align controller from your constants
+    // Note: The third parameter here is the desired linear speed (set to 0 if you only want to
+    // rotate)
+    return Constants.TELEOP_AUTO_ALIGN.TELEOP_AUTO_ALIGN_CONTROLLER.calculate(
+        getPose(), desiredPose, 0, desiredPose.getRotation());
+  }
+
+  // public Command autoAlignToPose(Pose2d targetPose) {
+  //   return run(() -> {
+  //     // Calculate alignment speeds
+  //     ChassisSpeeds speeds = getAlignmentSpeeds(targetPose);
+  //     // Optionally limit speeds if needed:
+  //     double maxLinear = Constants.OBSERVED_DRIVE_SPEED.in(MetersPerSecond);
+  //     speeds.vxMetersPerSecond = MathUtil.clamp(speeds.vxMetersPerSecond, -maxLinear, maxLinear);
+  //     speeds.vyMetersPerSecond = MathUtil.clamp(speeds.vyMetersPerSecond, -maxLinear, maxLinear);
+  //     // Apply the computed speeds using your IO interface
+  //     io.setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
+  //   })};
+  public Command autoAlighnTopose(Pose2d Targetpose) {
+    return run(
+        () -> {
+          ChassisSpeeds speeds = getAlignmentSpeeds(Targetpose);
+          double maxLinear = Constants.OBSERVED_DRIVE_SPEED.in(MetersPerSecond);
+          speeds.vxMetersPerSecond =
+              MathUtil.clamp(speeds.vxMetersPerSecond, -maxLinear, maxLinear);
+          speeds.vyMetersPerSecond =
+              MathUtil.clamp(speeds.vyMetersPerSecond, -maxLinear, maxLinear);
+          io.setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
+        });
   }
 
   /** Returns the current odometry pose. */

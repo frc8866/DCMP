@@ -1,15 +1,12 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
 import frc.robot.subsystems.elevator.elevatorpid;
 
 public class Flippy extends Command {
   private final elevatorpid elevator;
   private double flipyposition;
   private final int targetPosition;
-  
-  
 
   private enum State {
     MOVING,
@@ -31,28 +28,19 @@ public class Flippy extends Command {
   }
 
   @Override
-  public void initialize() {
-
-   
-  }
+  public void initialize() {}
 
   @Override
-public void execute() {
-  if (!elevator.flipcheck(flipyposition)) {
-    // Command the flip motor until it is at its setpoint.
+  public void execute() {
+    if (!elevator.flipcheck(flipyposition)) {
+      // Command the flip motor until it is at its setpoint.
+      elevator.setMotionMagicflip(flipyposition);
+      // Do not start moving the elevator until the flip motor is ready.
+      return;
+    }
+    elevator.setMotionMagic1(targetPosition);
     elevator.setMotionMagicflip(flipyposition);
-    // Do not start moving the elevator until the flip motor is ready.
-    return;
   }
-  elevator.setMotionMagic1(targetPosition);
-  elevator.setMotionMagicflip(flipyposition);
- 
-
-  
-  }
-  
-
-
 
   @Override
   public boolean isFinished() {

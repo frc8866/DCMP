@@ -1,21 +1,21 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
 import frc.robot.subsystems.elevator.elevatorpid;
 
-public class Comingdown extends Command {
+public class Elevatorcmd2 extends Command {
   private final elevatorpid elevator;
   private final int targetPosition;
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
-  private double l0 = 1;
-  private double l1 = 1;
-  private double l2 = 1;
-  private double l3 = 1;
-  private double l4 = 1;
+  private double l0 = 0;
+  private double l1 = -17.3;
+  private double l2 = -27.1033203125;
+  private double l3 = -27.1033203125;
+  private double l4 = -22.03759765625;
   private boolean first;
+  private boolean up;
 
-  private double flipsetpoint;
+  private double flipsetpoint = -11.679;
 
   private enum State {
     MOVING,
@@ -30,7 +30,8 @@ public class Comingdown extends Command {
    * @param elevator The elevator subsystem.
    * @param targetPosition The target position (in sensor units) to move to.
    */
-  public Comingdown(elevatorpid elevator, int targetPosition) {
+  public Elevatorcmd2(elevatorpid elevator, int targetPosition, boolean hi) {
+    this.up = hi;
     this.elevator = elevator;
     this.targetPosition = targetPosition;
     addRequirements(elevator);
@@ -39,17 +40,6 @@ public class Comingdown extends Command {
   @Override
   public void initialize() {
 
-    if (targetPosition == 1) {
-      Constants.setElevatorState(Constants.Elevatorposition.L1);
-    } else if (targetPosition == 2) {
-      Constants.setElevatorState(Constants.Elevatorposition.L2);
-    } else if (targetPosition == 3) {
-      Constants.setElevatorState(Constants.Elevatorposition.L3);
-    } else if (targetPosition == 4) {
-      Constants.setElevatorState(Constants.Elevatorposition.L4);
-    } else {
-      Constants.setElevatorState(Constants.Elevatorposition.L0);
-    }
     // Start in the MOVING state and reset encoders if needed.
     currentState = State.MOVING;
     if (elevator.getLeftPosition() < 0.1) {
@@ -61,16 +51,6 @@ public class Comingdown extends Command {
 
   @Override
   public void execute() {
-    // Set flipsetpoint based on the desired elevator state.
-    if (Constants.getElevatorState() == Constants.Elevatorposition.L1) {
-      flipsetpoint = l1;
-    } else if (Constants.getElevatorState() == Constants.Elevatorposition.L2) {
-      flipsetpoint = l2;
-    } else if (Constants.getElevatorState() == Constants.Elevatorposition.L3) {
-      flipsetpoint = l3;
-    } else if (Constants.getElevatorState() == Constants.Elevatorposition.L4) {
-      flipsetpoint = l4;
-    }
 
     // Check if the flip motor has reached its setpoint.
     // Note: Use flipsetpoint (not targetPosition) for the check.
@@ -105,6 +85,6 @@ public class Comingdown extends Command {
   @Override
   public void end(boolean interrupted) {
     // Stop the elevator when the command ends.
-    elevator.stop();
+
   }
 }

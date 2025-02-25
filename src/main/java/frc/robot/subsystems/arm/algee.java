@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class algee extends SubsystemBase {
-  private TalonFX algaeshooter = new TalonFX(16);
+  private TalonFX algaeshooter = new TalonFX(15);
   TalonFXConfiguration cfg = new TalonFXConfiguration();
   private Slot0Configs slot0 = cfg.Slot0;
   MotionMagicConfigs motionMagicConfigs = cfg.MotionMagic;
@@ -34,7 +34,6 @@ public class algee extends SubsystemBase {
         200; // Target acceleration of 160 rps/s (0.5 seconds)
     motionMagicConfigs.MotionMagicJerk = 400; // Target jerk of 1600 rps/s/s (0.1 seconds)\
 
-    
     algaeshooter.setNeutralMode(NeutralModeValue.Brake);
   }
 
@@ -67,9 +66,7 @@ public class algee extends SubsystemBase {
       }
 
       @Override
-      public void execute() {
-        
-      }
+      public void execute() {}
 
       @Override
       public void end(boolean interrupted) {
