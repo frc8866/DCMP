@@ -60,8 +60,8 @@ public class l3algae extends Command {
         m_algee.setShooter(m_intakeSpeed);
         // When the flip mechanism reaches -17 and shooter velocity indicates ball detection,
         // transition.
-        if (ele.flipcheck(-17) && currentVelocity < m_velocityThreshold) {
-          ballDetected = true;
+        if (ele.flipcheck(-17)) {
+
           state = 1;
         }
         break;
@@ -69,6 +69,7 @@ public class l3algae extends Command {
       case 1:
         // Stage 1: Command the elevator to go up while running shooter at a constant speed.
         ele.setMotionMagic(elevatorUpSetpoint);
+        ele.setMotionMagicflip(currentVelocity);
         m_algee.setShooter(0.3);
         // Transition when the elevator reaches its setpoint.
         if (ele.check(elevatorUpSetpoint)) {

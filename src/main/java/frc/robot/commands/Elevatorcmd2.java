@@ -5,7 +5,7 @@ import frc.robot.subsystems.elevator.elevatorpid;
 
 public class Elevatorcmd2 extends Command {
   private final elevatorpid elevator;
-  private final int targetPosition;
+  private final double targetPosition;
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
   private double l0 = 0;
   private double l1 = -17.3;
@@ -15,7 +15,7 @@ public class Elevatorcmd2 extends Command {
   private boolean first;
   private boolean up;
 
-  private double flipsetpoint = -11.679;
+  private double flipsetpoint = -14.83251953125;
 
   private enum State {
     MOVING,
@@ -30,7 +30,7 @@ public class Elevatorcmd2 extends Command {
    * @param elevator The elevator subsystem.
    * @param targetPosition The target position (in sensor units) to move to.
    */
-  public Elevatorcmd2(elevatorpid elevator, int targetPosition, boolean hi) {
+  public Elevatorcmd2(elevatorpid elevator, double targetPosition, boolean hi) {
     this.up = hi;
     this.elevator = elevator;
     this.targetPosition = targetPosition;
@@ -64,7 +64,7 @@ public class Elevatorcmd2 extends Command {
 
     // Once the flip motor is holding its setpoint, command the elevator.
 
-    elevator.setMotionMagic1(targetPosition);
+    elevator.setMotionMagic(targetPosition);
     elevator.setMotionMagicflip(flipsetpoint);
 
     // When close enough to the target, switch to PID holding mode.

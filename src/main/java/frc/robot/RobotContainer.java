@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.AutonElevatorcmd;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Elevatorcmd;
+import frc.robot.commands.Elevatorcmd2;
 import frc.robot.commands.Flippy;
 import frc.robot.commands.IntakeWithRumble;
 import frc.robot.generated.TunerConstants;
@@ -32,7 +33,6 @@ import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSIM;
 import frc.robot.subsystems.elevator.elevatorpid;
 import frc.robot.subsystems.elevator.l2algae;
-import frc.robot.subsystems.elevator.l3algae;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSIM;
@@ -193,7 +193,9 @@ public class RobotContainer {
 
                 // setpoint
                 new l2algae(algea, 0.8, 5, elevator1, -11.679)));
-    Command Positionl3 = new SequentialCommandGroup(new l3algae(algea, 0.8, 5, elevator1, -11.679));
+    Command Positionl3 =
+        // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
+        new SequentialCommandGroup(new Elevatorcmd2(elevator1, 4.97, true));
 
     Command weirdshootingthing = shoot.cmd(-0.5);
     Command highalgae = new ParallelCommandGroup(new Flippy(elevator1, 0, 0));
@@ -262,6 +264,8 @@ public class RobotContainer {
         .whileFalse(
             new SequentialCommandGroup(
                 elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+
 
     joystick
         .back()
