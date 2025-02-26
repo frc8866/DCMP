@@ -1,14 +1,17 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.commands;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.arm.algee;
+import frc.robot.subsystems.elevator.elevatorsub;
 
-public class l2algae extends Command {
+public class l3algae extends Command {
   private final algee m_algee;
-  private final elevatorpid ele;
+  private final elevatorsub ele;
   private final double m_intakeSpeed;
   private final double m_velocityThreshold;
+  private double elevatorpos;
+
   private boolean ballDetected = false;
   private double currentVelocity;
   private double flippos;
@@ -24,17 +27,19 @@ public class l2algae extends Command {
    * @param velocityThreshold The shooter velocity (absolute value) below which we assume a ball is
    *     loaded.
    */
-  public l2algae(
+  public l3algae(
       algee algeeSubsystem,
       double intakeSpeed,
       double velocityThreshold,
-      elevatorpid ele,
-      double flippos) {
+      elevatorsub ele,
+      double flippos,
+      double elevatorpos) {
     this.m_algee = algeeSubsystem;
     this.m_intakeSpeed = intakeSpeed;
     this.m_velocityThreshold = velocityThreshold;
     this.ele = ele;
     this.flippos = flippos;
+    this.elevatorpos = elevatorpos;
 
     addRequirements(m_algee);
   }
@@ -60,6 +65,12 @@ public class l2algae extends Command {
       ele.setMotionMagicflip(flippos);
       m_algee.setShooter(m_intakeSpeed);
     }
+    if (ballDetected == false && ele.flipcheck(flippos) && currentVelocity > 10) {
+      ele.setMotionMagicflip(flippos);
+      m_algee.setShooter(m_intakeSpeed);
+
+      ele.setMotionMagic(elevatorpos);
+    }
 
     // Once the elevator is at the intake position and the velocity is below the threshold, detect
     // the ball.
@@ -67,6 +78,7 @@ public class l2algae extends Command {
 
       ballDetected = true;
       m_algee.setShooter(0.3);
+      ele.setMotionMagic(elevatorpos);
 
       // Start the delay timer
       if (!timerStarted) {
@@ -77,7 +89,8 @@ public class l2algae extends Command {
     // After the ball is detected, wait for the delay to elapse before pulling the elevator back
     // down.
     if (ballDetected && delayTimer.get() > 1) {
-      ele.setMotionMagicflip(-3.4033203125);
+      ele.setMotionMagicflip(0);
+      ele.setMotionMagic(0);
     }
   }
 
@@ -90,6 +103,6 @@ public class l2algae extends Command {
   @Override
   public void end(boolean interrupted) {
     // Make sure the shooter motor is stopped.
-    m_algee.setShooter(0);
+
   }
 }

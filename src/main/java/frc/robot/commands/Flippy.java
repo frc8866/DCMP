@@ -1,12 +1,14 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.elevator.elevatorpid;
+import frc.robot.subsystems.arm.algee;
+import frc.robot.subsystems.elevator.elevatorsub;
 
 public class Flippy extends Command {
-  private final elevatorpid elevator;
+  private final elevatorsub elevator;
   private double flipyposition;
-  private final int targetPosition;
+  private final double targetPosition;
+  private algee algee;
 
   private enum State {
     MOVING,
@@ -21,7 +23,7 @@ public class Flippy extends Command {
    * @param elevator The elevator subsystem.
    * @param targetPosition The target position (in sensor units) to move to.
    */
-  public Flippy(elevatorpid elevator, int targetPosition, double flipyposition) {
+  public Flippy(elevatorsub elevator, double targetPosition, double flipyposition) {
     this.elevator = elevator;
     this.targetPosition = targetPosition;
     addRequirements(elevator);
@@ -38,7 +40,7 @@ public class Flippy extends Command {
       // Do not start moving the elevator until the flip motor is ready.
       return;
     }
-    elevator.setMotionMagic1(targetPosition);
+    elevator.setMotionMagic(targetPosition);
     elevator.setMotionMagicflip(flipyposition);
   }
 
@@ -51,6 +53,6 @@ public class Flippy extends Command {
   @Override
   public void end(boolean interrupted) {
     // Stop the elevator when the command ends.
-    elevator.stop();
+
   }
 }

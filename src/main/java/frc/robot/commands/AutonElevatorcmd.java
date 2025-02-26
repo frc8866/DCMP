@@ -2,10 +2,10 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import frc.robot.subsystems.elevator.elevatorpid;
+import frc.robot.subsystems.elevator.elevatorsub;
 
 public class AutonElevatorcmd extends Command {
-  private final elevatorpid elevator;
+  private final elevatorsub elevator;
   private final int targetPosition;
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
 
@@ -22,7 +22,7 @@ public class AutonElevatorcmd extends Command {
    * @param elevator The elevator subsystem.
    * @param targetPosition The target position (in sensor units) to move to.
    */
-  public AutonElevatorcmd(elevatorpid elevator, int targetPosition) {
+  public AutonElevatorcmd(elevatorsub elevator, int targetPosition) {
     this.elevator = elevator;
     this.targetPosition = targetPosition;
     addRequirements(elevator);

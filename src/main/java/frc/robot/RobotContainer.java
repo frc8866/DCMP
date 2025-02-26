@@ -16,9 +16,9 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.AutonElevatorcmd;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Elevatorcmd;
-import frc.robot.commands.Elevatorcmd2;
-import frc.robot.commands.Flippy;
 import frc.robot.commands.IntakeWithRumble;
+import frc.robot.commands.barge;
+import frc.robot.commands.l3algae;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
@@ -31,8 +31,7 @@ import frc.robot.subsystems.drive.DriveIOCTRE;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSIM;
-import frc.robot.subsystems.elevator.elevatorpid;
-import frc.robot.subsystems.elevator.l2algae;
+import frc.robot.subsystems.elevator.elevatorsub;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSIM;
@@ -70,8 +69,9 @@ public class RobotContainer {
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+  private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric();
   private shooter shoot = new shooter();
-  private elevatorpid elevator1 = new elevatorpid();
+  private elevatorsub elevator1 = new elevatorsub();
   private algee algea = new algee();
 
   public RobotContainer() {
@@ -192,14 +192,11 @@ public class RobotContainer {
             new ParallelCommandGroup(
 
                 // setpoint
-                new l2algae(algea, 0.8, 5, elevator1, -11.679)));
+                new l3algae(algea, 0.8, 5, elevator1, -11.679, 0)));
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
-        new SequentialCommandGroup(new Elevatorcmd2(elevator1, 4.97, true));
+        new SequentialCommandGroup(new l3algae(algea, 0.8, 5, elevator1, -14.83251953125, 5.32));
 
-    Command weirdshootingthing = shoot.cmd(-0.5);
-    Command highalgae = new ParallelCommandGroup(new Flippy(elevator1, 0, 0));
-    Command lowalgae = new ParallelCommandGroup(new Elevatorcmd(elevator1, 1, true));
     // idk what to put for the setpoint as of now we havent tested it yet
 
     // Note that X is defined as forward according to WPILib convention,
@@ -232,23 +229,57 @@ public class RobotContainer {
         .whileTrue(new IntakeWithRumble(shoot, joystick, 0.3))
         .whileFalse(shoot.cmd(0));
 
-    joystick.rightTrigger(0.2).whileTrue(shoot.cmd(-0.3)).whileFalse(shoot.cmd(0));
+    // joystick.leftTrigger(0.2)
+    // .whileTrue(new ConditionalCommand(new IntakeWithRumble(shoot, joystick, 0.3), Positionl3,
+    // null))
+
+    joystick
+        .rightTrigger(0.2)
+        .whileTrue(
+            new ConditionalCommand(
+                shoot.cmd(-0.3),
+                algea.algeacmd(0.5),
+                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
+        .whileFalse(new ParallelCommandGroup(algea.algeacmd(0), shoot.cmd(0)));
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
 
     joystick
         .a()
-        .whileTrue(new Elevatorcmd(elevator1, 1, true))
+        .whileTrue(
+            new ConditionalCommand(
+                new Elevatorcmd(elevator1, 1, true),
+                Positionl2,
+                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
             new SequentialCommandGroup(
                 elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
 
     joystick
+        .pov(0)
+        .whileTrue(
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0.5).withVelocityY(0)));
+
+    joystick
+        .pov(180)
+        .whileTrue(
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
+    joystick
+        .pov(90)
+        .whileTrue(
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(0.5)));
+
+    joystick
+        .pov(270)
+        .whileTrue(
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(-0.5)));
+
+    joystick // p2 br
         .rightStick()
         .whileTrue(
             new ConditionalCommand(
-                new Elevatorcmd(elevator1, 2, true),
-                Positionl2,
+                new Elevatorcmd(elevator1, 2, true), // coral
+                Positionl2, // algae
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
             new SequentialCommandGroup(
@@ -265,32 +296,19 @@ public class RobotContainer {
             new SequentialCommandGroup(
                 elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
 
-
-
     joystick
         .back()
-        .whileTrue(new Elevatorcmd(elevator1, 4, true))
+        .whileTrue(
+            new ConditionalCommand(
+                new Elevatorcmd(elevator1, 4, true),
+                new barge(elevator1, 26.841796875, true),
+                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
             new SequentialCommandGroup(
                 elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
-
-    // joystick
-    //     .rightStick()
-    //     .whileTrue(
-    //         new SequentialCommandGroup(
-    //             elevator1.Motionmagic2(-17),
-    //             new ParallelCommandGroup(
-    //                 new Elevatorcmd2(elevator1, 2,true),
-    //                 new Ballintake2(algea, 0, 0, elevator1, -11.679))))
-    //     .whileFalse(
-    //         new SequentialCommandGroup(
-    //             elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+    joystick.rightBumper().whileTrue(algea.algeacmd(0.5)).whileFalse(algea.algeacmd(0));
 
     joystick.start().whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));
-
-    // Pose2d target = new Pose2d(new Translation2d(1, 2), new Rotation2d(3));
-
-    // joystick.a().whileTrue(new PIDSwerve(drivetrain, target));
   }
 
   public Command getAutonomousCommand() {

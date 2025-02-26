@@ -23,7 +23,7 @@ import frc.robot.*;
 import frc.robot.Constants;
 import java.util.List;
 
-public class elevatorpid extends SubsystemBase {
+public class elevatorsub extends SubsystemBase {
   private List<Double> setpoints1 = List.of(0.0, 0.0, 0.0, 9.84423828125, 26.841796875, 5.0);
   private List<Double> setpoints2 = List.of(0.0, 7.75048828125, 7.75048828125, 35.0, 4.5, 5.5);
   private List<Double> activeSetpoints = setpoints1; // Default to setpoints
@@ -78,7 +78,7 @@ public class elevatorpid extends SubsystemBase {
           new SysIdRoutine.Mechanism(
               volts -> re.setControl(m_sysIdControl.withOutput(volts)), null, this));
 
-  public elevatorpid() {
+  public elevatorsub() {
     slot0.kG = 0.1; // A gear ratio of 4:1 results in 0.25 output
     slot0.kS = 0.25;
     slot0.kV = 0.18; // A velocity target of 1 rps results in 0.12 V output

@@ -3,7 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.elevator.elevatorsub;
 
-public class Elevatorcmd2 extends Command {
+public class barge extends Command {
   private final elevatorsub elevator;
   private final double targetPosition;
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
@@ -15,7 +15,7 @@ public class Elevatorcmd2 extends Command {
   private boolean first;
   private boolean up;
 
-  private double flipsetpoint = -14.83251953125;
+  private double flipsetpoint = -25.97802734375;
 
   private enum State {
     MOVING,
@@ -30,7 +30,7 @@ public class Elevatorcmd2 extends Command {
    * @param elevator The elevator subsystem.
    * @param targetPosition The target position (in sensor units) to move to.
    */
-  public Elevatorcmd2(elevatorsub elevator, double targetPosition, boolean hi) {
+  public barge(elevatorsub elevator, double targetPosition, boolean hi) {
     this.up = hi;
     this.elevator = elevator;
     this.targetPosition = targetPosition;

@@ -57,11 +57,11 @@ public class algee extends SubsystemBase {
   //   algaepiv.set(speed);
   // }
 
-  public Command algeacmd(double position, double speed) {
+  public Command algeacmd(double speed) {
     return new Command() {
       @Override
       public void initialize() {
-        pid.setSetpoint(position);
+
         // Initialization code, such as resetting encoders or PID controllers
       }
 
