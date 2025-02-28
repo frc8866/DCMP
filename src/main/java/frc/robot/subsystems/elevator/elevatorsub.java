@@ -30,8 +30,8 @@ public class elevatorsub extends SubsystemBase {
   private TalonFX le = new TalonFX(14, "Drivetrain");
   private TalonFX re = new TalonFX(13, "Drivetrain");
   private TalonFX flippydoo = new TalonFX(17);
-  private PIDController pidup = new PIDController(0.05, 0, 0);
-  private PIDController piddown = new PIDController(0.02, 0, 0);
+  private PIDController pidup = new PIDController(0.06, 0, 0);
+
   TalonFXConfiguration cfg = new TalonFXConfiguration();
   TalonFXConfiguration cff = new TalonFXConfiguration();
   private final VoltageOut m_sysIdControl = new VoltageOut(0);
@@ -81,9 +81,9 @@ public class elevatorsub extends SubsystemBase {
   public elevatorsub() {
     slot0.kG = 0.1; // A gear ratio of 4:1 results in 0.25 output
     slot0.kS = 0.25;
-    slot0.kV = 0.18; // A velocity target of 1 rps results in 0.12 V output
+    slot0.kV = 0.28; // A velocity target of 1 rps results in 0.12 V output
     slot0.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
-    slot0.kP = 1.5; // A position error of 2.5 rotations results in 12 V output
+    slot0.kP = 2.6; // A position error of 2.5 rotations results in 12 V output
     slot0.kI = 0.1; // no output for integrated error
     slot0.kD = 0; // A velocity error of 1 rps results in 0.1 V output
 
@@ -124,6 +124,8 @@ public class elevatorsub extends SubsystemBase {
     SmartDashboard.putNumber("voltage1", le.getMotorVoltage().getValueAsDouble());
     SmartDashboard.putNumber("Pivot", flippydoo.getPosition().getValueAsDouble());
     SmartDashboard.putBoolean("pivoitcheck", flipcheck(-11.679));
+    SmartDashboard.putBoolean(
+        "Sate Checker", Constants.getRobotState() == Constants.RobotState.IDLE);
 
     re.setControl(new Follower(le.getDeviceID(), true));
   }
@@ -158,6 +160,15 @@ public class elevatorsub extends SubsystemBase {
     flippydoo.setControl(
         m_request.withPosition(position).withEnableFOC(true).withFeedForward(0.15));
     // If you want the follower to track, you can do the same for 're' if needed.
+  }
+
+  public void setsetpoint(double position) {
+    pidup.setSetpoint(position);
+  }
+
+  public void pid() {
+    double speed1 = pidup.calculate(flippydoo.getPosition().getValueAsDouble());
+    flippydoo.set(speed1);
   }
 
   public boolean flipcheck(double position) {
@@ -222,17 +233,22 @@ public class elevatorsub extends SubsystemBase {
         // int kErrThreshold = 10; // how many sensor units until its close-enough
         // int kLoopsToSettle = 2; // how many loops sensor must be close-enough
         // int _withinThresholdLoops = 0;
+        pidup.setSetpoint(position);
       }
 
       @Override
       public void execute() {
+
+        double speed = pidup.calculate(flippydoo.getPosition().getValueAsDouble());
+        flippydoo.set(speed);
         // check(position);
-        flippydoo.setControl(
-            m_request1.withPosition(position).withEnableFOC(true).withFeedForward(0.15));
+
       }
 
       @Override
-      public void end(boolean interrupted) {}
+      public void end(boolean interrupted) {
+        flippydoo.set(0);
+      }
 
       @Override
       public boolean isFinished() {
@@ -509,44 +525,6 @@ public class elevatorsub extends SubsystemBase {
         // If you’re using a follower, you can let it follow automatically.
         // Alternatively, if you’re controlling 're' elsewhere, ensure it’s set to zero.
 
-      }
-    };
-  }
-
-  public Command piddown(double targetPosition) {
-    return new Command() {
-      // Define a tolerance (adjust as needed based on your sensor units)
-      private final double kTolerance = 0.1;
-
-      @Override
-      public void initialize() {
-        // Optionally reset any state or encoders if needed
-        piddown.setSetpoint(targetPosition);
-      }
-
-      @Override
-      public void execute() {
-        // Command the leader motor using Motion Magic with feedforward.
-        // (Since re is meant to follow le, remove direct control of re here.)
-
-        double speed = piddown.calculate(le.getPosition().getValueAsDouble());
-        le.set(speed);
-      }
-
-      @Override
-      public boolean isFinished() {
-        // End the command once the error is within tolerance.
-        double error = Math.abs(le.getPosition().getValueAsDouble() - targetPosition);
-        return false;
-      }
-
-      @Override
-      public void end(boolean interrupted) {
-        // Once finished (or interrupted), stop the motors.
-        le.setControl(new VoltageOut(0));
-        // If you’re using a follower, you can let it follow automatically.
-        // Alternatively, if you’re controlling 're' elsewhere, ensure it’s set to zero.
-        re.setControl(new VoltageOut(0));
       }
     };
   }

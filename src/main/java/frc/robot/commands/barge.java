@@ -15,7 +15,7 @@ public class barge extends Command {
   private boolean first;
   private boolean up;
 
-  private double flipsetpoint = -25.97802734375;
+  private double flipsetpoint = -23.76123046875;
 
   private enum State {
     MOVING,

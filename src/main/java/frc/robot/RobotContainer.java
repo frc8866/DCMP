@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.AutonElevatorcmd;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Elevatorcmd;
-import frc.robot.commands.IntakeWithRumble;
 import frc.robot.commands.barge;
 import frc.robot.commands.l3algae;
 import frc.robot.generated.TunerConstants;
@@ -48,7 +47,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
   private final TunableController joystick =
-      new TunableController(0).withControllerType(TunableControllerType.QUADRATIC);
+      new TunableController(0).withControllerType(TunableControllerType.CUBIC);
 
   private final TunableController joystick2 =
       new TunableController(1).withControllerType(TunableControllerType.QUADRATIC);
@@ -185,6 +184,8 @@ public class RobotContainer {
 
   private void configureBindings() {
 
+    // joystick.b().whileTrue(elevator1.cmdf(-26.6033203125)).whileFalse(elevator1.Flipydo(0));
+
     // check for FLIPPY DO POSITION
 
     Command Positionl2 =
@@ -192,10 +193,10 @@ public class RobotContainer {
             new ParallelCommandGroup(
 
                 // setpoint
-                new l3algae(algea, 0.8, 5, elevator1, -11.679, 0)));
+                new l3algae(algea, 0.7, 5, elevator1, -11.679, 0)));
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
-        new SequentialCommandGroup(new l3algae(algea, 0.8, 5, elevator1, -14.83251953125, 5.32));
+        new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -14.83251953125, 5.32));
 
     // idk what to put for the setpoint as of now we havent tested it yet
 
@@ -222,12 +223,13 @@ public class RobotContainer {
 
     // joystick  nidwj f
 
-    joystick2.a().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
+    joystick.b().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
 
     joystick
         .leftTrigger(0.2)
-        .whileTrue(new IntakeWithRumble(shoot, joystick, 0.3))
-        .whileFalse(shoot.cmd(0));
+        .whileTrue(
+            new ParallelCommandGroup(shoot.cmd(0.5), elevator1.runOnce(() -> elevator1.resetenc())))
+        .whileFalse(shoot.cmd(0.05));
 
     // joystick.leftTrigger(0.2)
     // .whileTrue(new ConditionalCommand(new IntakeWithRumble(shoot, joystick, 0.3), Positionl3,
@@ -237,23 +239,31 @@ public class RobotContainer {
         .rightTrigger(0.2)
         .whileTrue(
             new ConditionalCommand(
-                shoot.cmd(-0.3),
-                algea.algeacmd(0.5),
+                shoot.cmd(-0.2),
+                algea.algeacmd(-0.5),
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
-        .whileFalse(new ParallelCommandGroup(algea.algeacmd(0), shoot.cmd(0)));
+        .whileFalse(new ParallelCommandGroup(shoot.cmd(0.05)));
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
+    joystick
+        .back()
+        .whileTrue(
+            drivetrain.applyRequest(
+                () ->
+                    drive
+                        .withVelocityX(MaxSpeed.times(-joystick.customLeft().getY()).times(0.5))
+                        .withVelocityY(MaxSpeed.times(-joystick.customLeft().getX()).times(0.5))
+                        .withRotationalRate(
+                            Constants.MaxAngularRate.times(-joystick.customRight().getX())
+                                .times(0.5))));
 
     joystick
         .a()
-        .whileTrue(
-            new ConditionalCommand(
-                new Elevatorcmd(elevator1, 1, true),
-                Positionl2,
-                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
+        .whileTrue(new Elevatorcmd(elevator1, 1, true))
         .whileFalse(
             new SequentialCommandGroup(
-                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+                elevator1.Motionmagictoggle(0),
+                new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
 
     joystick
         .pov(0)
@@ -274,17 +284,23 @@ public class RobotContainer {
         .whileTrue(
             drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(-0.5)));
 
-    joystick // p2 br
+    joystick
         .rightStick()
         .whileTrue(
             new ConditionalCommand(
-                new Elevatorcmd(elevator1, 2, true), // coral
+                new Elevatorcmd(elevator1, 2, true),
                 Positionl2, // algae
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
             new SequentialCommandGroup(
                 elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
-
+    // joystick
+    //     .rightStick()
+    //     .whileTrue(new Elevatorcmd(elevator1, 2, true))
+    //     .whileFalse(
+    //         new SequentialCommandGroup(
+    //             elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+    ;
     joystick
         .leftStick()
         .whileTrue(
@@ -294,7 +310,8 @@ public class RobotContainer {
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
             new SequentialCommandGroup(
-                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+                elevator1.Motionmagictoggle(0),
+                new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
 
     joystick
         .back()

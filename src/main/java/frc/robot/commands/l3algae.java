@@ -77,7 +77,7 @@ public class l3algae extends Command {
     if (ballDetected == false && ele.flipcheck(flippos) && currentVelocity < 10) {
 
       ballDetected = true;
-      m_algee.setShooter(0.3);
+      m_algee.setShooter(0.4);
       ele.setMotionMagic(elevatorpos);
 
       // Start the delay timer
@@ -89,7 +89,7 @@ public class l3algae extends Command {
     // After the ball is detected, wait for the delay to elapse before pulling the elevator back
     // down.
     if (ballDetected && delayTimer.get() > 1) {
-      ele.setMotionMagicflip(0);
+      ele.setMotionMagicflip(-3);
       ele.setMotionMagic(0);
     }
   }

@@ -40,6 +40,11 @@ public class algee extends SubsystemBase {
   @Override
   public void periodic() {
     SmartDashboard.putNumber("Velocity", algaeshooter.getVelocity().getValueAsDouble());
+    SmartDashboard.putNumber("Curent spike", getCurrent());
+  }
+
+  public double getCurrent() {
+    return algaeshooter.getStatorCurrent().getValueAsDouble();
   }
 
   public double velocity() {
@@ -66,7 +71,10 @@ public class algee extends SubsystemBase {
       }
 
       @Override
-      public void execute() {}
+      public void execute() {
+
+        algaeshooter.set(speed);
+      }
 
       @Override
       public void end(boolean interrupted) {
@@ -75,7 +83,8 @@ public class algee extends SubsystemBase {
 
       @Override
       public boolean isFinished() {
-        return false; // Check if the setpoint is reached; // Check if the setpoint is reached
+        return velocity()
+            > 40; // Check if the setpoint is reached; // Check if the setpoint is reached
       }
     };
   }

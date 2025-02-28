@@ -28,7 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
  * </pre>
  */
 public class TunableController extends CommandXboxController {
-  private TunableControllerType type = TunableControllerType.LINEAR;
+  private TunableControllerType type = TunableControllerType.QUADRATIC;
 
   /** Minimum magnitude threshold for considering stick input non-zero */
   private static final double DEADBAND_THRESHOLD = 1e-6;
