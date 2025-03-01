@@ -70,5 +70,33 @@ public class shooter extends SubsystemBase {
         return false; // Check if the setpoint is reached
       }
     };
+
+  
+  }
+  public Command autoncmd(double speed){
+    return new Command() {
+      @Override
+      public void initialize() {
+        time3.reset();
+        time3.start();
+      }
+
+      @Override
+      public void execute() {
+        intake.set(speed);
+      }
+
+      @Override
+      public void end(boolean interrupted) {
+        time3.stop();
+        intake.set(0);
+      }
+
+      @Override
+      public boolean isFinished() {
+        return time3.get() > 2;
+      }
+    };
+      
   }
 }

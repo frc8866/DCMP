@@ -156,8 +156,13 @@ public class RobotContainer {
         break;
     }
 
-    NamedCommands.registerCommand("elevatoru", new AutonElevatorcmd(elevator1, 3));
-    NamedCommands.registerCommand("elevatord", new AutonElevatorcmd(elevator1, 0));
+    // NamedCommands.registerCommand("elevatoru", new AutonElevatorcmd(elevator1, 3));
+    // NamedCommands.registerCommand("elevatord", new AutonElevatorcmd(elevator1, 0));
+    NamedCommands.registerCommand("shoot",shoot.autoncmd(-0.2));
+    NamedCommands.registerCommand("elevatoru",new Elevatorcmd(elevator1, 1, true));
+    NamedCommands.registerCommand("elevatoru4",new Elevatorcmd(elevator1, 1, true));
+    NamedCommands.registerCommand("elevatord",new SequentialCommandGroup(elevator1.Motionmagictoggle(0),new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
+
     // NamedCommands.registerCommand("shoot", shoot.AutonShoot(.07, 0));
     // NamedCommands.registerCommand(
     //     "intake", new SequentialCommandGroup(shoot.both(0.07, 0.25), shoot.autonwait(0.2, 0.1)));
@@ -196,7 +201,7 @@ public class RobotContainer {
                 new l3algae(algea, 0.7, 5, elevator1, -11.679, 0)));
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
-        new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -14.83251953125, 5.32));
+        new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -15.53251953125, 5.32));
 
     // idk what to put for the setpoint as of now we havent tested it yet
 
@@ -240,7 +245,7 @@ public class RobotContainer {
         .whileTrue(
             new ConditionalCommand(
                 shoot.cmd(-0.2),
-                algea.algeacmd(-0.5),
+                algea.algeacmd(-0.7),
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(new ParallelCommandGroup(shoot.cmd(0.05)));
 
@@ -277,12 +282,12 @@ public class RobotContainer {
     joystick
         .pov(90)
         .whileTrue(
-            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(0.5)));
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(-0.5)));
 
     joystick
         .pov(270)
         .whileTrue(
-            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(-0.5)));
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(0.5)));
 
     joystick
         .rightStick()

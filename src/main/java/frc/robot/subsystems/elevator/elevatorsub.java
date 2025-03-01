@@ -125,7 +125,7 @@ public class elevatorsub extends SubsystemBase {
     SmartDashboard.putNumber("Pivot", flippydoo.getPosition().getValueAsDouble());
     SmartDashboard.putBoolean("pivoitcheck", flipcheck(-11.679));
     SmartDashboard.putBoolean(
-        "Sate Checker", Constants.getRobotState() == Constants.RobotState.IDLE);
+        "Sate Checker", Constants.getRobotState() == Constants.RobotState.ALGEA);
 
     re.setControl(new Follower(le.getDeviceID(), true));
   }
