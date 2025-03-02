@@ -9,10 +9,10 @@ public class Elevatorcmd extends Command {
   private final int targetPosition;
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
   private double l0 = 0;
-  private double l1 = -4.13134765625;
+  private double l1 = -7.13134765625;
   private double l2 = -27.000390625;
-  private double l3 = -26.900390625;
-  private double l4 = -24.6123046875;
+  private double l3 = -26.700390625;
+  private double l4 = -24.3123046875;
 
   private boolean first;
   private boolean up;
@@ -109,7 +109,7 @@ public class Elevatorcmd extends Command {
     } else if (up == false) {
       elevator.Motionmagic(0);
       if (elevator.check(0)) {
-        elevator.setMotionMagicflip(0);
+        elevator.setMotionMagicflip(0.6);
         // idk
       }
     }
@@ -117,8 +117,9 @@ public class Elevatorcmd extends Command {
 
   @Override
   public boolean isFinished() {
+    System.out.println("done");
     // This command runs until it is interrupted (for example, by another command).
-    return false;
+    return elevator.autoncheck(targetPosition) && elevator.flipcheck(targetPosition);
   }
 
   @Override

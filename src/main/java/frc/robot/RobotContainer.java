@@ -8,6 +8,7 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -47,7 +48,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
   private final TunableController joystick =
-      new TunableController(0).withControllerType(TunableControllerType.CUBIC);
+      new TunableController(0).withControllerType(TunableControllerType.QUADRATIC);
 
   private final TunableController joystick2 =
       new TunableController(1).withControllerType(TunableControllerType.QUADRATIC);
@@ -158,10 +159,17 @@ public class RobotContainer {
 
     // NamedCommands.registerCommand("elevatoru", new AutonElevatorcmd(elevator1, 3));
     // NamedCommands.registerCommand("elevatord", new AutonElevatorcmd(elevator1, 0));
-    NamedCommands.registerCommand("shoot",shoot.autoncmd(-0.2));
-    NamedCommands.registerCommand("elevatoru",new Elevatorcmd(elevator1, 1, true));
-    NamedCommands.registerCommand("elevatoru4",new Elevatorcmd(elevator1, 1, true));
-    NamedCommands.registerCommand("elevatord",new SequentialCommandGroup(elevator1.Motionmagictoggle(0),new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
+    NamedCommands.registerCommand("shoot", shoot.autoncmd(-0.3));
+    // NamedCommands.registerCommand("elevatoru", new AutonElevatorcmd(elevator1, 2,
+    // -27.000390625));
+    NamedCommands.registerCommand("elevatoru2", new Elevatorcmd(elevator1, 1, true));
+    NamedCommands.registerCommand("elevatoru3", new AutonElevatorcmd(elevator1, 3, true, -2));
+
+    NamedCommands.registerCommand(
+        "elevatord",
+        new SequentialCommandGroup(
+            elevator1.Motionmagictoggle(0),
+            new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
 
     // NamedCommands.registerCommand("shoot", shoot.AutonShoot(.07, 0));
     // NamedCommands.registerCommand(
@@ -201,31 +209,68 @@ public class RobotContainer {
                 new l3algae(algea, 0.7, 5, elevator1, -11.679, 0)));
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
-        new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -15.53251953125, 5.32));
+        new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -15.23251953125, 5.82));
 
     // idk what to put for the setpoint as of now we havent tested it yet
 
     // Note that X is defined as forward according to WPILib convention,
     // and Y is defined as to the left according to WPILib convention.
-    drivetrain.setDefaultCommand(
-        // Drivetrain will execute this command periodically
-        drivetrain.applyRequest(
-            () ->
-                drive
-                    .withVelocityX(
-                        MaxSpeed.times(
-                            -joystick
-                                .customLeft()
-                                .getY())) // Drive forward with negative Y (forward)
-                    .withVelocityY(
-                        MaxSpeed.times(
-                            -joystick.customLeft().getX())) // Drive left with negative X (left)
-                    .withRotationalRate(
-                        Constants.MaxAngularRate.times(
-                            -joystick
-                                .customRight()
-                                .getX())))); // Drive counterclockwise with negative X (left)
+    // drivetrain.setDefaultCommand(
+    //     // Drivetrain will execute this command periodically
+    //     drivetrain.applyRequest(
+    //         () ->
+    //             drive
+    //                 .withVelocityX(
+    //                     MaxSpeed.times(
+    //                         -joystick
+    //                             .customLeft()
+    //                             .getY())) // Drive forward with negative Y (forward)
+    //                 .withVelocityY(
+    //                     MaxSpeed.times(
+    //                         -joystick.customLeft().getX())) // Drive left with negative X (left)
+    //                 .withRotationalRate(
+    //                     Constants.MaxAngularRate.times(
+    //                         -joystick
+    //                             .customRight()
+    //                             .getX())))); // Drive counterclockwise with negative X (left)
+    if (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
+      System.out.println("ok");
+      drivetrain.setDefaultCommand(
+          drivetrain.applyRequest(
+              () -> {
+                double x = joystick.customLeft().getX();
+                double y = joystick.customLeft().getY();
+                double rot = joystick.customRight().getX();
 
+                // Check if joystick inputs are close to zero (not moving)
+                if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05 && Math.abs(rot) < 0.05) {
+                  return brake; // Apply braking mode (X formation)
+                } else {
+                  return drive
+                      .withVelocityX(MaxSpeed.times(-y)) // Drive forward/backward
+                      .withVelocityY(MaxSpeed.times(-x)) // Drive left/right
+                      .withRotationalRate(Constants.MaxAngularRate.times(-rot)); // Rotate
+                }
+              }));
+    } else {
+      drivetrain.setDefaultCommand(
+          drivetrain.applyRequest(
+              () -> {
+                double x = joystick.customLeft().getX();
+                double y = joystick.customLeft().getY();
+                double rot = joystick.customRight().getX();
+
+                // Check if joystick inputs are close to zero (not moving)
+                if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05 && Math.abs(rot) < 0.05) {
+                  return brake; // Apply braking mode (X formation)
+                } else {
+                  return drive
+                      .withVelocityX(MaxSpeed.times(-y)) // Drive forward/backward
+                      .withVelocityY(MaxSpeed.times(-x)) // Drive left/right
+                      .withRotationalRate(Constants.MaxAngularRate.times(-rot)); // Rotate
+                }
+              }));
+    }
     // joystick  nidwj f
 
     joystick.b().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
@@ -233,7 +278,7 @@ public class RobotContainer {
     joystick
         .leftTrigger(0.2)
         .whileTrue(
-            new ParallelCommandGroup(shoot.cmd(0.5), elevator1.runOnce(() -> elevator1.resetenc())))
+            new ParallelCommandGroup(shoot.cmd(0.3), elevator1.runOnce(() -> elevator1.resetenc())))
         .whileFalse(shoot.cmd(0.05));
 
     // joystick.leftTrigger(0.2)
@@ -256,8 +301,10 @@ public class RobotContainer {
             drivetrain.applyRequest(
                 () ->
                     drive
-                        .withVelocityX(MaxSpeed.times(-joystick.customLeft().getY()).times(0.5))
-                        .withVelocityY(MaxSpeed.times(-joystick.customLeft().getX()).times(0.5))
+                        .withVelocityX(
+                            MaxSpeed.times(-joystick.customLeft().getY() * 0.75).times(0.5))
+                        .withVelocityY(
+                            MaxSpeed.times(-joystick.customLeft().getX() * 0.75).times(0.5))
                         .withRotationalRate(
                             Constants.MaxAngularRate.times(-joystick.customRight().getX())
                                 .times(0.5))));
@@ -273,21 +320,21 @@ public class RobotContainer {
     joystick
         .pov(0)
         .whileTrue(
-            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0.5).withVelocityY(0)));
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0.8).withVelocityY(0)));
 
     joystick
         .pov(180)
         .whileTrue(
-            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(-0.5).withVelocityY(0)));
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(-0.8).withVelocityY(0)));
     joystick
         .pov(90)
         .whileTrue(
-            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(-0.5)));
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(-0.8)));
 
     joystick
         .pov(270)
         .whileTrue(
-            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(0.5)));
+            drivetrain.applyRequest(() -> forwardStraight.withVelocityX(0).withVelocityY(0.8)));
 
     joystick
         .rightStick()

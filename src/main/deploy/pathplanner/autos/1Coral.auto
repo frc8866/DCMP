@@ -7,7 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "1Coral1 (1)"
+            "pathName": "1Coral1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevatoru2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "1Coral1A"
           }
         },
         {
@@ -20,6 +32,12 @@
           "type": "path",
           "data": {
             "pathName": "1Coral1B"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "elevatord"
           }
         }
       ]

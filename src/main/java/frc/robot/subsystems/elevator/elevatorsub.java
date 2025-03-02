@@ -13,6 +13,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -31,6 +32,8 @@ public class elevatorsub extends SubsystemBase {
   private TalonFX re = new TalonFX(13, "Drivetrain");
   private TalonFX flippydoo = new TalonFX(17);
   private PIDController pidup = new PIDController(0.06, 0, 0);
+  private PIDController pidauto = new PIDController(0.03, 0, 0);
+  private Timer match_time = new Timer();
 
   TalonFXConfiguration cfg = new TalonFXConfiguration();
   TalonFXConfiguration cff = new TalonFXConfiguration();
@@ -110,10 +113,13 @@ public class elevatorsub extends SubsystemBase {
     re.getConfigurator().apply(cfg);
     flippydoo.getConfigurator().apply(cff);
     flippydoo.setNeutralMode(NeutralModeValue.Brake);
+    le.setNeutralMode(NeutralModeValue.Brake);
+    re.setNeutralMode(NeutralModeValue.Brake);
 
     // Follower followrequest = new Follower(le.getDeviceID(), true);
 
     SignalLogger.start();
+    match_time.start();
   }
 
   @Override
@@ -128,6 +134,9 @@ public class elevatorsub extends SubsystemBase {
         "Sate Checker", Constants.getRobotState() == Constants.RobotState.ALGEA);
 
     re.setControl(new Follower(le.getDeviceID(), true));
+    SmartDashboard.putNumber("Match timer", match_time.getMatchTime());
+
+    SmartDashboard.putBoolean("check for autonn", autoncheck(1) && flipcheck(-4.13134765625));
   }
 
   public void resetenc() {
@@ -166,14 +175,23 @@ public class elevatorsub extends SubsystemBase {
     pidup.setSetpoint(position);
   }
 
+  public void setsetpointauto(double position) {
+    pidup.setSetpoint(position);
+  }
+
   public void pid() {
     double speed1 = pidup.calculate(flippydoo.getPosition().getValueAsDouble());
     flippydoo.set(speed1);
   }
 
+  public void pid2() {
+    double speed1 = pidauto.calculate(flippydoo.getPosition().getValueAsDouble());
+    flippydoo.set(speed1);
+  }
+
   public boolean flipcheck(double position) {
     double curentpos = flippydoo.getPosition().getValueAsDouble();
-    if (curentpos - 0.5 < position && curentpos + 0.5 > position) {
+    if (curentpos - 0.8 < position && curentpos + 0.8 > position) {
       return true;
 
     } else {
@@ -338,6 +356,14 @@ public class elevatorsub extends SubsystemBase {
   public boolean autoncheck(int index) {
     double sensor = le.getPosition().getValueAsDouble();
     return targeposition(index) - 0.3 < sensor;
+  }
+  // 5
+  // 4.7
+  // 4.8
+
+  public boolean autoncheckposition(double index) {
+    double sensor = le.getPosition().getValueAsDouble();
+    return index - 0.3 < sensor;
   }
 
   public boolean elecheck(int index) {

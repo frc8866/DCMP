@@ -47,7 +47,7 @@ public class Flippy extends Command {
   @Override
   public boolean isFinished() {
     // This command runs until it is interrupted (for example, by another command).
-    return false;
+    return elevator.autoncheckposition(targetPosition);
   }
 
   @Override
