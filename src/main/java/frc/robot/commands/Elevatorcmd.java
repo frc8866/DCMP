@@ -117,9 +117,8 @@ public class Elevatorcmd extends Command {
 
   @Override
   public boolean isFinished() {
-    System.out.println("done");
     // This command runs until it is interrupted (for example, by another command).
-    return elevator.autoncheck(targetPosition) && elevator.flipcheck(targetPosition);
+    return false;
   }
 
   @Override

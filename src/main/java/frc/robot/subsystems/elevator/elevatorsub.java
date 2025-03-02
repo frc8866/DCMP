@@ -25,7 +25,7 @@ import frc.robot.Constants;
 import java.util.List;
 
 public class elevatorsub extends SubsystemBase {
-  private List<Double> setpoints1 = List.of(0.0, 0.0, 0.0, 9.84423828125, 26.841796875, 5.0);
+  private List<Double> setpoints1 = List.of(0.0, .0, 0.0, 9.84423828125, 26.841796875, 5.0);
   private List<Double> setpoints2 = List.of(0.0, 7.75048828125, 7.75048828125, 35.0, 4.5, 5.5);
   private List<Double> activeSetpoints = setpoints1; // Default to setpoints
   private TalonFX le = new TalonFX(14, "Drivetrain");

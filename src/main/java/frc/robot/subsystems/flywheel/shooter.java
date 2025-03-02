@@ -93,7 +93,7 @@ public class shooter extends SubsystemBase {
 
       @Override
       public boolean isFinished() {
-        return time3.get() > 2;
+        return time3.get() > 1;
       }
     };
   }

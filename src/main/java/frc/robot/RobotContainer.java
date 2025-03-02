@@ -162,8 +162,8 @@ public class RobotContainer {
     NamedCommands.registerCommand("shoot", shoot.autoncmd(-0.3));
     // NamedCommands.registerCommand("elevatoru", new AutonElevatorcmd(elevator1, 2,
     // -27.000390625));
-    NamedCommands.registerCommand("elevatoru2", new Elevatorcmd(elevator1, 1, true));
-    NamedCommands.registerCommand("elevatoru3", new AutonElevatorcmd(elevator1, 3, true, -2));
+    NamedCommands.registerCommand("elevatoru2", new AutonElevatorcmd(elevator1, 1, true));
+    NamedCommands.registerCommand("elevatoru2", new AutonElevatorcmd(elevator1, 4, true));
 
     NamedCommands.registerCommand(
         "elevatord",
