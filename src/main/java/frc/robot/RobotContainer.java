@@ -238,9 +238,9 @@ public class RobotContainer {
       drivetrain.setDefaultCommand(
           drivetrain.applyRequest(
               () -> {
-                double x = joystick.customLeft().getX();
-                double y = joystick.customLeft().getY();
-                double rot = joystick.customRight().getX();
+                double x = joystick.customLeft().getX() * 0.9 ;
+                double y = joystick.customLeft().getY() * 0.9;
+                double rot = joystick.customRight().getX()* 0.9;
 
                 // Check if joystick inputs are close to zero (not moving)
                 if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05 && Math.abs(rot) < 0.05) {

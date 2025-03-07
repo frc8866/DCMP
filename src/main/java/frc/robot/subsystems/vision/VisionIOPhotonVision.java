@@ -6,6 +6,8 @@
 
 package frc.robot.subsystems.vision;
 
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.Constants;
@@ -72,42 +74,6 @@ public class VisionIOPhotonVision implements VisionIO {
     return new PoseObservation();
   }
 
-  private PhotonPipelineResult cam1() {
-    if (camera.getName() == "Cam1") {
-      return camera.getLatestResult();
-
-    } else {
-      return new PhotonPipelineResult();
-    }
-  }
-
-  private PhotonPipelineResult cam2() {
-    if (camera.getName() == "Cam2") {
-      return camera.getLatestResult();
-
-    } else {
-      return new PhotonPipelineResult();
-    }
-  }
-
-  private PhotonPipelineResult cam3() {
-    if (camera.getName() == "Cam3") {
-      return camera.getLatestResult();
-
-    } else {
-      return new PhotonPipelineResult();
-    }
-  }
-
-  private PhotonPipelineResult cam4() {
-    if (camera.getName() == "Cam4") {
-      return camera.getLatestResult();
-
-    } else {
-      return new PhotonPipelineResult();
-    }
-  }
-
   private PoseObservation buildPoseObservation(PhotonPipelineResult result, Pose3d robotPose) {
     List<RawFiducial> rawFiducialsList = new ArrayList<>();
     double totalDistance = 0.0;
@@ -134,7 +100,7 @@ public class VisionIOPhotonVision implements VisionIO {
             avgDistance,
             avgArea,
             ambiguity,
-            visionParams.get().gyroRate(),
+            visionParams.get().gyroRate().in(RadiansPerSecond),
             visionParams.get().robotPose(),
             false),
         rawFiducialsList.toArray(new RawFiducial[0]));

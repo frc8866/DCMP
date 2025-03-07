@@ -294,7 +294,7 @@ public class VisionUtil {
    * @return True if the rotation velocity exceeds the maximum allowed speed
    */
   private static boolean invalidRotationVelocity(PoseEstimate mt) {
-    return mt.yawVelocity().abs(RadiansPerSecond) > MT2_SPIN_MAX.in(RadiansPerSecond);
+    return mt.yawVelocity().in > MT2_SPIN_MAX.in(RadiansPerSecond);
   }
 
   /**

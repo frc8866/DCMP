@@ -98,7 +98,6 @@ public class Elevatorcmd extends Command {
 
       elevator.setMotionMagic1(targetPosition);
       elevator.pid();
-
       // When close enough to the target, switch to PID holding mode.
       // if (Math.abs(currentPos - targetPosition) < tolerance) {
       //   currentState = State.HOLDING;
@@ -109,7 +108,7 @@ public class Elevatorcmd extends Command {
     } else if (up == false) {
       elevator.Motionmagic(0);
       if (elevator.check(0)) {
-        elevator.setMotionMagicflip(0.6);
+        elevator.setMotionMagicflip(0.4);
         // idk
       }
     }
