@@ -23,6 +23,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
+  public static volatile boolean BEFORE_MATCH = true; // Controls MT1-only usage before match
+
 
   private final RobotContainer m_robotContainer;
 
