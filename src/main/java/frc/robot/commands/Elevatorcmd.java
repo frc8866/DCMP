@@ -11,7 +11,7 @@ public class Elevatorcmd extends Command {
   private double l0 = 0;
   private double l1 = -7.13134765625;
   private double l2 = -27.000390625;
-  private double l3 = -26.700390625;
+  private double l3 = -26.0193359375;
   private double l4 = -24.3123046875;
 
   private boolean first;
@@ -82,7 +82,7 @@ public class Elevatorcmd extends Command {
         // BargeShoot
 
       }
-      elevator.setsetpoint(flipsetpoint);
+      elevator.setposition(flipsetpoint);
 
       // Check if the flip motor has reached its setpoint.
       // Note: Use flipsetpoint (not targetPosition) for the check.
@@ -108,7 +108,7 @@ public class Elevatorcmd extends Command {
     } else if (up == false) {
       elevator.Motionmagic(0);
       if (elevator.check(0)) {
-        elevator.setMotionMagicflip(0.4);
+        elevator.setMotionMagicflip(0.2);
         // idk
       }
     }

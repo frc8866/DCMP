@@ -21,8 +21,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.RobotState;
 
 public class LEDSubsystem extends SubsystemBase {
-  private final CANdle candle;
-  private final CandleSelection which;
+  private final CANdle candle = new CANdle(5, "Drivetrain");
 
   // Variables for flash behavior during state transitions (between ALGEA and IDLE)
   private RobotState lastRobotState = Constants.getRobotState();
@@ -39,9 +38,9 @@ public class LEDSubsystem extends SubsystemBase {
   // - Disabled uses an RGBFade animation.
   // - IDLE uses a Rainbow animation.
   // - ALGEA uses a Fire animation.
-  private final Animation rgbFadeAnimation = new RgbFadeAnimation(0.5, 0.5, 68);
-  private final Animation rainbowAnimation = new RainbowAnimation(0.50, 0.5, 68, false, 8);
-  private final Animation fireAnimation = new FireAnimation(1.0, 0.38, 94, 0.8, 0.2, false, 8);
+  private final Animation rgbFadeAnimation = new RgbFadeAnimation(0.5, 0.5, 360);
+  private final Animation rainbowAnimation = new RainbowAnimation(0.50, 0.5, 360, false, 8);
+  private final Animation fireAnimation = new FireAnimation(1.0, 0.38, 360, 0.8, 0.2, false, 8);
 
   // A simple Color class for setting a solid color during flash mode.
   public static class Color {
@@ -69,10 +68,9 @@ public class LEDSubsystem extends SubsystemBase {
     public static final Color rainbowFlash = new Color(255, 255, 255);
   }
 
-  public LEDSubsystem(CandleSelection which) {
-    this.which = which;
+  public LEDSubsystem() {
+
     // Use device 0 for LEFT and device 1 for RIGHT.
-    candle = new CANdle(which == CandleSelection.LEFT ? 0 : 1, "rio");
     applyConfigs();
     blinkTimer.start();
 

@@ -41,6 +41,7 @@ import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOLimelight;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
+import frc.robot.utils.SidePoseMatcher;
 import frc.robot.utils.TunableController;
 import frc.robot.utils.TunableController.TunableControllerType;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -86,10 +87,15 @@ public class RobotContainer {
             new VisionIOPhotonVision(
                 "FrontRight",
                 new Transform3d(
-                    new Translation3d(0.2, 0.0, 0.8),
-                    new Rotation3d(0, Math.toRadians(20), Math.toRadians(5))),
+                    new Translation3d(0.25, -0.3, 0.11),
+                    new Rotation3d(0, Math.toRadians(0), Math.toRadians(26))),
                 drivetrain::getVisionParameters),
-            new VisionIOLimelight("limelight-fr", drivetrain::getVisionParameters),
+            new VisionIOPhotonVision(
+                "FrontLeft",
+                new Transform3d(
+                    new Translation3d(0.25, 0.4, 0.11),
+                    new Rotation3d(0, Math.toRadians(0), Math.toRadians(334))),
+                drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-bl", drivetrain::getVisionParameters),
             new VisionIOLimelight("limelight-br", drivetrain::getVisionParameters));
 
@@ -209,7 +215,7 @@ public class RobotContainer {
                 new l3algae(algea, 0.7, 5, elevator1, -11.679, 0)));
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
-        new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -15.23251953125, 5.82));
+        new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -15.23251953125, 5.32));
 
     // idk what to put for the setpoint as of now we havent tested it yet
 
@@ -238,9 +244,9 @@ public class RobotContainer {
       drivetrain.setDefaultCommand(
           drivetrain.applyRequest(
               () -> {
-                double x = joystick.customLeft().getX() * 0.9 ;
+                double x = joystick.customLeft().getX() * 0.9;
                 double y = joystick.customLeft().getY() * 0.9;
-                double rot = joystick.customRight().getX()* 0.9;
+                double rot = joystick.customRight().getX() * 0.9;
 
                 // Check if joystick inputs are close to zero (not moving)
                 if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05 && Math.abs(rot) < 0.05) {
@@ -271,15 +277,16 @@ public class RobotContainer {
                 }
               }));
     }
+
     // joystick  nidwj f
 
-    joystick.b().onTrue(elevator1.runOnce(() -> elevator1.resetenc()));
+    // joystick.b().onTrue(drivetrain.setDefaultCommand(drivetrain.driveToPose(null)));
 
     joystick
         .leftTrigger(0.2)
         .whileTrue(
             new ParallelCommandGroup(shoot.cmd(0.3), elevator1.runOnce(() -> elevator1.resetenc())))
-        .whileFalse(shoot.cmd(0.05));
+        .whileFalse(shoot.cmd(0.1));
 
     // joystick.leftTrigger(0.2)
     // .whileTrue(new ConditionalCommand(new IntakeWithRumble(shoot, joystick, 0.3), Positionl3,
@@ -295,6 +302,8 @@ public class RobotContainer {
         .whileFalse(new ParallelCommandGroup(shoot.cmd(0.05)));
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
+
+    // joystick2.x().onTrue(drivetrain.runOnce(() -> drivetrain.setgyro()));
     joystick
         .back()
         .whileTrue(
@@ -309,13 +318,21 @@ public class RobotContainer {
                             Constants.MaxAngularRate.times(-joystick.customRight().getX())
                                 .times(0.5))));
 
+    // joystick
+    //     .a()
+    //     .whileTrue(new Elevatorcmd(elevator1, 1, true))
+    //     .whileFalse(
+    //         new SequentialCommandGroup(
+    //             elevator1.Motionmagictoggle(0),
+    //             new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
+    // joystick.a().whileTrue(new PIDSwerve(drivetrain,new Pose2d(1,2,new Rotation2d())));
     joystick
         .a()
-        .whileTrue(new Elevatorcmd(elevator1, 1, true))
-        .whileFalse(
-            new SequentialCommandGroup(
-                elevator1.Motionmagictoggle(0),
-                new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
+        .whileTrue(
+            drivetrain.defer(
+                () ->
+                    drivetrain.autoAlighnTopose(
+                        SidePoseMatcher.getClosestPose(drivetrain.getPose()))));
 
     joystick
         .pov(0)

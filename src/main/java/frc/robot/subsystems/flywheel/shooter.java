@@ -23,6 +23,7 @@ public class shooter extends SubsystemBase {
   public void periodic() {
 
     SmartDashboard.putNumber("Intake Current", intake.getStatorCurrent().getValueAsDouble());
+    SmartDashboard.putNumber("Intake Velocity", intake.getVelocity().getValueAsDouble());
   }
 
   public boolean check() {

@@ -1,5 +1,7 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.MathUtil;
@@ -9,10 +11,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Constants.Pose;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
 
 public class PIDSwerve extends Command {
@@ -24,11 +26,13 @@ public class PIDSwerve extends Command {
   // private final double maxSpeed = Constants.Swerve.maxSpeed / 5.0;
   private final double positionKS = 0.02;
   private final double positionIZone = 4.0;
+  private Pose2d targetPose;
 
   private final PIDController rotationPID = new PIDController(0.003, 0, 0);
   private final double rotationTolerance = 1.5; // degrees
 
-  private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
+  private LinearVelocity MaxSpeed = MetersPerSecond.of(5);
+  ;
 
   private final SwerveRequest.RobotCentric baseRequest =
       new SwerveRequest.RobotCentric()
@@ -38,12 +42,12 @@ public class PIDSwerve extends Command {
 
   // private LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
 
-  public PIDSwerve(Drive s_Swerve, Pose2d targetPose) {
-    super();
+  private PIDSwerve(Drive s_Swerve, Pose2d targetPose) {
+    this.targetPose = targetPose;
 
     this.s_Swerve = s_Swerve;
-    ;
-    addRequirements(s_Swerve);
+
+    addRequirements();
 
     xPID.setIZone(positionIZone); // Only use Integral term within this range
     xPID.setIntegratorRange(-positionKS * 2, positionKS * 2);
@@ -90,6 +94,8 @@ public class PIDSwerve extends Command {
     double correction = rotationPID.calculate(rotation.getDegrees());
     double feedForward = Pose.rotationKS * Math.signum(correction);
     double rotationVal = MathUtil.clamp(correction + feedForward, -1.0, 1.0);
+
+    SmartDashboard.putNumber("xval", xVal);
 
     SwerveRequest.RobotCentric request =
         baseRequest

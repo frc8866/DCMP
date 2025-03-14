@@ -37,8 +37,8 @@ import frc.robot.generated.TunerConstants;
  * (log replay from a file).
  */
 public final class Constants {
-  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(4.5);
-  public static final AngularVelocity TURN_SPEED = Units.DegreesPerSecond.of(360);
+  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(2);
+  public static final AngularVelocity TURN_SPEED = Units.DegreesPerSecond.of(1000);
 
   public static class TELEOP_AUTO_ALIGN {
     // TODO: Test if this actually works LOL
@@ -55,7 +55,7 @@ public final class Constants {
 
     public static final ProfiledPIDController ROTATION_CONTROLLER =
         new ProfiledPIDController(
-            3,
+            4,
             0,
             0,
             new TrapezoidProfile.Constraints(
@@ -63,12 +63,12 @@ public final class Constants {
                 Math.pow(TURN_SPEED.in(Units.DegreesPerSecond), 2)));
     public static final Angle AT_ROTATION_TOLERANCE = Units.Degrees.of(1);
 
-    public static final Distance AUTO_ALIGNMENT_TOLERANCE = Units.Inches.of(5);
+    public static final Distance AUTO_ALIGNMENT_TOLERANCE = Units.Inches.of(2);
 
     static {
       TRANS_CONTROLLER.setTolerance(AT_POINT_TOLERANCE.in(Units.Meters));
 
-      ROTATION_CONTROLLER.enableContinuousInput(0, 360);
+      ROTATION_CONTROLLER.enableContinuousInput(0, 1000);
       ROTATION_CONTROLLER.setTolerance(AT_ROTATION_TOLERANCE.in(Units.Degrees));
     }
 
@@ -78,7 +78,7 @@ public final class Constants {
 
   public static final Mode simMode = Mode.SIM;
 
-  public static final AngularVelocity MaxAngularRate = RotationsPerSecond.of(1.5);
+  public static final AngularVelocity MaxAngularRate = RotationsPerSecond.of(3);
   public static final AngularVelocity MaxModuleRate = RotationsPerSecond.of(20.0);
 
   // PathPlanner config constants

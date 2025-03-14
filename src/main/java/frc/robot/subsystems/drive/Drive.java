@@ -375,6 +375,11 @@ public class Drive extends SubsystemBase {
     io.resetPose(pose1);
   }
 
+  public void setgyro() {
+    Pose2d pose1 = new Pose2d(2, 20, new Rotation2d(30));
+    io.resetPose(pose1);
+  }
+
   public SwerveModulePosition[] getModulePositions() {
     return inputs.modulePositions;
   }

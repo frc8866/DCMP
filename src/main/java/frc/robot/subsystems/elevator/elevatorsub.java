@@ -9,10 +9,11 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -44,7 +45,8 @@ public class elevatorsub extends SubsystemBase {
   MotionMagicConfigs motionMagicConfigs2 = cff.MotionMagic;
   final MotionMagicVoltage m_request = new MotionMagicVoltage(0);
   final MotionMagicVoltage m_request1 = new MotionMagicVoltage(0);
-  private CANcoder hi = new CANcoder(1);
+  private final ProfiledPIDController profiledPID =
+      new ProfiledPIDController(0.1, 0.0, 0.0, new TrapezoidProfile.Constraints(8, 7));
 
   private enum ElevatorState {
     MOVING, // using Motion Magic to drive to a setpoint
@@ -155,12 +157,14 @@ public class elevatorsub extends SubsystemBase {
   }
 
   public void setMotionMagic1(int position) {
+
     // Use Motion Magic with feedforward and FOC enabled.
     le.setControl(
         m_request
             .withPosition(activeSetpoints.get(position))
             .withFeedForward(0.15)
             .withEnableFOC(true));
+
     // If you want the follower to track, you can do the same for 're' if needed.
   }
 
@@ -175,8 +179,17 @@ public class elevatorsub extends SubsystemBase {
     pidup.setSetpoint(position);
   }
 
-  public void setsetpointauto(double position) {
+  public void setposition(double position) {
     pidup.setSetpoint(position);
+  }
+
+  public void setsetpointauto(double position) {
+    profiledPID.setGoal(position);
+  }
+
+  public void transposepid() {
+    double speed1 = profiledPID.calculate(flippydoo.getPosition().getValueAsDouble());
+    flippydoo.set(speed1);
   }
 
   public void pid() {
