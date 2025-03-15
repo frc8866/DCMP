@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.965750000000001,
-        "y": 3.9762499999999994
+        "x": 7.456352459016394,
+        "y": 1.289
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.965750000000001,
-        "y": 3.9762499999999994
+        "x": 6.432791690195544,
+        "y": 1.3360320787212772
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.976749999999999,
-        "y": 3.9762499999999994
+        "x": 5.394,
+        "y": 3.1199282786885245
       },
       "prevControl": {
-        "x": 6.976749999999999,
-        "y": 3.9762499999999994
+        "x": 5.967692691825638,
+        "y": 2.620609234176886
       },
       "nextControl": null,
       "isLocked": false,
@@ -32,13 +32,13 @@
   "constraintZones": [
     {
       "name": "Constraints Zone",
-      "minWaypointRelativePos": 0.623902768399728,
+      "minWaypointRelativePos": 0.65,
       "maxWaypointRelativePos": 1.0,
       "constraints": {
-        "maxVelocity": 1.0,
+        "maxVelocity": 2.0,
         "maxAcceleration": 1.0,
-        "maxAngularVelocity": 200.0,
-        "maxAngularAcceleration": 200.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
         "unlimited": false
       }
@@ -47,24 +47,13 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "elevatoru",
-      "waypointRelativePos": 0.7136476426798989,
+      "name": "CoralScore",
+      "waypointRelativePos": 0.2926391382405745,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
         "data": {
           "name": "elevatoru"
-        }
-      }
-    },
-    {
-      "name": "shoot",
-      "waypointRelativePos": 1.0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "shoot"
         }
       }
     }
@@ -79,7 +68,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 119.99999999999999
   },
   "reversed": false,
   "folder": null,

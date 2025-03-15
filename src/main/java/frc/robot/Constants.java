@@ -37,7 +37,7 @@ import frc.robot.generated.TunerConstants;
  * (log replay from a file).
  */
 public final class Constants {
-  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(2);
+  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(1);
   public static final AngularVelocity TURN_SPEED = Units.DegreesPerSecond.of(1000);
 
   public static class TELEOP_AUTO_ALIGN {

@@ -73,7 +73,38 @@ public class shooter extends SubsystemBase {
     };
   }
 
-  public Command autoncmd(double speed) {
+  public boolean hasVelocity(double inputVelo) {
+
+    double Velo = intake.getVelocity().getValueAsDouble();
+
+    double velocitythreshold = inputVelo;
+
+    return Math.abs(Velo) > velocitythreshold;
+  }
+
+  public Command autoncmdOut(double speed, double Velocity) {
+    return new Command() {
+      @Override
+      public void initialize() {}
+
+      @Override
+      public void execute() {
+        intake.set(speed);
+      }
+
+      @Override
+      public void end(boolean interrupted) {
+        intake.set(0);
+      }
+
+      @Override
+      public boolean isFinished() {
+        return hasVelocity(Velocity);
+      }
+    };
+  }
+
+  public Command autoncmdIn(double speed) {
     return new Command() {
       @Override
       public void initialize() {
@@ -88,13 +119,12 @@ public class shooter extends SubsystemBase {
 
       @Override
       public void end(boolean interrupted) {
-        time3.stop();
         intake.set(0);
       }
 
       @Override
       public boolean isFinished() {
-        return time3.get() > 1;
+        return time3.get() > .75 && Math.abs(intake.getVelocity().getValueAsDouble()) < 24;
       }
     };
   }

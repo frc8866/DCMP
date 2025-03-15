@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.AutonElevatorcmd;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.Elevatorcmd;
 import frc.robot.commands.barge;
@@ -163,14 +162,11 @@ public class RobotContainer {
         break;
     }
 
-    // NamedCommands.registerCommand("elevatoru", new AutonElevatorcmd(elevator1, 3));
-    // NamedCommands.registerCommand("elevatord", new AutonElevatorcmd(elevator1, 0));
-    NamedCommands.registerCommand("shoot", shoot.autoncmd(-0.3));
-    // NamedCommands.registerCommand("elevatoru", new AutonElevatorcmd(elevator1, 2,
-    // -27.000390625));
-    NamedCommands.registerCommand("elevatoru2", new AutonElevatorcmd(elevator1, 1, true));
-    NamedCommands.registerCommand("elevatoru2", new AutonElevatorcmd(elevator1, 4, true));
+    NamedCommands.registerCommand("shoot", shoot.autoncmdOut(-0.2, 16));
+    NamedCommands.registerCommand("Intake", shoot.autoncmdIn(0.3));
+    NamedCommands.registerCommand("Backdrive", shoot.cmd(0.05));
 
+    NamedCommands.registerCommand("elevatoru", new Elevatorcmd(elevator1, 4, true));
     NamedCommands.registerCommand(
         "elevatord",
         new SequentialCommandGroup(
