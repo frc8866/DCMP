@@ -9,12 +9,6 @@
           "data": {
             "pathName": "Leave Path"
           }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "FlipD"
-          }
         }
       ]
     }

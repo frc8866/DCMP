@@ -10,9 +10,9 @@ public class Elevatorcmd extends Command {
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
   private double l0 = 0;
   private double l1 = -7.13134765625;
-  private double l2 = -27.000390625;
+  private double l2 = -26.300390625;
   private double l3 = -26.0193359375;
-  private double l4 = -24.3123046875;
+  private double l4 = -24.0123046875;
 
   private boolean first;
   private boolean up;

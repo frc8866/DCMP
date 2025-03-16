@@ -25,10 +25,10 @@ public class SidePoseMatcher {
           new Pose2d(new Translation2d(3.13, 3.76), new Rotation2d(Math.toRadians(5.781))),
           new Pose2d(new Translation2d(3.15, 4.15), new Rotation2d(Math.toRadians(7.12))),
           new Pose2d(new Translation2d(4.04, 2.71), new Rotation2d(Math.toRadians(65.98))),
-          new Pose2d(new Translation2d(3.7, 2.95), new Rotation2d(Math.toRadians(63.93))),
-          new Pose2d(new Translation2d(3.7, 2.95), new Rotation2d(Math.toRadians(63.93))),
-          new Pose2d(new Translation2d(5.4, 2.97), new Rotation2d(Math.toRadians(128.33))),
-          new Pose2d(new Translation2d(5.09, 2.79), new Rotation2d(Math.toRadians(128.75))),
+          new Pose2d(new Translation2d(3.74, 2.95), new Rotation2d(Math.toRadians(63.93))),
+          new Pose2d(new Translation2d(3.74, 3.10), new Rotation2d(Math.toRadians(59.74))),
+          new Pose2d(new Translation2d(4.92, 2.88), new Rotation2d(Math.toRadians(121.73))),
+          new Pose2d(new Translation2d(5.16, 3.09), new Rotation2d(Math.toRadians(119.5))),
           new Pose2d(new Translation2d(5.8, 3.9), new Rotation2d(Math.toRadians(-176.29))),
           new Pose2d(new Translation2d(5.83, 4.3), new Rotation2d(Math.toRadians(-174.66))));
 
@@ -37,16 +37,16 @@ public class SidePoseMatcher {
       Arrays.asList(
           new Pose2d(new Translation2d(11.72, 3.75), new Rotation2d(Math.toRadians(6.58))),
           new Pose2d(new Translation2d(11.75, 4.06), new Rotation2d(Math.toRadians(4.8))),
-          new Pose2d(new Translation2d(13.49, 5.35), new Rotation2d(Math.toRadians(-111.1))),
-          new Pose2d(new Translation2d(13.86, 5.09), new Rotation2d(Math.toRadians(-115.1))),
-          new Pose2d(new Translation2d(12.64, 2.72), new Rotation2d(Math.toRadians(67.24))),
-          new Pose2d(new Translation2d(12.34, 2.93), new Rotation2d(Math.toRadians(67.61))),
+          new Pose2d(new Translation2d(13.55, 5.09), new Rotation2d(Math.toRadians(-119.28))),
+          new Pose2d(new Translation2d(13.83, 4.97), new Rotation2d(Math.toRadians(-118.68))),
+          new Pose2d(new Translation2d(12.25, 3.08), new Rotation2d(Math.toRadians(64.42))),
+          new Pose2d(new Translation2d(12.57, 2.97), new Rotation2d(Math.toRadians(60.11))),
           new Pose2d(new Translation2d(12.49, 5.21), new Rotation2d(Math.toRadians(-56.30))),
           new Pose2d(new Translation2d(12.15, 5.07), new Rotation2d(Math.toRadians(-54.18))),
-          new Pose2d(new Translation2d(13.62, 2.81), new Rotation2d(Math.toRadians(129.28))),
-          new Pose2d(new Translation2d(13.98, 3.01), new Rotation2d(Math.toRadians(127.91))),
-          new Pose2d(new Translation2d(14.39, 4.34), new Rotation2d(Math.toRadians(-168.82))),
-          new Pose2d(new Translation2d(14.4, 3.92), new Rotation2d(Math.toRadians(-172.02))));
+          new Pose2d(new Translation2d(13.48, 2.87), new Rotation2d(Math.toRadians(125.72))),
+          new Pose2d(new Translation2d(13.76, 3.04), new Rotation2d(Math.toRadians(123.04))),
+          new Pose2d(new Translation2d(14.22, 4.15), new Rotation2d(Math.toRadians(-179.11))),
+          new Pose2d(new Translation2d(14.25, 3.82), new Rotation2d(Math.toRadians(-177.81))));
 
   /**
    * Iterates over a list of Pose2d and returns the one closest to the currentPose.

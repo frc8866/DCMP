@@ -21,7 +21,7 @@ import frc.robot.Constants;
 import frc.robot.Constants.RobotState;
 
 public class LEDSubsystem extends SubsystemBase {
-  private final CANdle candle = new CANdle(5, "Drivetrain");
+  private final CANdle candle = new CANdle(0, "Drivetrain");
 
   // Variables for flash behavior during state transitions (between ALGEA and IDLE)
   private RobotState lastRobotState = Constants.getRobotState();
@@ -77,7 +77,7 @@ public class LEDSubsystem extends SubsystemBase {
     // Set initial animation based on the current state.
     RobotState initialState = Constants.getRobotState();
     if (!DriverStation.isEnabled()) {
-      animate(rgbFadeAnimation);
+      animate(fireAnimation);
     } else {
       if (initialState == RobotState.ALGEA) {
         animate(fireAnimation);
@@ -118,7 +118,7 @@ public class LEDSubsystem extends SubsystemBase {
     // If the robot is disabled, always run the RGBFade animation.
     if (!DriverStation.isEnabled()) {
       flashMode = false; // Cancel any flash mode if active.
-      animate(rgbFadeAnimation);
+      animate(fireAnimation);
     } else {
       RobotState currentState = Constants.getRobotState();
 
@@ -138,10 +138,10 @@ public class LEDSubsystem extends SubsystemBase {
             setColor(Colors.off);
           } else {
             // Choose flash color based on the target state.
-            if (currentState == RobotState.ALGEA) {
-              setColor(Colors.fireFlash);
-            } else if (currentState == RobotState.IDLE) {
+            if (Constants.getRobotState() == RobotState.ALGEA) {
               setColor(Colors.rainbowFlash);
+            } else if (Constants.getRobotState() == RobotState.IDLE) {
+              setColor(Colors.fireFlash);
             }
           }
           blinkTimer.restart();
@@ -149,13 +149,13 @@ public class LEDSubsystem extends SubsystemBase {
       } else {
         // End flash mode and select the normal animation.
         flashMode = false;
-        if (currentState == RobotState.ALGEA) {
+        if (currentState == RobotState.IDLE) {
           animate(fireAnimation);
-        } else if (currentState == RobotState.IDLE) {
+        } else if (currentState == RobotState.ALGEA) {
           animate(rainbowAnimation);
         } else {
           // Default fallback.
-          animate(rainbowAnimation);
+          animate(fireAnimation);
         }
       }
       lastRobotState = currentState;
