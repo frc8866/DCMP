@@ -278,7 +278,7 @@ public class Robot extends LoggedRobot {
         .leftTrigger(0.2)
         .whileTrue(
             new ParallelCommandGroup(shoot.cmd(0.3), elevator1.runOnce(() -> elevator1.resetenc())))
-        .whileFalse(shoot.cmd(0.15));
+        .whileFalse(shoot.cmd(0.2));
 
     joystick
         .rightTrigger(0.2)
@@ -287,7 +287,7 @@ public class Robot extends LoggedRobot {
                 shoot.cmd(-0.2),
                 algea.algeacmd(-0.7),
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
-        .whileFalse(new ParallelCommandGroup(shoot.cmd(0.05)));
+        .whileFalse(new ParallelCommandGroup(shoot.cmd(0.1)));
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
     joystick

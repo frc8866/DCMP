@@ -39,8 +39,8 @@ public class LEDSubsystem extends SubsystemBase {
   // - IDLE uses a Rainbow animation.
   // - ALGEA uses a Fire animation.
   private final Animation rgbFadeAnimation = new RgbFadeAnimation(0.5, 0.5, 360);
-  private final Animation rainbowAnimation = new RainbowAnimation(0.50, 0.5, 360, false, 8);
-  private final Animation fireAnimation = new FireAnimation(1.0, 0.38, 360, 0.8, 0.2, false, 8);
+  private final Animation rainbowAnimation = new RainbowAnimation(1.5, 1, 360, false, 8);
+  private final Animation fireAnimation = new FireAnimation(1.5, 1.5, 360, 0.8, 0.2, false, 8);
 
   // A simple Color class for setting a solid color during flash mode.
   public static class Color {

@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.34,
-        "y": 2.880016447368421
+        "x": 5.427,
+        "y": 3.149
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.589006072662243,
-        "y": 2.2994337817662904
+        "x": 4.6760060726622426,
+        "y": 2.568417334397872
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.462,
-        "y": 0.6092927631578948
+        "x": 1.2315789473684209,
+        "y": 0.5515625
       },
       "prevControl": {
-        "x": 2.2078437617606737,
-        "y": 1.7143609131865656
+        "x": 1.9774227091290957,
+        "y": 1.6566306500286707
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "eventMarkers": [
     {
       "name": "ElevatorDown",
-      "waypointRelativePos": 0.43771712158809073,
+      "waypointRelativePos": 0.37163375224416556,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -59,10 +59,10 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 2.0,
-    "maxAcceleration": 1.0,
-    "maxAngularVelocity": 400.0,
-    "maxAngularAcceleration": 500.0,
+    "maxVelocity": 5.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
@@ -76,5 +76,5 @@
     "velocity": 0,
     "rotation": 119.55999999999999
   },
-  "useDefaultConstraints": false
+  "useDefaultConstraints": true
 }

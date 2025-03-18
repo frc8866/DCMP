@@ -29,7 +29,7 @@ import org.littletonrobotics.junction.Logger;
  */
 public class Vision extends SubsystemBase {
 
-  private static final VisionMode MODE = VisionMode.MA;
+  private static final VisionMode MODE = VisionMode.POOF;
   private static final String VISION_PATH = "Vision/Camera";
 
   private final VisionConsumer consumer;

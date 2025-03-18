@@ -106,7 +106,7 @@ public final class Constants {
   public static final RobotConfig PP_CONFIG =
       new RobotConfig(
           ROBOT_MASS,
-          ROBOT_MOI,  
+          ROBOT_MOI,
           new ModuleConfig(
               SWERVE_MODULE_CONSTANTS.WheelRadius,
               TunerConstants.kSpeedAt12Volts.in(MetersPerSecond),
