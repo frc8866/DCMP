@@ -86,10 +86,10 @@ public class Elevatorcmd extends Command {
 
       // Check if the flip motor has reached its setpoint.
       // Note: Use flipsetpoint (not targetPosition) for the check.
-      if (!elevator.flipcheck(flipsetpoint)) {
+      if (!elevator.flipcheck(-13)) {
 
         // Command the flip motor until it is at its setpoint.
-        elevator.pid();
+        elevator.setMotionMagicflip(flipsetpoint);
         // Do not start moving the elevator until the flip motor is ready.
         return;
       }
@@ -97,7 +97,7 @@ public class Elevatorcmd extends Command {
       // Once the flip motor is holding its setpoint, command the elevator.
 
       elevator.setMotionMagic1(targetPosition);
-      elevator.pid();
+      elevator.setMotionMagicflip(flipsetpoint);
       // When close enough to the target, switch to PID holding mode.
       // if (Math.abs(currentPos - targetPosition) < tolerance) {
       //   currentState = State.HOLDING;

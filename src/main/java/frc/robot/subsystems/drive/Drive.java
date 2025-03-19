@@ -322,7 +322,7 @@ public class Drive extends SubsystemBase {
           ChassisSpeeds speeds = getAlignmentSpeeds(Targetpose);
           double maxLinear = Constants.OBSERVED_DRIVE_SPEED.in(MetersPerSecond);
           speeds.vxMetersPerSecond =
-              MathUtil.clamp(speeds.vxMetersPerSecond, -maxLinear, maxLinear);
+              MathUtil.clamp(speeds.vxMetersPerSecond * 1.001, -maxLinear, maxLinear);
           speeds.vyMetersPerSecond =
               MathUtil.clamp(speeds.vyMetersPerSecond, -maxLinear, maxLinear);
           io.setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));

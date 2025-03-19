@@ -35,8 +35,8 @@ public class SidePoseMatcher {
   // Hard-coded list of poses for the red alliance.
   private static final List<Pose2d> redPoses =
       Arrays.asList(
-          new Pose2d(new Translation2d(11.72, 3.75), new Rotation2d(Math.toRadians(6.58))),
-          new Pose2d(new Translation2d(11.75, 4.06), new Rotation2d(Math.toRadians(4.8))),
+          new Pose2d(new Translation2d(14.38, 4.16), new Rotation2d(Math.toRadians(178.72))),
+          new Pose2d(new Translation2d(14.38, 3.86), new Rotation2d(Math.toRadians(-178))),
           new Pose2d(new Translation2d(13.55, 5.09), new Rotation2d(Math.toRadians(-119.28))),
           new Pose2d(new Translation2d(13.83, 4.97), new Rotation2d(Math.toRadians(-118.68))),
           new Pose2d(new Translation2d(12.25, 3.08), new Rotation2d(Math.toRadians(64.42))),
@@ -45,8 +45,8 @@ public class SidePoseMatcher {
           new Pose2d(new Translation2d(12.15, 5.07), new Rotation2d(Math.toRadians(-54.18))),
           new Pose2d(new Translation2d(13.48, 2.87), new Rotation2d(Math.toRadians(125.72))),
           new Pose2d(new Translation2d(13.76, 3.04), new Rotation2d(Math.toRadians(123.04))),
-          new Pose2d(new Translation2d(14.22, 4.15), new Rotation2d(Math.toRadians(-179.11))),
-          new Pose2d(new Translation2d(14.25, 3.82), new Rotation2d(Math.toRadians(-177.81))));
+          new Pose2d(new Translation2d(0, 0), new Rotation2d(Math.toRadians(-179.11))),
+          new Pose2d(new Translation2d(0, 0), new Rotation2d(Math.toRadians(-177.81))));
 
   /**
    * Iterates over a list of Pose2d and returns the one closest to the currentPose.

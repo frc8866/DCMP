@@ -12,6 +12,7 @@ import com.pathplanner.lib.pathfinding.Pathfinding;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -142,20 +143,8 @@ public class Robot extends LoggedRobot {
                 new VisionIOPhotonVision(
                     "FrontRight",
                     new Transform3d(
-                        new Translation3d(0.25, -0.3, 0.11),
-                        new Rotation3d(0, Math.toRadians(0), Math.toRadians(26))),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVision(
-                    "LimelightBack",
-                    new Transform3d(new Translation3d(-0.3, 0.0, 0.2), new Rotation3d(0, 0, 180)),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVision(
-                    "LimelightLeft",
-                    new Transform3d(new Translation3d(0.0, 0.3, 0.2), new Rotation3d(0, 0, 90)),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVision(
-                    "LimelightRight",
-                    new Transform3d(new Translation3d(0.0, -0.3, 0.2), new Rotation3d(0, 0, -90)),
+                        new Translation3d(Units.inchesToMeters(7), 0, Units.inchesToMeters(30.625)),
+                        new Rotation3d(0, Math.toRadians(35), Math.toRadians(0))),
                     drivetrain::getVisionParameters));
         flywheel = new Flywheel(new FlywheelIO() {});
         elevator = new Elevator(new ElevatorIO() {});

@@ -50,8 +50,8 @@ public final class Constants {
     public static final Distance MAX_AUTO_DRIVE_PROCESSOR_DISTANCE = Units.Meters.of(5);
     public static final LinearVelocity MIN_DRIVER_OVERRIDE = OBSERVED_DRIVE_SPEED.div(10);
 
-    public static final PIDController TRANS_CONTROLLER = new PIDController(4, 0, 0);
-    public static final Distance AT_POINT_TOLERANCE = Units.Inches.of(0.5);
+    public static final PIDController TRANS_CONTROLLER = new PIDController(6, 0, 0);
+    public static final Distance AT_POINT_TOLERANCE = Units.Inches.of(0.01);
 
     public static final ProfiledPIDController ROTATION_CONTROLLER =
         new ProfiledPIDController(
@@ -63,7 +63,7 @@ public final class Constants {
                 Math.pow(TURN_SPEED.in(Units.DegreesPerSecond), 2)));
     public static final Angle AT_ROTATION_TOLERANCE = Units.Degrees.of(1);
 
-    public static final Distance AUTO_ALIGNMENT_TOLERANCE = Units.Inches.of(2);
+    public static final Distance AUTO_ALIGNMENT_TOLERANCE = Units.Inches.of(0.5);
 
     static {
       TRANS_CONTROLLER.setTolerance(AT_POINT_TOLERANCE.in(Units.Meters));
@@ -82,10 +82,10 @@ public final class Constants {
   public static final AngularVelocity MaxModuleRate = RotationsPerSecond.of(20.0);
 
   // PathPlanner config constants
-  private static final Mass ROBOT_MASS = Kilogram.of(69.78);
+  private static final Mass ROBOT_MASS = Kilogram.of(65.771);
   // 15.2
   private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(6.0);
-  private static final double WHEEL_COF = 1.196;
+  private static final double WHEEL_COF = 1.916;
   public static final SwerveModuleConstants SWERVE_MODULE_CONSTANTS = TunerConstants.FrontLeft;
   public static final Translation2d[] SWERVE_MODULE_OFFSETS =
       new Translation2d[] {
