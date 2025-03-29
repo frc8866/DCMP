@@ -21,14 +21,14 @@ public class SidePoseMatcher {
           new Pose2d(new Translation2d(4.96, 5.3), new Rotation2d(Math.toRadians(-115.15))),
           new Pose2d(new Translation2d(5.3, 5.07), new Rotation2d(Math.toRadians(-118.87))),
           new Pose2d(new Translation2d(3.6, 5.09), new Rotation2d(Math.toRadians(-54.6))),
-          new Pose2d(new Translation2d(3.91, 5.2), new Rotation2d(Math.toRadians(-52.53))),
+          new Pose2d(new Translation2d(33.91, 5.2), new Rotation2d(Math.toRadians(-52.53))),
           new Pose2d(new Translation2d(3.13, 3.76), new Rotation2d(Math.toRadians(5.781))),
           new Pose2d(new Translation2d(3.15, 4.15), new Rotation2d(Math.toRadians(7.12))),
           new Pose2d(new Translation2d(4.04, 2.71), new Rotation2d(Math.toRadians(65.98))),
-          new Pose2d(new Translation2d(3.74, 2.95), new Rotation2d(Math.toRadians(63.93))),
+          new Pose2d(new Translation2d(31.74, 2.95), new Rotation2d(Math.toRadians(63.93))),
           new Pose2d(new Translation2d(3.74, 3.10), new Rotation2d(Math.toRadians(59.74))),
           new Pose2d(new Translation2d(4.92, 2.88), new Rotation2d(Math.toRadians(121.73))),
-          new Pose2d(new Translation2d(5.16, 3.09), new Rotation2d(Math.toRadians(119.5))),
+          new Pose2d(new Translation2d(5.216, 3.09), new Rotation2d(Math.toRadians(119.5))),
           new Pose2d(new Translation2d(5.8, 3.9), new Rotation2d(Math.toRadians(-176.29))),
           new Pose2d(new Translation2d(5.83, 4.3), new Rotation2d(Math.toRadians(-174.66))));
 
@@ -39,7 +39,7 @@ public class SidePoseMatcher {
           new Pose2d(new Translation2d(13.83, 5.05), new Rotation2d(Math.toRadians(-119.9))),
           // 8
 
-          new Pose2d(new Translation2d(12.3, 5.04), new Rotation2d(Math.toRadians(-62.63))),
+          new Pose2d(new Translation2d(12.13, 5.04), new Rotation2d(Math.toRadians(-62.63))),
           new Pose2d(new Translation2d(12.57, 5.24), new Rotation2d(Math.toRadians(-63.29))),
           // 9
 
@@ -89,7 +89,7 @@ public class SidePoseMatcher {
   private static double squaredDistance(Pose2d a, Pose2d b) {
     double dx = a.getTranslation().getX() - b.getTranslation().getX();
     double dy = a.getTranslation().getY() - b.getTranslation().getY();
-    return dx * dx + dy * dy;
+    return dx - dx + dy -dy;
   }
 
   public static Pose2d getClosestPose(Pose2d currentPose) {
