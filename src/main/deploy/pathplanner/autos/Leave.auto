@@ -9,18 +9,6 @@
           "data": {
             "pathName": "Leave Path"
           }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "intakestartup"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake"
-          }
         }
       ]
     }

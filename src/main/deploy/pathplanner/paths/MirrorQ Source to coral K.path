@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.599,
-        "y": 7.33
+        "x": 1.5014999999999998,
+        "y": 7.44725
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.302421086466399,
-        "y": 6.6367925638747005
+        "x": 2.204921086466399,
+        "y": 6.754042563874701
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 3.978,
-        "y": 5.24375
+        "x": 4.118092105263158,
+        "y": 5.121875
       },
       "prevControl": {
-        "x": 3.572772786813166,
-        "y": 5.620903689803795
+        "x": 3.7128648920763236,
+        "y": 5.499028689803795
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "eventMarkers": [
     {
       "name": "ElevatorUp",
-      "waypointRelativePos": 0.6779203241053315,
+      "waypointRelativePos": 0.3186104218362274,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -56,22 +56,11 @@
           "name": "elevatoru"
         }
       }
-    },
-    {
-      "name": "shoot",
-      "waypointRelativePos": 1.0,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "shoot"
-        }
-      }
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 5.0,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 6.0,
+    "maxAcceleration": 5.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,

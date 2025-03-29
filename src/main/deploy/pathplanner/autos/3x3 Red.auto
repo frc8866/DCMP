@@ -21,7 +21,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "MirrorQ start to coral J"
+                        "pathName": "4L4 Part1"
                       }
                     },
                     {
@@ -33,7 +33,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "MirrorQ Coral J to Source"
+                        "pathName": "4L4 Part2"
                       }
                     },
                     {
@@ -45,7 +45,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "MirrorQ Source to coral K"
+                        "pathName": "4L4 Part5"
                       }
                     },
                     {
@@ -57,7 +57,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "MirrorQ coral K to source"
+                        "pathName": "4L4 Part6"
                       }
                     },
                     {
@@ -69,7 +69,7 @@
                     {
                       "type": "path",
                       "data": {
-                        "pathName": "MirrorQ Source to coral L"
+                        "pathName": "4L4 Part7"
                       }
                     }
                   ]

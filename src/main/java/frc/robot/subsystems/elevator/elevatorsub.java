@@ -84,12 +84,12 @@ public class elevatorsub extends SubsystemBase {
               volts -> re.setControl(m_sysIdControl.withOutput(volts)), null, this));
 
   public elevatorsub() {
-    slot0.kG = 0.1; // A gear ratio of 4:1 results in 0.25 output
+    slot0.kG = 0.28; // A gear ratio of 4:1 results in 0.25 output
     slot0.kS = 0.25;
-    slot0.kV = 0.28; // A velocity target of 1 rps results in 0.12 V output
-    slot0.kA = 0.01; // An acceleration of 1 rps/s requires 0.01 V output
+    slot0.kV = 0.39; // A velocity target of 1 rps results in 0.12 V output
+    slot0.kA = 0.04; // An acceleration of 1 rps/s requires 0.01 V output
     slot0.kP = 2.6; // A position error of 2.5 rotations results in 12 V output
-    slot0.kI = 0.1; // no output for integrated error
+    slot0.kI = 0.18; // no output for integrated error
     slot0.kD = 0; // A velocity error of 1 rps results in 0.1 V output
 
     slot2.kG = 0.1; // A gear ratio of 4:1 results in 0.25 output
