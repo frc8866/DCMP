@@ -27,6 +27,7 @@ import frc.robot.commands.l3algae;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PhotonVision;
+import frc.robot.subsystems.climbsub;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOCTRE;
@@ -95,6 +96,7 @@ public class Robot extends LoggedRobot {
   private elevatorsub elevator1 = new elevatorsub();
   private algee algea = new algee();
   private LEDSubsystem led = new LEDSubsystem();
+  private climbsub climb = new climbsub();
   private final PhotonVision hi;
 
   // Autonomous chooser
@@ -317,6 +319,8 @@ public class Robot extends LoggedRobot {
                 () ->
                     drivetrain.autoAlighnTopose(
                         SidePoseMatcher.getClosestPose(drivetrain.getPose()))));
+
+    
 
     joystick
         .pov(0)
