@@ -37,7 +37,7 @@ import frc.robot.generated.TunerConstants;
  * (log replay from a file).
  */
 public final class Constants {
-  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(1);
+  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(1.2);
   public static final AngularVelocity TURN_SPEED = Units.DegreesPerSecond.of(1000);
 
   public static class TELEOP_AUTO_ALIGN {
@@ -50,7 +50,7 @@ public final class Constants {
     public static final Distance MAX_AUTO_DRIVE_PROCESSOR_DISTANCE = Units.Meters.of(5);
     public static final LinearVelocity MIN_DRIVER_OVERRIDE = OBSERVED_DRIVE_SPEED.div(10);
 
-    public static final PIDController TRANS_CONTROLLER = new PIDController(6, 0, 0);
+    public static final PIDController TRANS_CONTROLLER = new PIDController(6.5, 0, 0);
     public static final Distance AT_POINT_TOLERANCE = Units.Inches.of(0.01);
 
     public static final ProfiledPIDController ROTATION_CONTROLLER =
@@ -142,6 +142,16 @@ public final class Constants {
     ALGEA; // Robot is climbing
   }
 
+  public static enum Alagestate {
+    None, // Robot is not doing anything2
+    Holding
+  }
+
+  public static enum coralstate {
+    None, // Robot is not doing anything2
+    Holding
+  }
+
   public enum Elevatorposition {
     L4,
     L3,
@@ -154,8 +164,20 @@ public final class Constants {
 
   private static RobotState currentRobotState = RobotState.IDLE;
 
+  private static Alagestate currentalagestate = Alagestate.None;
+
+  private static coralstate currentcoralstate = coralstate.None;
+
   public static Elevatorposition getElevatorState() {
     return curentElevatorposition;
+  }
+
+  public static Alagestate getAlgaestate() {
+    return currentalagestate;
+  }
+
+  public static coralstate getCoralstate() {
+    return currentcoralstate;
   }
 
   public static void setElevatorState(Elevatorposition newState) {
@@ -207,6 +229,14 @@ public final class Constants {
   public static void setRobotState(RobotState newState) {
     currentRobotState = newState;
     System.out.println("Robot state updated to: " + newState);
+  }
+
+  public static void setAlgaestate(Alagestate newState) {
+    currentalagestate = newState;
+  }
+
+  public static void setCoralstate(coralstate newState) {
+    currentcoralstate = newState;
   }
 
   static {

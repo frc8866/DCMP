@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.arm.algee;
 import frc.robot.subsystems.elevator.elevatorsub;
 
-public class Hyper extends Command {
+public class Hyperl3 extends Command {
   private final algee m_algee;
   private final elevatorsub ele;
   private final double m_intakeSpeed;
@@ -27,7 +27,7 @@ public class Hyper extends Command {
    * @param velocityThreshold The shooter velocity (absolute value) below which we assume a ball is
    *     loaded.
    */
-  public Hyper(
+  public Hyperl3(
       algee algeeSubsystem,
       double intakeSpeed,
       double velocityThreshold,
@@ -77,6 +77,8 @@ public class Hyper extends Command {
     if (ballDetected == false && ele.flipcheck(flippos) && currentVelocity < 10) {
 
       ballDetected = true;
+
+      if (ballDetected) {}
       m_algee.setShooter(0.3);
       ele.setMotionMagic(elevatorpos);
 
@@ -89,8 +91,8 @@ public class Hyper extends Command {
     // After the ball is detected, wait for the delay to elapse before pulling the elevator back
     // down.
     if (ballDetected && delayTimer.get() > 1) {
-      ele.setMotionMagicflip(-24.6);
-      ele.setMotionMagic(0);
+      ele.setMotionMagicflip(-26.0193359375);
+      ele.setMotionMagic(9.84423828125);
     }
   }
 

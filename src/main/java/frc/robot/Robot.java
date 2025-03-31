@@ -9,12 +9,7 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathfindingCommand;
 import com.pathplanner.lib.pathfinding.Pathfinding;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,10 +19,14 @@ import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.Elevatorcmd;
+import frc.robot.commands.Hyper;
+import frc.robot.commands.Hyperl3;
+import frc.robot.commands.Rumbleintake;
 import frc.robot.commands.barge;
 import frc.robot.commands.l3algae;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LEDSubsystem;
+import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOCTRE;
@@ -45,8 +44,6 @@ import frc.robot.subsystems.flywheel.FlywheelIOSIM;
 import frc.robot.subsystems.flywheel.shooter;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSIM;
 import frc.robot.utils.LocalADStarAK;
 import frc.robot.utils.SidePoseMatcher;
 import frc.robot.utils.TunableController;
@@ -61,7 +58,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
 public class Robot extends LoggedRobot {
 
-  public static volatile boolean BEFORE_MATCH = true; // Controls MT1-only usage before match
+  public static volatile boolean BEFORE_MATCH = false; // Controls MT1-only usage before match
 
   // Swerve & Subsystem Fields
   private final LinearVelocity MaxSpeed = TunerConstants.kSpeedAt12Volts;
@@ -91,13 +88,14 @@ public class Robot extends LoggedRobot {
   private final Elevator elevator;
   private final Arm arm;
   // Vision subsystem field for non-sim (REAL) mode
-  private Vision vision = null;
+  private Vision vision;
 
   // Additional subsystems & commands
   private shooter shoot = new shooter();
   private elevatorsub elevator1 = new elevatorsub();
   private algee algea = new algee();
   private LEDSubsystem led = new LEDSubsystem();
+  private final PhotonVision hi;
 
   // Autonomous chooser
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -106,6 +104,7 @@ public class Robot extends LoggedRobot {
   private Command m_autonomousCommand;
 
   public Robot() {
+
     // --- Setup Logging, CAN, & Pathfinding ---
     CanBridge.runTCP();
     Pathfinding.setPathfinder(new LocalADStarAK());
@@ -136,55 +135,26 @@ public class Robot extends LoggedRobot {
     switch (Constants.currentMode) {
       case REAL:
         drivetrain = new Drive(currentDriveIO);
+        hi = new PhotonVision(drivetrain);
+
         // Initialize vision for the real robot using limelight cameras.
-        vision =
-            new Vision(
-                drivetrain::addVisionData,
-                new VisionIOPhotonVision(
-                    "FrontRight",
-                    new Transform3d(
-                        new Translation3d(Units.inchesToMeters(7), 0, Units.inchesToMeters(30.625)),
-                        new Rotation3d(0, Math.toRadians(35), Math.toRadians(0))),
-                    drivetrain::getVisionParameters));
+
         flywheel = new Flywheel(new FlywheelIO() {});
         elevator = new Elevator(new ElevatorIO() {});
         arm = new Arm(new ArmIO() {});
         break;
       case SIM:
         drivetrain = new Drive(currentDriveIO);
-        vision =
-            new Vision(
-                drivetrain::addVisionData,
-                new VisionIOPhotonVisionSIM(
-                    "Front Camera",
-                    new Transform3d(
-                        new Translation3d(0.2427, -0.2913, 0.19),
-                        new Rotation3d(0, Math.toRadians(0), Math.toRadians(30))),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVisionSIM(
-                    "Back Camera",
-                    new Transform3d(
-                        new Translation3d(-0.2, 0.0, 0.8),
-                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(180))),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVisionSIM(
-                    "Left Camera",
-                    new Transform3d(
-                        new Translation3d(0.0, 0.2, 0.8),
-                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(90))),
-                    drivetrain::getVisionParameters),
-                new VisionIOPhotonVisionSIM(
-                    "Right Camera",
-                    new Transform3d(
-                        new Translation3d(0.0, -0.2, 0.8),
-                        new Rotation3d(0, Math.toRadians(20), Math.toRadians(-90))),
-                    drivetrain::getVisionParameters));
+        hi = new PhotonVision(drivetrain);
+
         flywheel = new Flywheel(new FlywheelIOSIM());
         elevator = new Elevator(new ElevatorIOSIM());
         arm = new Arm(new ArmIOSIM());
         break;
       default:
         drivetrain = new Drive(new DriveIO() {});
+        hi = new PhotonVision(drivetrain);
+
         vision =
             new Vision(
                 drivetrain::addVisionData,
@@ -195,11 +165,14 @@ public class Robot extends LoggedRobot {
         flywheel = new Flywheel(new FlywheelIO() {});
         elevator = new Elevator(new ElevatorIO() {});
         arm = new Arm(new ArmIOCTRE() {});
+
         break;
     }
 
     NamedCommands.registerCommand("shoot", shoot.autoncmdOut(-0.2, 16));
     NamedCommands.registerCommand("Intake", shoot.autoncmdIn(0.3));
+    NamedCommands.registerCommand("IntakeLong", shoot.autoncmdIn(0.3));
+
     NamedCommands.registerCommand("Backdrive", shoot.cmd(0.05));
     NamedCommands.registerCommand("elevatoru", new Elevatorcmd(elevator1, 4, true));
     NamedCommands.registerCommand(
@@ -218,65 +191,101 @@ public class Robot extends LoggedRobot {
   }
 
   private void configureBindings() {
+
     Command Positionl2 =
         new SequentialCommandGroup(
             new ParallelCommandGroup(
 
                 // setpoint
                 new l3algae(algea, 0.7, 5, elevator1, -11.679, 0)));
+
+    Command hyper =
+        new SequentialCommandGroup(
+            new ParallelCommandGroup(
+
+                // setpoint
+                new Hyper(algea, 0.7, 5, elevator1, -11.679, 0)));
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
         new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -15.03251953125, 5.9));
-    // Set up the default swerve drive command.
-    if (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
-      drivetrain.setDefaultCommand(
-          drivetrain.applyRequest(
-              () -> {
-                double x = joystick.customLeft().getX() * 0.9;
-                double y = joystick.customLeft().getY() * 0.9;
-                double rot = joystick.customRight().getX() * 0.9;
-                if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05 && Math.abs(rot) < 0.05) {
-                  return brakeRequest;
-                } else {
-                  return driveRequest
-                      .withVelocityX(MaxSpeed.times(-y))
-                      .withVelocityY(MaxSpeed.times(-x))
-                      .withRotationalRate(Constants.MaxAngularRate.times(-rot));
-                }
-              }));
-    } else {
-      drivetrain.setDefaultCommand(
-          drivetrain.applyRequest(
-              () -> {
-                double x = joystick.customLeft().getX();
-                double y = joystick.customLeft().getY();
-                double rot = joystick.customRight().getX();
-                if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05 && Math.abs(rot) < 0.05) {
-                  return brakeRequest;
-                } else {
-                  return driveRequest
-                      .withVelocityX(MaxSpeed.times(-y))
-                      .withVelocityY(MaxSpeed.times(-x))
-                      .withRotationalRate(Constants.MaxAngularRate.times(-rot));
-                }
-              }));
-    }
 
+    Command hyperl3 =
+        // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
+        new SequentialCommandGroup(new Hyperl3(algea, 0.5, 5, elevator1, -15.03251953125, 5.9));
+    // Set up the default swerve drive command.
+    // Set up the default swerve drive command.
+    // if (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
+    //   drivetrain.setDefaultCommand(
+    //       drivetrain.applyRequest(
+    //           () -> {
+    //             double x = joystick.customLeft().getX() * 0.9;
+    //             double y = joystick.customLeft().getY() * 0.9;
+    //             double rot = joystick.customRight().getX() * 0.9;
+    //             if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05 && Math.abs(rot) < 0.05) {
+    //               return brakeRequest;
+    //             } else {
+    //               return driveRequest
+    //                   .withVelocityX(MaxSpeed.times(-y))
+    //                   .withVelocityY(MaxSpeed.times(-x))
+    //                   .withRotationalRate(Constants.MaxAngularRate.times(-rot));
+    //             }
+    //           }));
+    // } else {
+    //   drivetrain.setDefaultCommand(
+    //       drivetrain.applyRequest(
+    //           () -> {
+    //             double x = joystick.customLeft().getX();
+    //             double y = joystick.customLeft().getY();
+    //             double rot = joystick.customRight().getX();
+    //             if (Math.abs(x) < 0.05 && Math.abs(y) < 0.05 && Math.abs(rot) < 0.05) {
+    //               return brakeRequest;
+    //             } else {
+    //               return driveRequest
+    //                   .withVelocityX(MaxSpeed.times(-y))
+    //                   .withVelocityY(MaxSpeed.times(-x))
+    //                   .withRotationalRate(Constants.MaxAngularRate.times(-rot));
+    //             }
+    //           }));
+    // }
+
+    drivetrain.setDefaultCommand(
+        // Drivetrain will execute this command periodically
+        drivetrain.applyRequest(
+            () ->
+                drive
+                    .withVelocityX(
+                        MaxSpeed.times(
+                            -joystick
+                                .customLeft()
+                                .getY())) // Drive forward with negative Y (forward)
+                    .withVelocityY(
+                        MaxSpeed.times(-joystick.customLeft().getX())) // Drive left with negative X
+                    .withRotationalRate(
+                        Constants.MaxAngularRate.times(
+                            -joystick
+                                .customRight()
+                                .getX())))); // Drive counterclockwise with negative X (left)
     // Additional joystick bindings for shooter, elevator, etc.
+
+    // intake
     joystick
         .leftTrigger(0.2)
         .whileTrue(
-            new ParallelCommandGroup(shoot.cmd(0.3), elevator1.runOnce(() -> elevator1.resetenc())))
-        .whileFalse(shoot.cmd(0.2));
+            new ParallelCommandGroup(
+                shoot.cmd(0.3).alongWith(new Rumbleintake(shoot, joystick)),
+                elevator1.runOnce(() -> elevator1.resetenc())))
+        .whileFalse(shoot.cmd(0.07));
 
-    joystick
-        .rightTrigger(0.2)
-        .whileTrue(
-            new ConditionalCommand(
-                shoot.cmd(-0.2),
-                algea.algeacmd(-0.7),
-                () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
-        .whileFalse(new ParallelCommandGroup(shoot.cmd(0.1)));
+    // joystick
+    //     .rightTrigger(0.2)
+    //     .whileTrue(
+    //         new ConditionalCommand(
+    //             shoot.cmd(-0.2), // If either stick is pressed → shoot coral
+    //             algea.algeacmd(-0.7), // Otherwise → shoot algae
+    //             () -> joystick.rightStick().getAsBoolean() ||
+    // joystick.leftStick().getAsBoolean()))
+    //     .whileFalse(shoot.cmd(0.1)); // Default to light coral hold
+    joystick.rightTrigger(0.2).whileTrue(shoot.cmd(-0.2)).whileFalse(shoot.cmd(0.07));
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
     joystick
@@ -302,7 +311,7 @@ public class Robot extends LoggedRobot {
     //             new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
     // joystick.a().whileTrue(new PIDSwerve(drivetrain,new Pose2d(1,2,new Rotation2d())));
     joystick
-        .a()
+        .leftBumper()
         .whileTrue(
             drivetrain.defer(
                 () ->
@@ -333,24 +342,38 @@ public class Robot extends LoggedRobot {
         .whileTrue(
             new ConditionalCommand(
                 new Elevatorcmd(elevator1, 2, true),
-                Positionl2, // algae
+                new ConditionalCommand(
+                    hyper,
+                    Positionl2,
+                    () -> Constants.getCoralstate() == Constants.coralstate.Holding), // algae
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
             new SequentialCommandGroup(
                 elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    // joystick2.a().whileTrue(shoot.cmd(-0.2));
+
+    // joystick
+    //     .rightStick()
+    //     .and(joystick.rightTrigger(0.2))
+    //     .whileTrue(shoot.cmd(-0.2))
+    //     .whileFalse(shoot.cmd(0.1));
     // joystick
     //     .rightStick()
     //     .whileTrue(new Elevatorcmd(elevator1, 2, true))
     //     .whileFalse(
     //         new SequentialCommandGroup(
     //             elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
-    ;
+
     joystick
         .leftStick()
         .whileTrue(
             new ConditionalCommand(
                 new Elevatorcmd(elevator1, 3, true),
-                Positionl3,
+                new ConditionalCommand(
+                    hyperl3,
+                    Positionl3,
+                    () -> Constants.getCoralstate() == Constants.coralstate.Holding),
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
             new SequentialCommandGroup(
@@ -383,11 +406,6 @@ public class Robot extends LoggedRobot {
     Threads.setCurrentThreadPriority(false, 10);
     SmartDashboard.putString("State", Constants.getRobotState().name());
     SmartDashboard.putString("Elevator Position", Constants.getElevatorState().name());
-
-    // Update vision each cycle if it was initialized
-    if (vision != null) {
-      vision.periodic();
-    }
   }
 
   @Override
@@ -408,7 +426,12 @@ public class Robot extends LoggedRobot {
   public void autonomousPeriodic() {}
 
   @Override
-  public void autonomousExit() {}
+  public void autonomousExit() {
+
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
+    }
+  }
 
   @Override
   public void teleopInit() {

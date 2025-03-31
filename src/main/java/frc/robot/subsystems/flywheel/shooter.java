@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class shooter extends SubsystemBase {
   private TalonFX intake = new TalonFX(16);
@@ -38,6 +39,10 @@ public class shooter extends SubsystemBase {
     intake.set(speed);
   }
 
+  public double velocity() {
+    return intake.getVelocity().getValueAsDouble();
+  }
+
   public boolean hasCurrentSpike() {
 
     double current = intake.getStatorCurrent().getValueAsDouble();
@@ -50,7 +55,36 @@ public class shooter extends SubsystemBase {
   public Command cmd(double speed) {
     return new Command() {
       @Override
+      public void initialize() {}
+
+      @Override
+      public void execute() {
+        if (speed == -0.2 && intake.getVelocity().getValueAsDouble() > 45) {
+          Constants.setCoralstate(Constants.coralstate.None);
+        }
+
+        if (speed == 0.1 && Math.abs(intake.getVelocity().getValueAsDouble()) < 0.5) {
+          Constants.setCoralstate(Constants.coralstate.Holding);
+        }
+        // check(position);
+        intake.set(speed);
+      }
+
+      @Override
+      public void end(boolean interrupted) {}
+
+      @Override
+      public boolean isFinished() {
+        return false; // Check if the setpoint is reached
+      }
+    };
+  }
+
+  public Command scourcecmd(double speed) {
+    return new Command() {
+      @Override
       public void initialize() {
+
         // Initialization code, such as resetting encoders or PID controllers
         // int kErrThreshold = 10; // how many sensor units until its close-enough
         // int kLoopsToSettle = 2; // how many loops sensor must be close-enough
@@ -78,6 +112,15 @@ public class shooter extends SubsystemBase {
     double Velo = intake.getVelocity().getValueAsDouble();
 
     double velocitythreshold = inputVelo;
+
+    return Math.abs(Velo) > velocitythreshold;
+  }
+
+  public boolean hasVelocityautoalighn() {
+
+    double Velo = intake.getVelocity().getValueAsDouble();
+
+    double velocitythreshold = 20;
 
     return Math.abs(Velo) > velocitythreshold;
   }
@@ -124,7 +167,7 @@ public class shooter extends SubsystemBase {
 
       @Override
       public boolean isFinished() {
-        return time3.get() > .75 && Math.abs(intake.getVelocity().getValueAsDouble()) < 24;
+        return time3.get() > 1.25 && Math.abs(intake.getVelocity().getValueAsDouble()) < 24;
       }
     };
   }

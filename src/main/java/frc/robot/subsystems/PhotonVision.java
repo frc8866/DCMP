@@ -85,7 +85,7 @@ public class PhotonVision extends SubsystemBase {
             var estStdDevs = getEstimationStdDevs(estPose);
 
             drivebase.addVisionMeasurement(
-                new Pose2d(estPose.getX()+0.2, estPose.getY()+0.2, estPose.getRotation()),
+                new Pose2d(estPose.getX() + 0.2, estPose.getY() + 0.2, estPose.getRotation()),
                 est.timestampSeconds,
                 estStdDevs);
             // Pose2d hi= drivebase.getPose();
