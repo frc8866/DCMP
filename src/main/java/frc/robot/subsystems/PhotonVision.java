@@ -77,7 +77,7 @@ public class PhotonVision extends SubsystemBase {
   public void periodic() {
     Rotation2d cRotation2d = drivebase.getPose().getRotation();
     if (!DriverStation.isAutonomous()) {
-      var visi1onEst = getEstimatedGlobalPose();
+      var visionEst = getEstimatedGlobalPose();
       visionEst.ifPresent(
           est -> {
             var estPose = est.estimatedPose.toPose2d();
