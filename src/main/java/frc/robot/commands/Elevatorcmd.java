@@ -10,9 +10,9 @@ public class Elevatorcmd extends Command {
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
   private double l0 = 0;
   private double l1 = -7.13134765625;
-  private double l2 = -26.300390625;
+  private double l2 = -26.000390625;
   private double l3 = -26.0193359375;
-  private double l4 = -24.0123046875;
+  private double l4 = -24.15123046875;
 
   private boolean first;
   private boolean up;
@@ -41,6 +41,15 @@ public class Elevatorcmd extends Command {
 
   @Override
   public void initialize() {
+
+    elevator.initializePid(targetPosition);
+
+    if (elevator.whichlist() == 1) {
+
+      Constants.setRobotState(Constants.RobotState.IDLE);
+    } else if (elevator.whichlist() == 2) {
+      Constants.setRobotState(Constants.RobotState.ALGEA);
+    }
 
     if (targetPosition == 1) {
       Constants.setElevatorState(Constants.Elevatorposition.L1);
@@ -82,7 +91,6 @@ public class Elevatorcmd extends Command {
         // BargeShoot
 
       }
-      elevator.setposition(flipsetpoint);
 
       // Check if the flip motor has reached its setpoint.
       // Note: Use flipsetpoint (not targetPosition) for the check.
@@ -108,7 +116,7 @@ public class Elevatorcmd extends Command {
     } else if (up == false) {
       elevator.Motionmagic(0);
       if (elevator.check(0)) {
-        elevator.setMotionMagicflip(0.2);
+        elevator.setMotionMagicflip(-0.4);
         // idk
       }
     }

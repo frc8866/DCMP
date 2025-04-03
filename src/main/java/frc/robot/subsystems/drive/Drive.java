@@ -187,9 +187,9 @@ public class Drive extends SubsystemBase {
                     .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
         new PPHolonomicDriveController(
             // PID constants for translation
-            new PIDConstants(10, 0, 0),
+            new PIDConstants(5, 0, 0),
             // PID constants for rotation
-            new PIDConstants(7, 0, 0)),
+            new PIDConstants(5, 0, 0)),
         Constants.PP_CONFIG,
         // Assume the path needs to be flipped for Red vs Blue, this is normally the case
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
@@ -304,6 +304,22 @@ public class Drive extends SubsystemBase {
         getPose(), desiredPose, 0, desiredPose.getRotation());
   }
 
+  public ChassisSpeeds getAlignmentSpeedsl2(Pose2d desiredPose) {
+    // Use the teleop auto align controller from your constants
+    // Note: The third parameter here is the desired linear speed (set to 0 if you only want to
+    // rotate)
+    return Constants.TELEOP_AUTO_ALIGNl2.TELEOP_AUTO_ALIGN_CONTROLLER.calculate(
+        getPose(), desiredPose, 0, desiredPose.getRotation());
+  }
+
+  public ChassisSpeeds getAlignmentSpeedsl3(Pose2d desiredPose) {
+    // Use the teleop auto align controller from your constants
+    // Note: The third parameter here is the desired linear speed (set to 0 if you only want to
+    // rotate)
+    return Constants.TELEOP_AUTO_ALIGNl3.TELEOP_AUTO_ALIGN_CONTROLLER.calculate(
+        getPose(), desiredPose, 0, desiredPose.getRotation());
+  }
+
   // public Command autoAlignToPose(Pose2d targetPose) {
   //   return run(() -> {
   //     // Calculate alignment speeds
@@ -315,15 +331,47 @@ public class Drive extends SubsystemBase {
   //     // Apply the computed speeds using your IO interface
   //     io.setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
   //   })};
+
+  public boolean isAtTarget(Pose2d target, Pose2d currentPose) {
+    double toleranceMeters = 0.1; // 10 cm tolerance
+    return currentPose.getTranslation().getDistance(target.getTranslation()) < toleranceMeters;
+  }
+
   public Command autoAlighnTopose(Pose2d Targetpose) {
     return run(
         () -> {
           ChassisSpeeds speeds = getAlignmentSpeeds(Targetpose);
           double maxLinear = Constants.OBSERVED_DRIVE_SPEED.in(MetersPerSecond);
           speeds.vxMetersPerSecond =
-              MathUtil.clamp(speeds.vxMetersPerSecond * 1.001, -maxLinear, maxLinear);
+              MathUtil.clamp(speeds.vxMetersPerSecond * 1, -maxLinear, maxLinear);
           speeds.vyMetersPerSecond =
-              MathUtil.clamp(speeds.vyMetersPerSecond, -maxLinear, maxLinear);
+              MathUtil.clamp(speeds.vyMetersPerSecond * 1, -maxLinear, maxLinear);
+          io.setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
+        });
+  }
+
+  public Command autoAlighnToposel2(Pose2d Targetpose) {
+    return run(
+        () -> {
+          ChassisSpeeds speeds = getAlignmentSpeedsl2(Targetpose);
+          double maxLinear = Constants.OBSERVED_DRIVE_SPEEDl2.in(MetersPerSecond);
+          speeds.vxMetersPerSecond =
+              MathUtil.clamp(speeds.vxMetersPerSecond * 1, -maxLinear, maxLinear);
+          speeds.vyMetersPerSecond =
+              MathUtil.clamp(speeds.vyMetersPerSecond * 1, -maxLinear, maxLinear);
+          io.setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
+        });
+  }
+
+  public Command autoAlighnToposel3(Pose2d Targetpose) {
+    return run(
+        () -> {
+          ChassisSpeeds speeds = getAlignmentSpeedsl3(Targetpose);
+          double maxLinear = Constants.OBSERVED_DRIVE_SPEEDl3.in(MetersPerSecond);
+          speeds.vxMetersPerSecond =
+              MathUtil.clamp(speeds.vxMetersPerSecond * 1, -maxLinear, maxLinear);
+          speeds.vyMetersPerSecond =
+              MathUtil.clamp(speeds.vyMetersPerSecond * 1, -maxLinear, maxLinear);
           io.setControl(m_pathApplyRobotSpeeds.withSpeeds(speeds));
         });
   }
@@ -434,6 +482,7 @@ public class Drive extends SubsystemBase {
   }
 
   public void addVisionData(List<VisionMeasurement> visionData) {
+
     visionData.forEach(this::addVisionMeasurement);
   }
 

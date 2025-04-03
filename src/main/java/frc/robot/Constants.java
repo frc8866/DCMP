@@ -37,13 +37,88 @@ import frc.robot.generated.TunerConstants;
  * (log replay from a file).
  */
 public final class Constants {
-  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(1.2);
+  public static final LinearVelocity OBSERVED_DRIVE_SPEED = Units.MetersPerSecond.of(0.8);
+  public static final LinearVelocity OBSERVED_DRIVE_SPEEDl2 = Units.MetersPerSecond.of(1.6);
+  public static final LinearVelocity OBSERVED_DRIVE_SPEEDl3 = Units.MetersPerSecond.of(1.3);
+
   public static final AngularVelocity TURN_SPEED = Units.DegreesPerSecond.of(1000);
 
   public static class TELEOP_AUTO_ALIGN {
     // TODO: Test if this actually works LOL
     public static final LinearVelocity DESIRED_AUTO_ALIGN_SPEED =
         Units.MetersPerSecond.of(OBSERVED_DRIVE_SPEED.in(MetersPerSecond) / 4);
+
+    public static final Distance MAX_AUTO_DRIVE_CORAL_STATION_DISTANCE = Units.Meters.of(10);
+    public static final Distance MAX_AUTO_DRIVE_REEF_DISTANCE = Units.Meters.of(1);
+    public static final Distance MAX_AUTO_DRIVE_PROCESSOR_DISTANCE = Units.Meters.of(5);
+    public static final LinearVelocity MIN_DRIVER_OVERRIDE = OBSERVED_DRIVE_SPEED.div(10);
+
+    public static final PIDController TRANS_CONTROLLER = new PIDController(6.5, 0, 0);
+    public static final Distance AT_POINT_TOLERANCE = Units.Inches.of(0.01);
+
+    public static final ProfiledPIDController ROTATION_CONTROLLER =
+        new ProfiledPIDController(
+            4,
+            0,
+            0,
+            new TrapezoidProfile.Constraints(
+                TURN_SPEED.in(Units.DegreesPerSecond),
+                Math.pow(TURN_SPEED.in(Units.DegreesPerSecond), 2)));
+    public static final Angle AT_ROTATION_TOLERANCE = Units.Degrees.of(1);
+
+    public static final Distance AUTO_ALIGNMENT_TOLERANCE = Units.Inches.of(0.5);
+
+    static {
+      TRANS_CONTROLLER.setTolerance(AT_POINT_TOLERANCE.in(Units.Meters));
+
+      ROTATION_CONTROLLER.enableContinuousInput(0, 1000);
+      ROTATION_CONTROLLER.setTolerance(AT_ROTATION_TOLERANCE.in(Units.Degrees));
+    }
+
+    public static HolonomicDriveController TELEOP_AUTO_ALIGN_CONTROLLER =
+        new HolonomicDriveController(TRANS_CONTROLLER, TRANS_CONTROLLER, ROTATION_CONTROLLER);
+  }
+
+  public static class TELEOP_AUTO_ALIGNl2 {
+    // TODO: Test if this actually works LOL
+    public static final LinearVelocity DESIRED_AUTO_ALIGN_SPEED =
+        Units.MetersPerSecond.of(OBSERVED_DRIVE_SPEEDl2.in(MetersPerSecond) / 4);
+
+    public static final Distance MAX_AUTO_DRIVE_CORAL_STATION_DISTANCE = Units.Meters.of(10);
+    public static final Distance MAX_AUTO_DRIVE_REEF_DISTANCE = Units.Meters.of(1);
+    public static final Distance MAX_AUTO_DRIVE_PROCESSOR_DISTANCE = Units.Meters.of(5);
+    public static final LinearVelocity MIN_DRIVER_OVERRIDE = OBSERVED_DRIVE_SPEED.div(10);
+
+    public static final PIDController TRANS_CONTROLLER = new PIDController(6.5, 0, 0);
+    public static final Distance AT_POINT_TOLERANCE = Units.Inches.of(0.01);
+
+    public static final ProfiledPIDController ROTATION_CONTROLLER =
+        new ProfiledPIDController(
+            4,
+            0,
+            0,
+            new TrapezoidProfile.Constraints(
+                TURN_SPEED.in(Units.DegreesPerSecond),
+                Math.pow(TURN_SPEED.in(Units.DegreesPerSecond), 2)));
+    public static final Angle AT_ROTATION_TOLERANCE = Units.Degrees.of(1);
+
+    public static final Distance AUTO_ALIGNMENT_TOLERANCE = Units.Inches.of(0.5);
+
+    static {
+      TRANS_CONTROLLER.setTolerance(AT_POINT_TOLERANCE.in(Units.Meters));
+
+      ROTATION_CONTROLLER.enableContinuousInput(0, 1000);
+      ROTATION_CONTROLLER.setTolerance(AT_ROTATION_TOLERANCE.in(Units.Degrees));
+    }
+
+    public static HolonomicDriveController TELEOP_AUTO_ALIGN_CONTROLLER =
+        new HolonomicDriveController(TRANS_CONTROLLER, TRANS_CONTROLLER, ROTATION_CONTROLLER);
+  }
+
+  public static class TELEOP_AUTO_ALIGNl3 {
+    // TODO: Test if this actually works LOL
+    public static final LinearVelocity DESIRED_AUTO_ALIGN_SPEED =
+        Units.MetersPerSecond.of(OBSERVED_DRIVE_SPEEDl3.in(MetersPerSecond) / 4);
 
     public static final Distance MAX_AUTO_DRIVE_CORAL_STATION_DISTANCE = Units.Meters.of(10);
     public static final Distance MAX_AUTO_DRIVE_REEF_DISTANCE = Units.Meters.of(1);

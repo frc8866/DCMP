@@ -85,7 +85,7 @@ public class PhotonVision extends SubsystemBase {
             var estStdDevs = getEstimationStdDevs(estPose);
 
             drivebase.addVisionMeasurement(
-                new Pose2d(estPose.getX() + 0.2, estPose.getY() + 0.2, estPose.getRotation()),
+                new Pose2d(-estPose.getX() , -estPose.getY() , estPose.getRotation()),
                 est.timestampSeconds,
                 estStdDevs);
             // Pose2d hi= drivebase.getPose();
@@ -151,7 +151,7 @@ public class PhotonVision extends SubsystemBase {
           tagPose.get().toPose2d().getTranslation().getDistance(estimatedPose.getTranslation());
     }
     if (numTags == 0) return estStdDevs;
-    avgDist /= numTags;
+    avgDist *= numTags;
     // Decrease std devs if multiple targets are visible
     if (numTags > 1) estStdDevs = VecBuilder.fill(0.5, 0.5, 1);
     ;

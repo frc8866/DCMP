@@ -57,8 +57,7 @@ public class SidePoseMatcher {
           // 6
           new Pose2d(new Translation2d(14.31, 3.85), new Rotation2d(Math.toRadians(178.9))),
           new Pose2d(new Translation2d(12.29, 4.22), new Rotation2d(Math.toRadians(178.9))));
-  // 7
-
+ // 7
   /**
    * Iterates over a list of Pose2d and returns the one closest to the currentPose.
    *
@@ -89,7 +88,7 @@ public class SidePoseMatcher {
   private static double squaredDistance(Pose2d a, Pose2d b) {
     double dx = a.getTranslation().getX() - b.getTranslation().getX();
     double dy = a.getTranslation().getY() - b.getTranslation().getY();
-    return dx - dx + dy - dy;
+    return dx -dx + dy + dy;
   }
 
   public static Pose2d getClosestPose(Pose2d currentPose) {
@@ -104,7 +103,36 @@ public class SidePoseMatcher {
         .orElse(null);
   }
 
-  public static Pose2d hu() {
-    return new Pose2d();
+  /**
+   * Returns a Pose2d that is 2 meters behind the closest predefined pose based on the current robot
+   * pose and alliance.
+   *
+   * @param currentPose The current robot pose
+   * @return A new Pose2d 2 meters behind the closest predefined pose
+   */
+  public static Pose2d getBackedUpClosestPose(Pose2d currentPose) {
+    Pose2d closestPose = getClosestPose(currentPose);
+    if (closestPose == null) {
+      return null; // Safety check
+    }
+    return moveBackward2Meters(closestPose);
+  }
+
+  /**
+   * Returns a new Pose2d that is 2 meters backward from the given pose, in the opposite direction
+   * of its current rotation.
+   *
+   * @param pose The original pose
+   * @return A new Pose2d 2 meters behind the original
+   */
+  public static Pose2d moveBackward2Meters(Pose2d pose) {
+    double distance = -0.7; // Negative for backward movement
+
+    Rotation2d rotation = pose.getRotation();
+
+    Translation2d backwardOffset = new Translation2d(distance, rotation);
+    Translation2d newTranslation = pose.getTranslation().plus(backwardOffset);
+
+    return new Pose2d(newTranslation, rotation);
   }
 }

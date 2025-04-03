@@ -25,6 +25,8 @@ public class shooter extends SubsystemBase {
 
     SmartDashboard.putNumber("Intake Current", intake.getStatorCurrent().getValueAsDouble());
     SmartDashboard.putNumber("Intake Velocity", intake.getVelocity().getValueAsDouble());
+
+    SmartDashboard.putString("Coral sate", Constants.getCoralstate().name());
   }
 
   public boolean check() {
@@ -52,6 +54,10 @@ public class shooter extends SubsystemBase {
     return current > CURRENT_SPIKE_THRESHOLD;
   }
 
+  public boolean velocitycheck() {
+    return intake.getVelocity().getValueAsDouble() > 40;
+  }
+
   public Command cmd(double speed) {
     return new Command() {
       @Override
@@ -59,11 +65,11 @@ public class shooter extends SubsystemBase {
 
       @Override
       public void execute() {
-        if (speed == -0.2 && intake.getVelocity().getValueAsDouble() > 45) {
+        if (speed == -0.2 && Math.abs(intake.getVelocity().getValueAsDouble()) > 15) {
           Constants.setCoralstate(Constants.coralstate.None);
         }
 
-        if (speed == 0.1 && Math.abs(intake.getVelocity().getValueAsDouble()) < 0.5) {
+        if (speed == 0.07 && Math.abs(intake.getVelocity().getValueAsDouble()) < 4) {
           Constants.setCoralstate(Constants.coralstate.Holding);
         }
         // check(position);
@@ -120,7 +126,7 @@ public class shooter extends SubsystemBase {
 
     double Velo = intake.getVelocity().getValueAsDouble();
 
-    double velocitythreshold = 20;
+    double velocitythreshold = 18;
 
     return Math.abs(Velo) > velocitythreshold;
   }

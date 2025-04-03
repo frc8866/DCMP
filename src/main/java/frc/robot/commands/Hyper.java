@@ -61,7 +61,7 @@ public class Hyper extends Command {
     currentVelocity = Math.abs(m_algee.velocity());
     // If the ball is not yet detected and the elevator hasn't reached the intake position, command
     // the elevator to move there.
-    if (!ballDetected && ele.flipcheck(flippos)) {
+    if (!ballDetected && !ele.flipcheck(flippos)) {
       ele.setMotionMagicflip(flippos);
       m_algee.setShooter(m_intakeSpeed);
     }
@@ -77,7 +77,7 @@ public class Hyper extends Command {
     if (ballDetected == false && ele.flipcheck(flippos) && currentVelocity < 10) {
 
       ballDetected = true;
-      m_algee.setShooter(0.3);
+      m_algee.setShooter(-0.15);
       ele.setMotionMagic(elevatorpos);
 
       // Start the delay timer

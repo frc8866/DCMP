@@ -1,11 +1,13 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.arm.algee;
 import frc.robot.subsystems.elevator.elevatorsub;
 
 public class barge extends Command {
   private final elevatorsub elevator;
   private final double targetPosition;
+  private final algee algee;
   private final double tolerance = 0.25; // Tolerance to switch from Motion Magic to PID
   private double l0 = 0;
   private double l1 = -17.3;
@@ -30,10 +32,11 @@ public class barge extends Command {
    * @param elevator The elevator subsystem.
    * @param targetPosition The target position (in sensor units) to move to.
    */
-  public barge(elevatorsub elevator, double targetPosition, boolean hi) {
+  public barge(elevatorsub elevator, double targetPosition, boolean hi, algee algee) {
     this.up = hi;
     this.elevator = elevator;
     this.targetPosition = targetPosition;
+    this.algee = algee;
     addRequirements(elevator);
   }
 
@@ -62,10 +65,19 @@ public class barge extends Command {
       return;
     }
 
-    // Once the flip motor is holding its setpoint, command the elevator.
+    if (!elevator.autoncheck2(targetPosition)) {
+      elevator.setMotionMagic(targetPosition);
+      elevator.setMotionMagicflip(flipsetpoint);
+    }
 
-    elevator.setMotionMagic(targetPosition);
-    elevator.setMotionMagicflip(flipsetpoint);
+    if (elevator.autoncheck2(targetPosition)) {
+      elevator.setMotionMagic(targetPosition);
+      elevator.setMotionMagicflip(flipsetpoint);
+
+      algee.setShooter(1);
+    }
+
+    // Once the flip motor is holding its setpoint, command the elevator.
 
     // When close enough to the target, switch to PID holding mode.
     // if (Math.abs(currentPos - targetPosition) < tolerance) {

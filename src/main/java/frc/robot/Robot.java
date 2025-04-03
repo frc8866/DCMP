@@ -21,18 +21,17 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.commands.Elevatorcmd;
 import frc.robot.commands.Hyper;
 import frc.robot.commands.Hyperl3;
-import frc.robot.commands.Rumbleintake;
 import frc.robot.commands.barge;
 import frc.robot.commands.l3algae;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PhotonVision;
-import frc.robot.subsystems.climbsub;
 import frc.robot.subsystems.arm.Arm;
 import frc.robot.subsystems.arm.ArmIO;
 import frc.robot.subsystems.arm.ArmIOCTRE;
 import frc.robot.subsystems.arm.ArmIOSIM;
 import frc.robot.subsystems.arm.algee;
+import frc.robot.subsystems.climbsub;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.elevator.Elevator;
@@ -96,8 +95,8 @@ public class Robot extends LoggedRobot {
   private elevatorsub elevator1 = new elevatorsub();
   private algee algea = new algee();
   private LEDSubsystem led = new LEDSubsystem();
-  private climbsub climb = new climbsub();
   private final PhotonVision hi;
+  private climbsub climb = new climbsub();
 
   // Autonomous chooser
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -176,6 +175,61 @@ public class Robot extends LoggedRobot {
     NamedCommands.registerCommand("IntakeLong", shoot.autoncmdIn(0.3));
 
     NamedCommands.registerCommand("Backdrive", shoot.cmd(0.05));
+
+    NamedCommands.registerCommand(
+        "autoalighn",
+        drivetrain.defer(
+            () ->
+                new ParallelCommandGroup(
+                        drivetrain.autoAlighnToposel2(
+                            SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose())),
+                        new Elevatorcmd(elevator1, 2, true))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && elevator1.autoncheck(2))
+                    .andThen(
+                        drivetrain
+                            .autoAlighnTopose(SidePoseMatcher.getClosestPose(drivetrain.getPose()))
+                            .alongWith(new Elevatorcmd(elevator1, 2, true)))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && elevator1.autoncheck(2))
+                    .andThen(
+                        new ParallelCommandGroup(
+                            new Elevatorcmd(elevator1, 2, true),
+                            shoot.cmd(-0.3),
+                            drivetrain.autoAlighnToposel2(
+                                SidePoseMatcher.getClosestPose(drivetrain.getPose()))))
+                    .until(() -> shoot.hasVelocityautoalighn())
+                    .andThen(
+                        new ParallelCommandGroup(
+                            drivetrain.autoAlighnToposel2(
+                                SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose())),
+                            new Elevatorcmd(elevator1, 2, true),
+                            shoot.cmd(1)))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && shoot.velocitycheck())
+                    // .until(
+                    //     () ->
+                    //         drivetrain.isAtTarget(
+                    //             SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                    //             drivetrain.getPose()))))
+                    .andThen(
+                        new SequentialCommandGroup(
+                                elevator1.Motionmagictoggle(0),
+                                new Elevatorcmd(elevator1, 0, false))
+                            .until(() -> elevator1.autoalighncheck(0)))));
+
     NamedCommands.registerCommand("elevatoru", new Elevatorcmd(elevator1, 4, true));
     NamedCommands.registerCommand(
         "elevatord",
@@ -199,21 +253,21 @@ public class Robot extends LoggedRobot {
             new ParallelCommandGroup(
 
                 // setpoint
-                new l3algae(algea, 0.7, 5, elevator1, -11.679, 0)));
+                new l3algae(algea, -0.7, 5, elevator1, -11.679, 0)));
 
     Command hyper =
         new SequentialCommandGroup(
             new ParallelCommandGroup(
 
                 // setpoint
-                new Hyper(algea, 0.7, 5, elevator1, -11.679, 0)));
+                new Hyper(algea, -0.5, 5, elevator1, -11.679, 0)));
     Command Positionl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
-        new SequentialCommandGroup(new l3algae(algea, 0.5, 5, elevator1, -15.03251953125, 5.9));
+        new SequentialCommandGroup(new l3algae(algea, -0.5, 5, elevator1, -15.03251953125, 5.9));
 
     Command hyperl3 =
         // new SequentialCommandGroup(new l2algae(algea, 0.8, 5, elevator1, -18.31416015625));
-        new SequentialCommandGroup(new Hyperl3(algea, 0.5, 5, elevator1, -15.03251953125, 5.9));
+        new SequentialCommandGroup(new Hyperl3(algea, -0.5, 5, elevator1, -15.03251953125, 5.9));
     // Set up the default swerve drive command.
     // Set up the default swerve drive command.
     // if (DriverStation.getAlliance().get() == DriverStation.Alliance.Blue) {
@@ -273,9 +327,7 @@ public class Robot extends LoggedRobot {
     joystick
         .leftTrigger(0.2)
         .whileTrue(
-            new ParallelCommandGroup(
-                shoot.cmd(0.3).alongWith(new Rumbleintake(shoot, joystick)),
-                elevator1.runOnce(() -> elevator1.resetenc())))
+            new ParallelCommandGroup(shoot.cmd(0.3), elevator1.runOnce(() -> elevator1.resetenc())))
         .whileFalse(shoot.cmd(0.07));
 
     // joystick
@@ -287,7 +339,29 @@ public class Robot extends LoggedRobot {
     //             () -> joystick.rightStick().getAsBoolean() ||
     // joystick.leftStick().getAsBoolean()))
     //     .whileFalse(shoot.cmd(0.1)); // Default to light coral hold
-    joystick.rightTrigger(0.2).whileTrue(shoot.cmd(-0.2)).whileFalse(shoot.cmd(0.07));
+
+    joystick
+        .rightTrigger(0.2)
+        .whileTrue(
+            new ConditionalCommand(
+                // Condition: if either stick is pressed, execute coral shoot
+                shoot.cmd(-0.2),
+                // Else, check if the back button is pressed
+                new ConditionalCommand(
+                    // If back button is pressed, then check robot state:
+                    new ConditionalCommand(
+                        // If in ALGEA mode, execute algea shoot
+                        algea.algeacmd(0.7),
+                        // Otherwise, execute coral shoot
+                        shoot.cmd(-0.2),
+                        () -> Constants.getRobotState() == Constants.RobotState.ALGEA),
+                    // If the back button isn't pressed, default to coral shoot
+                    shoot.cmd(-0.2),
+                    () -> joystick.back().getAsBoolean()),
+                // Outer condition: sticks have priority
+                () -> joystick.rightStick().getAsBoolean() || joystick.leftStick().getAsBoolean()))
+        .whileFalse(shoot.cmd(0.07));
+    // joystick.rightTrigger(0.2).whileTrue(shoot.cmd(-0.2)).whileFalse(shoot.cmd(0.07));
 
     joystick.x().onTrue(drivetrain.runOnce(() -> drivetrain.resetgyro()));
     joystick
@@ -312,15 +386,227 @@ public class Robot extends LoggedRobot {
     //             elevator1.Motionmagictoggle(0),
     //             new ParallelCommandGroup(new Elevatorcmd(elevator1, 0, false))));
     // joystick.a().whileTrue(new PIDSwerve(drivetrain,new Pose2d(1,2,new Rotation2d())));
-    joystick
-        .leftBumper()
-        .whileTrue(
-            drivetrain.defer(
-                () ->
-                    drivetrain.autoAlighnTopose(
-                        SidePoseMatcher.getClosestPose(drivetrain.getPose()))));
+    // joystick
+    //     .leftBumper()
+    //     .whileTrue(
+    //         drivetrain.defer(
+    //             () ->
+    //                 drivetrain.autoAlighnTopose(
+    //                     SidePoseMatcher.getClosestPose(drivetrain.getPose()))));
 
-    
+    // joystick
+    //     .leftBumper()
+    //     .whileTrue(
+    //         drivetrain.defer(
+    //             () ->
+    //                 drivetrain
+    //                     .autoAlighnTopose(
+    //                         SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()))
+    //                     .until(
+    //                         () ->
+    //                             drivetrain.isAtTarget(
+    //                                 SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+    //                                 drivetrain.getPose()))
+    //                     .andThen(
+    //                         drivetrain
+    //                             .autoAlighnTopose(
+    //                                 SidePoseMatcher.getClosestPose(drivetrain.getPose()))
+    //                             .until(
+    //                                 () ->
+    //                                     drivetrain.isAtTarget(
+    //                                         SidePoseMatcher.getClosestPose(drivetrain.getPose()),
+    //                                         drivetrain.getPose())))
+    //                     .andThen(
+    //                         new ParallelCommandGroup(
+    //                             new Elevatorcmd(elevator1, 2, true),
+    //                             drivetrain.autoAlighnTopose(
+    //                                 SidePoseMatcher.getClosestPose(drivetrain.getPose()))))))
+    //     .whileFalse(
+    //         new SequentialCommandGroup(
+    //             elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    joystick
+        .y()
+        .whileTrue(new Elevatorcmd(elevator1, 3, true))
+        .whileFalse(
+            new SequentialCommandGroup(
+                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    joystick2
+        .y()
+        .whileTrue(new Elevatorcmd(elevator1, 4, true))
+        .whileFalse(
+            new SequentialCommandGroup(
+                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    joystick2
+        .b()
+        .whileTrue(new Elevatorcmd(elevator1, 3, true))
+        .whileFalse(
+            new SequentialCommandGroup(
+                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    joystick2
+        .a()
+        .whileTrue(new Elevatorcmd(elevator1, 2, true))
+        .whileFalse(
+            new SequentialCommandGroup(
+                elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    Command l2 =
+        drivetrain.defer(
+            () ->
+                new ParallelCommandGroup(
+                        drivetrain.autoAlighnToposel2(
+                            SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose())),
+                        new Elevatorcmd(elevator1, 2, true))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && elevator1.autoncheck(2))
+                    .andThen(
+                        drivetrain
+                            .autoAlighnTopose(SidePoseMatcher.getClosestPose(drivetrain.getPose()))
+                            .alongWith(new Elevatorcmd(elevator1, 2, true)))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && elevator1.autoncheck(2))
+                    .andThen(
+                        new ParallelCommandGroup(
+                            new Elevatorcmd(elevator1, 2, true),
+                            shoot.cmd(-0.3),
+                            drivetrain.autoAlighnToposel2(
+                                SidePoseMatcher.getClosestPose(drivetrain.getPose()))))
+                    .until(() -> shoot.hasVelocityautoalighn())
+                    .andThen(
+                        new ParallelCommandGroup(
+                            drivetrain.autoAlighnToposel2(
+                                SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose())),
+                            new Elevatorcmd(elevator1, 2, true),
+                            shoot.cmd(1)))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && shoot.velocitycheck())
+                    // .until(
+                    //     () ->
+                    //         drivetrain.isAtTarget(
+                    //             SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                    //             drivetrain.getPose()))))
+                    .andThen(
+                        new SequentialCommandGroup(
+                                elevator1.Motionmagictoggle(0),
+                                new Elevatorcmd(elevator1, 0, false))
+                            .until(() -> elevator1.autoalighncheck(0))));
+    Command l3 =
+        drivetrain.defer(
+            () ->
+                new ParallelCommandGroup(
+                        drivetrain.autoAlighnToposel3(
+                            SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose())),
+                        new Elevatorcmd(elevator1, 3, true))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && elevator1.autoncheck(3))
+                    .andThen(
+                        drivetrain
+                            .autoAlighnToposel3(
+                                SidePoseMatcher.getClosestPose(drivetrain.getPose()))
+                            .alongWith(new Elevatorcmd(elevator1, 3, true)))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && elevator1.autoncheck(3))
+                    .andThen(
+                        new ParallelCommandGroup(
+                            new Elevatorcmd(elevator1, 3, true),
+                            shoot.cmd(-0.3),
+                            drivetrain.autoAlighnToposel3(
+                                SidePoseMatcher.getClosestPose(drivetrain.getPose()))))
+                    .until(() -> shoot.hasVelocityautoalighn())
+                    .andThen(
+                        new ParallelCommandGroup(
+                            drivetrain.autoAlighnToposel3(
+                                SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose())),
+                            new Elevatorcmd(elevator1, 3, true),
+                            shoot.cmd(1)))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && shoot.velocitycheck())
+                    // .until(
+                    //     () ->
+                    //         drivetrain.isAtTarget(
+                    //             SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                    //             drivetrain.getPose()))))
+                    .andThen(
+                        new SequentialCommandGroup(
+                            elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false))));
+
+    Command l4 =
+        drivetrain.defer(
+            () ->
+                new ParallelCommandGroup(
+                        drivetrain.autoAlighnTopose(
+                            SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose())),
+                        new Elevatorcmd(elevator1, 4, true))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && elevator1.autoncheck(4))
+                    .andThen(
+                        drivetrain
+                            .autoAlighnTopose(SidePoseMatcher.getClosestPose(drivetrain.getPose()))
+                            .alongWith(new Elevatorcmd(elevator1, 4, true)))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && elevator1.autoncheck(4))
+                    .andThen(
+                        new ParallelCommandGroup(
+                            new Elevatorcmd(elevator1, 4, true),
+                            shoot.cmd(-0.3),
+                            drivetrain.autoAlighnTopose(
+                                SidePoseMatcher.getClosestPose(drivetrain.getPose()))))
+                    .until(() -> shoot.hasVelocityautoalighn())
+                    .andThen(
+                        new ParallelCommandGroup(
+                            drivetrain.autoAlighnTopose(
+                                SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose())),
+                            new Elevatorcmd(elevator1, 4, true),
+                            shoot.cmd(1)))
+                    .until(
+                        () ->
+                            drivetrain.isAtTarget(
+                                    SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                                    drivetrain.getPose())
+                                && shoot.velocitycheck())
+                    // .until(
+                    //     () ->
+                    //         drivetrain.isAtTarget(
+                    //             SidePoseMatcher.getBackedUpClosestPose(drivetrain.getPose()),
+                    //             drivetrain.getPose()))))
+                    .andThen(
+                        new SequentialCommandGroup(
+                            elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false))));
 
     joystick
         .pov(0)
@@ -345,7 +631,7 @@ public class Robot extends LoggedRobot {
         .rightStick()
         .whileTrue(
             new ConditionalCommand(
-                new Elevatorcmd(elevator1, 2, true),
+                l2,
                 new ConditionalCommand(
                     hyper,
                     Positionl2,
@@ -354,6 +640,9 @@ public class Robot extends LoggedRobot {
         .whileFalse(
             new SequentialCommandGroup(
                 elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
+    joystick2.b().whileTrue(climb.cmd(10));
+    joystick.a().whileTrue(climb.cmd(0));
 
     // joystick2.a().whileTrue(shoot.cmd(-0.2));
 
@@ -373,7 +662,7 @@ public class Robot extends LoggedRobot {
         .leftStick()
         .whileTrue(
             new ConditionalCommand(
-                new Elevatorcmd(elevator1, 3, true),
+                l3,
                 new ConditionalCommand(
                     hyperl3,
                     Positionl3,
@@ -388,12 +677,13 @@ public class Robot extends LoggedRobot {
         .back()
         .whileTrue(
             new ConditionalCommand(
-                new Elevatorcmd(elevator1, 4, true),
-                new barge(elevator1, 26.841796875, true),
+                l4,
+                new barge(elevator1, 26.841796875, true, algea),
                 () -> Constants.getRobotState() != Constants.RobotState.ALGEA))
         .whileFalse(
             new SequentialCommandGroup(
                 elevator1.Motionmagictoggle(0), new Elevatorcmd(elevator1, 0, false)));
+
     joystick.rightBumper().whileTrue(algea.algeacmd(0.5)).whileFalse(algea.algeacmd(0));
 
     joystick.start().whileTrue(elevator1.runOnce(() -> elevator1.togglesetpoint()));
