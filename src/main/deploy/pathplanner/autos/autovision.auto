@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "alighn1"
+            "pathName": "1peice"
           }
         },
         {
@@ -19,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "scource"
+            "pathName": "visionscource"
           }
         },
         {
@@ -31,25 +31,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Alighn2"
+            "pathName": "visioncore2"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "autoalighn"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "scource2"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "2.5"
           }
         }
       ]
