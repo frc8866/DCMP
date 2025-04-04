@@ -112,7 +112,7 @@ public class elevatorsub extends SubsystemBase {
     motionMagicConfigs2.MotionMagicJerk = 900;
 
     motionMagicConfigs.MotionMagicCruiseVelocity = 500; // Target cruise velocity of 80 rps
-    motionMagicConfigs.MotionMagicAcceleration =
+    motionMagicConfigs.MotionMagicAcceleration =x
         400; // Target acceleration of 160 rps/s (0.5 seconds)
     motionMagicConfigs.MotionMagicJerk = 900; // Target jerk of 1600 rps/s/s (0.1 seconds)\
 
